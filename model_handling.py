@@ -88,7 +88,7 @@ def evaluate_model(model, X_test, y_test):
 def get_name_index(model_name):
     idx = 0
     if os.path.exists('Model_Statistics'):
-        model_paths = Path('Model_Statistics/').rglob(model_name + '.json')
+        model_paths = Path('Model_Statistics/').rglob(model_name + '*.json')
         list_model_paths = [str(path) for path in model_paths]
         idx = len(list_model_paths)
     return idx

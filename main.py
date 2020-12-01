@@ -55,7 +55,7 @@ if __name__ == '__main__':
                                normalize_hist=normalize_hist)
 
     # Define which models to train and evaluate; names describe the model type (log_reg, ridge_class, ada_boost, etc)
-    models = ada_boost_models
+    models = log_reg_models
     name = 'log_reg'
     index = get_name_index(name)
 
