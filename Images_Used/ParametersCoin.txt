@@ -1,0 +1,14 @@
+max_major = 40
+min_distance = 100
+min_votes = 0.6
+min_major = 15
+min_minor_major_ratio = 0.75
+nb_candidates = 3
+major_groth_step_radius = 8
+accumulator_bin_size = 6
+max_bridge_radius = 3
+max_bridges = 3
+canny_lower_gradient_threshold = 25
+canny_upper_to_lower_gradient_threshold_ratio = 3
+major_sample_fraction = 0.05
+blur_size = 5
