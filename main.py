@@ -46,9 +46,9 @@ if __name__ == '__main__':
     print("Test folders:", test_paths)
 
     # Choose preprocessing options
-    normalize_mean = True
+    normalize_mean = False
     normalize_std = False
-    normalize_hist = False
+    normalize_hist = True
     X_train, y_train = read_data(training_paths, normalize_mean=normalize_mean, normalize_std=normalize_std,
                                  normalize_hist=normalize_hist)
     X_test, y_test = read_data(test_paths, normalize_mean=normalize_mean, normalize_std=normalize_std,
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     # Define which models to train and evaluate; names describe the model type (log_reg, ridge_class, ada_boost, etc)
     models = ada_boost_models
-    name = 'ada_boost'
+    name = 'log_reg'
     index = get_name_index(name)
 
     for i in range(0, len(models)):
