@@ -3,10 +3,15 @@ from pathlib import Path
 import numpy as np
 import re
 import cv2
+from skimage.io import imread, imshow
 from sklearn.preprocessing import scale
+from skimage.color import rgb2ycbcr, ycbcr2rgb
+from skimage.feature import local_binary_pattern, haar_like_feature, haar_like_feature_coord, draw_haar_like_feature
+from skimage.transform import integral_image
+from skimage.exposure import equalize_hist, equalize_adapthist
 
 
-def read_data_from_folder(path_image_folder, normalize_hist=True):
+def read_data_from_folder(path_image_folder, gray_scale=False, normalize_hist=True, binary_patterns=False, haar_features=False):
     image_folder = Path(path_image_folder).rglob('*.jpg')
     images_paths = [str(path) for path in image_folder]
     nb_images = len(images_paths)
@@ -16,9 +21,15 @@ def read_data_from_folder(path_image_folder, normalize_hist=True):
     pattern_true = r'true'
     pattern_false = r'false'
     for i in range(0, nb_images):
-        image = cv2.imread(images_paths[i])
+        #image = cv2.imread(images_paths[i])
+        image = imread(images_paths[i], as_gray=gray_scale)
         if normalize_hist:
             image = histogram_equalization(image)
+        if binary_patterns:
+            compute_local_binary_pattern()
+        if haar_features:
+            compute_haar_features()
+
         data.append(image.flatten())
         if re.search(pattern_true, images_paths[i]) is not None:
             labels.append(1)
@@ -38,15 +49,19 @@ def normalize_data(data, with_mean=True, with_std=True):
 
 def histogram_equalization(image):
     if image.ndim == 2:
-        return cv2.equalizeHist(image)
+        #return cv2.equalizeHist(image)
+        return equalize_hist(image)
     elif image.ndim == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
         image[:, :, 0] = cv2.equalizeHist(image[:, :, 0])
         image = cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
+        #image = rgb2ycbcr(image)
+        #image[:, :, 0] = equalize_hist(image[:, :, 0])
+        #image = ycbcr2rgb(image)
         return image
     else:
         print('Image shape:', image.shape)
-        raise AssertionError('Image has neither one channel (gray scale) nor three channels (RGB).')
+        raise ValueError('Image has neither one channel (gray scale) nor three channels (RGB).')
 
 
 def read_data(folder_list, normalize_mean=True, normalize_std=True, normalize_hist=True):
@@ -69,5 +84,23 @@ def get_paths_image_folders(path_folder):
 
 def get_folder_name(path_folder):
     name_start = path_folder.rfind('/')
-    folder_name = path_folder[name_start+1:]
+    folder_name = path_folder[name_start + 1:]
     return folder_name
+
+
+def compute_local_binary_pattern(image, nb_pts=None, radius=3):
+    if image.ndim != 2:
+        raise ValueError('Image must be 2-dimensional, got {}-dimensional image'.format(image.ndim))
+    if nb_pts is None:
+        nb_pts = 8 * radius
+    image_lbp = local_binary_pattern(image, nb_pts, radius)
+    return image_lbp
+
+
+def compute_haar_features(image, feature_type=None, feature_coord=None):
+    if image.ndim != 2:
+        raise ValueError('Image must be 2-dimensional, got {}-dimensional image'.format(image.ndim))
+    int_img = integral_image(image)
+    feature_vector = haar_like_feature(int_img, 0, 0, image.shape[0], image.shape[1], feature_type=feature_type,
+                                       feature_coord=feature_coord)
+    return feature_vector

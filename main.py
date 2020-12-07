@@ -16,11 +16,12 @@ log_reg_models = [LogisticRegression(penalty='none', max_iter=200), LogisticRegr
 ridge_class_models = [RidgeClassifier(alpha=5.0), RidgeClassifier(alpha=1.0), RidgeClassifier(alpha=0.5),
                       RidgeClassifier(alpha=0.1), RidgeClassifier(alpha=0.01)]
 
+random_forest_models = [RandomForestClassifier(n_estimators=200, class_weight='balanced'),
+                        RandomForestClassifier(n_estimators=50), RandomForestClassifier(n_estimators=100),
+                        RandomForestClassifier(n_estimators=200)]
+
 ada_boost_models = [AdaBoostClassifier(n_estimators=50), AdaBoostClassifier(n_estimators=100),
                     AdaBoostClassifier(n_estimators=200)]
-
-random_forest_models = [RandomForestClassifier(n_estimators=50), RandomForestClassifier(n_estimators=100),
-                        RandomForestClassifier(n_estimators=200)]
 
 log_reg_cv_models = [LogisticRegressionCV(penalty='l2', max_iter=200),
                      LogisticRegressionCV(penalty='l1', max_iter=200, solver='saga'),
@@ -46,7 +47,7 @@ if __name__ == '__main__':
     print("Test folders:", test_paths)
 
     # Choose preprocessing options
-    normalize_mean = False
+    normalize_mean = True
     normalize_std = False
     normalize_hist = True
     X_train, y_train = read_data(training_paths, normalize_mean=normalize_mean, normalize_std=normalize_std,
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     X_test, y_test = read_data(test_paths, normalize_mean=normalize_mean, normalize_std=normalize_std,
                                normalize_hist=normalize_hist)
 
-    # Define which models to train and evaluate; names describe the model type (log_reg, ridge_class, ada_boost, etc)
+    # Define which models to train and evaluate; name describes the model type (log_reg, ridge_class, random_forest, ada_boost, etc)
     models = log_reg_models
     name = 'log_reg'
     index = get_name_index(name)
