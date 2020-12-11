@@ -2,13 +2,12 @@ import os
 from pathlib import Path
 import numpy as np
 import re
-import cv2
 from skimage.io import imread, imshow
 from sklearn.preprocessing import scale
 from skimage.color import rgb2ycbcr, ycbcr2rgb
 from skimage.feature import local_binary_pattern, haar_like_feature, haar_like_feature_coord, draw_haar_like_feature
 from skimage.transform import integral_image
-from skimage.exposure import equalize_hist, equalize_adapthist
+from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
 
 
 def read_data_from_folder(path_image_folder, gray_scale=False, normalize_hist=True, binary_patterns=False, haar_features=False):
@@ -21,7 +20,6 @@ def read_data_from_folder(path_image_folder, gray_scale=False, normalize_hist=Tr
     pattern_true = r'true'
     pattern_false = r'false'
     for i in range(0, nb_images):
-        #image = cv2.imread(images_paths[i])
         image = imread(images_paths[i], as_gray=gray_scale)
         if normalize_hist:
             image = histogram_equalization(image)
@@ -48,20 +46,20 @@ def normalize_data(data, with_mean=True, with_std=True):
 
 
 def histogram_equalization(image):
+    image = rescale_intensity(image, out_range=(0.0, 1.0))
     if image.ndim == 2:
-        #return cv2.equalizeHist(image)
         return equalize_hist(image)
-    elif image.ndim == 3:
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
-        image[:, :, 0] = cv2.equalizeHist(image[:, :, 0])
-        image = cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
-        #image = rgb2ycbcr(image)
-        #image[:, :, 0] = equalize_hist(image[:, :, 0])
-        #image = ycbcr2rgb(image)
+    elif image.ndim == 3 and image.shape[-1] == 3:
+        image = rgb2ycbcr(image)
+        image[:, :, 0] = rescale_intensity(equalize_hist(image[:, :, 0]), out_range=(16.0, 235.0))
+        image = ycbcr2rgb(image)
+        image = rescale_intensity(image, out_range=(0.0, 1.0))
         return image
     else:
         print('Image shape:', image.shape)
-        raise ValueError('Image has neither one channel (gray scale) nor three channels (RGB).')
+        raise ValueError(
+            'Image has neither one channel (gray scale) nor three channels (RGB); got shape {} instead.'.format(
+                image.shape))
 
 
 def read_data(folder_list, normalize_mean=True, normalize_std=True, normalize_hist=True):
