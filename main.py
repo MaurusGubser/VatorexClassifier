@@ -33,46 +33,37 @@ gradient_boosting_models = [GradientBoostingClassifier(n_estimators=50),
                             GradientBoostingClassifier(n_estimators=200)]
 
 if __name__ == '__main__':
-    path = "Training_Images/"
-    images_paths = get_paths_image_folders(path)
-    large_training_paths = images_paths[0:8] + images_paths[9:12]
-    small_training_paths = images_paths[3:10]
+    rel_path = "Training_Images/"
+    images_paths = get_paths_of_image_folders(rel_path)
 
-    # Choose small or large training set and test set
-    training_paths = small_training_paths
-    test_paths = images_paths[2:3]
+    # Choose training set and test set
+    training_paths = images_paths[3:10]
+    test_paths = images_paths[0:3]
     training_folder_names = [get_folder_name(path) for path in training_paths]
     test_folder_names = [get_folder_name(path) for path in test_paths]
     print("Train folders:", training_paths)
     print("Test folders:", test_paths)
 
-    # Choose preprocessing options
-    normalize_mean = True
-    normalize_std = False
+    # Define data preprocessing options
+    gray_scale = False
     normalize_hist = True
-    X_train, y_train = read_data(training_paths, normalize_mean=normalize_mean, normalize_std=normalize_std,
-                                 normalize_hist=normalize_hist)
-    X_test, y_test = read_data(test_paths, normalize_mean=normalize_mean, normalize_std=normalize_std,
-                               normalize_hist=normalize_hist)
+    with_image = True
+    with_binary_patterns = False
+    with_haar_features = False
+    with_mean = True
+    with_std = False
+
+    preprocessing_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist, 'with_image': with_image,
+                                'with_binary_patterns': with_binary_patterns, 'with_haar_features': with_haar_features,
+                                'with_mean': with_mean, 'with_std': with_std}
+    X_train, y_train = prepare_data_and_labels(training_paths, preprocessing_parameters)
+    X_test, y_test = prepare_data_and_labels(test_paths, preprocessing_parameters)
+    data_parameters = {'training_folder_names': training_folder_names, 'X_train': X_train, 'y_train': y_train,
+                       'test_folder_names': test_folder_names, 'X_test': X_test, 'y_test': y_test}
 
     # Define which models to train and evaluate; name describes the model type (log_reg, ridge_class, random_forest, ada_boost, etc)
     models = log_reg_models
     name = 'log_reg'
-    index = get_name_index(name)
 
-    for i in range(0, len(models)):
-        model_name = name + '_' + str(index + i)
-        dict_model = {'model': models[i], 'model_params': models[i].get_params(),
-                      'training_data': training_folder_names, 'training_size': y_train.size,
-                      'training_nb_mites': int(np.sum(y_train)),
-                      'test_data': test_folder_names, 'test_size': y_test.size, 'test_nb_mites': int(np.sum(y_test)),
-                      'normalize_mean': normalize_mean, 'normalize_std': normalize_std,
-                      'normalize_hist': normalize_hist}
-        start_time = time.time()
-        dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
-        end_time = time.time()
-        print('Training time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
-        dict_model['model_stats'] = evaluate_model(dict_model['model'], X_test, y_test)
-        export_model(dict_model['model'], model_name)
-        export_model_stats_json(dict_model, model_name)
-        export_model_stats_csv(dict_model, model_name)
+    train_and_evaluate_modelgroup(modelgroup=models, modelgroup_name=name, data_params=data_parameters,
+                                  preproc_params=preprocessing_parameters)

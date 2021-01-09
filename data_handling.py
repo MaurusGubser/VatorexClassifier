@@ -10,42 +10,39 @@ from skimage.transform import integral_image
 from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
 
 
-def read_data_from_folder(path_image_folder, gray_scale=False, normalize_hist=True, binary_patterns=False, haar_features=False):
-    image_folder = Path(path_image_folder).rglob('*.jpg')
+def read_images_from_folder(path_folder, gray_scale=False, hist_eq=False):
+    image_folder = Path(path_folder).rglob('*.jpg')
     images_paths = [str(path) for path in image_folder]
-    nb_images = len(images_paths)
-    data = []
+    images = []
     labels = []
-
     pattern_true = r'true'
     pattern_false = r'false'
-    for i in range(0, nb_images):
-        image = imread(images_paths[i], as_gray=gray_scale)
-        if normalize_hist:
-            image = histogram_equalization(image)
-        if binary_patterns:
-            compute_local_binary_pattern()
-        if haar_features:
-            compute_haar_features()
 
-        data.append(image.flatten())
-        if re.search(pattern_true, images_paths[i]) is not None:
+    for path in images_paths:
+        image = imread(path, as_gray=gray_scale)
+        if hist_eq:
+            image = equalize_histogram_adaptive(image)
+        images.append(image)
+        if re.search(pattern_true, path):
             labels.append(1)
-        elif re.search(pattern_false, images_paths[i]) is not None:
+        elif re.search(pattern_false, path):
             labels.append(0)
         else:
-            print(images_paths[i])
-            raise AssertionError("Image path does not contain 'true' or 'false'.")
-    labels = np.array(labels)
-    data = np.array(data)
-    return data, labels
+            raise AssertionError(f"Image path is {path} and does not contain 'true' or 'false'.")
+    return images, labels
 
 
-def normalize_data(data, with_mean=True, with_std=True):
-    return scale(data, axis=-1, with_mean=with_mean, with_std=with_std)
+def read_images(folder_list, gray_scale=False, hist_eq=False):
+    images = []
+    labels = []
+    for folder_path in folder_list:
+        imgs, lbls = read_images_from_folder(folder_path, gray_scale=gray_scale, hist_eq=hist_eq)
+        images = images + imgs
+        labels = labels + lbls
+    return images, labels
 
 
-def histogram_equalization(image):
+def equalize_histogram(image):
     image = rescale_intensity(image, out_range=(0.0, 1.0))
     if image.ndim == 2:
         return equalize_hist(image)
@@ -58,21 +55,56 @@ def histogram_equalization(image):
     else:
         print('Image shape:', image.shape)
         raise ValueError(
-            'Image has neither one channel (gray scale) nor three channels (RGB); got shape {} instead.'.format(
-                image.shape))
+            f'Image has neither one channel (gray scale) nor three channels (RGB); got shape {image.shape} instead.')
 
 
-def read_data(folder_list, normalize_mean=True, normalize_std=True, normalize_hist=True):
-    data, labels = read_data_from_folder(folder_list[0])
-    for i in range(1, len(folder_list)):
-        X, y = read_data_from_folder(folder_list[i], normalize_hist=normalize_hist)
-        data = np.concatenate((data, X))
-        labels = np.concatenate((labels, y))
-    data = normalize_data(data, with_mean=normalize_mean, with_std=normalize_std)
+def equalize_histogram_adaptive(image):
+    return equalize_adapthist(image)
+
+
+def compute_local_binary_pattern(image, nb_pts=None, radius=3):
+    if image.ndim != 2:
+        raise ValueError(f'Image must be 2-dimensional, got {image.ndim}-dimensional image')
+    if nb_pts is None:
+        nb_pts = 8 * radius
+    image_lbp = local_binary_pattern(image, nb_pts, radius)
+    return image_lbp
+
+
+def compute_haar_features(image, feature_type=None, feature_coord=None):
+    if image.ndim != 2:
+        raise ValueError(f'Image must be 2-dimensional, got {image.ndim}-dimensional image')
+    int_img = integral_image(image)
+    feature_vector = haar_like_feature(int_img, 0, 0, image.shape[0], image.shape[1], feature_type=feature_type,
+                                       feature_coord=feature_coord)
+    return feature_vector
+
+
+def normalize_data(data, with_mean=True, with_std=True):
+    return scale(data, axis=-1, with_mean=with_mean, with_std=with_std)
+
+
+def prepare_data_and_labels(folder_list, preproc_params):
+    images, labels = read_images(folder_list, preproc_params['gray_scale'], preproc_params['normalize_hist'])
+    data = []
+    if not (preproc_params['with_image'] or preproc_params['with_binary_patterns'] or preproc_params['with_haar_features']):
+        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'with_haar_features' has to be True.")
+    for img in images:
+        data_img = np.empty(0)
+        if preproc_params['with_image']:
+            data_img = np.append(data_img, img.flatten())
+        if preproc_params['with_binary_patterns']:
+            data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
+        if preproc_params['with_haar_features']:
+            data_img = np.append(data_img, compute_haar_features(img))
+        data.append(data_img)
+
+    data = normalize_data(np.array(data), with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
+    labels = np.array(labels)
     return data, labels
 
 
-def get_paths_image_folders(path_folder):
+def get_paths_of_image_folders(path_folder):
     images_paths = []
     for root, dirs, files in os.walk(path_folder):
         for name in dirs:
@@ -84,21 +116,3 @@ def get_folder_name(path_folder):
     name_start = path_folder.rfind('/')
     folder_name = path_folder[name_start + 1:]
     return folder_name
-
-
-def compute_local_binary_pattern(image, nb_pts=None, radius=3):
-    if image.ndim != 2:
-        raise ValueError('Image must be 2-dimensional, got {}-dimensional image'.format(image.ndim))
-    if nb_pts is None:
-        nb_pts = 8 * radius
-    image_lbp = local_binary_pattern(image, nb_pts, radius)
-    return image_lbp
-
-
-def compute_haar_features(image, feature_type=None, feature_coord=None):
-    if image.ndim != 2:
-        raise ValueError('Image must be 2-dimensional, got {}-dimensional image'.format(image.ndim))
-    int_img = integral_image(image)
-    feature_vector = haar_like_feature(int_img, 0, 0, image.shape[0], image.shape[1], feature_type=feature_type,
-                                       feature_coord=feature_coord)
-    return feature_vector
