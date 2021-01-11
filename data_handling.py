@@ -8,6 +8,7 @@ from skimage.color import rgb2ycbcr, ycbcr2rgb
 from skimage.feature import local_binary_pattern, haar_like_feature, haar_like_feature_coord, draw_haar_like_feature
 from skimage.transform import integral_image
 from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
+import time
 
 
 def read_images_from_folder(path_folder, gray_scale=False, hist_eq=False):
@@ -85,6 +86,7 @@ def normalize_data(data, with_mean=True, with_std=True):
 
 
 def prepare_data_and_labels(folder_list, preproc_params):
+    start = time.time()
     images, labels = read_images(folder_list, preproc_params['gray_scale'], preproc_params['normalize_hist'])
     data = []
     if not (preproc_params['with_image'] or preproc_params['with_binary_patterns'] or preproc_params['with_haar_features']):
@@ -101,6 +103,8 @@ def prepare_data_and_labels(folder_list, preproc_params):
 
     data = normalize_data(np.array(data), with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
     labels = np.array(labels)
+    end = time.time()
+    print(f"Read data and labels in {(end - start)/60:.1f} minutes; data of shape {data.shape}")
     return data, labels
 
 

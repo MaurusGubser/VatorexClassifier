@@ -38,23 +38,26 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
         os.mkdir('Model_Statistics')
     filename = 'Model_Statistics/Model_Statistics.csv'
     if not os.path.exists(filename):
-        title_string = 'Model name, Model_params, Accuracy, Acc. Balanced, Precision, Recall, F1 Score, '
+        title_string = 'Model name,Model_params,Accuracy,Acc. Balanced,Precision,Recall,F1 Score,'
         for i in data_dict.keys():
-            title_string = title_string + str(i)
+            title_string = title_string + str(i) + ','
+        title_string = title_string + '\n'
         with open(filename, 'w') as initfile:
             initfile.write(title_string)
-                #'Model name, Model params, Training sets, Training size, Training nb mites, Test sets, Test size, Test nb mites, Normalize mean, Normalize std, Normalize histogram, acc, acc_balanced, prec, rcll, f1_scr \n')
+        initfile.close()
+
+    model_string = model_name + ',' + str(model_dict['model_params']).replace(',', '') + ','
+    for key, model_value in model_dict['model_stats'].items():
+        if key == 'conf_matrix':
+            continue
+        model_string = model_string + str(model_value) + ','
+    for data_value in data_dict.values():
+        model_string = model_string + str(data_value).replace(',', '') + ','
+    model_string = model_string + '\n'
     with open(filename, 'a') as outfile:
-        outfile.write(model_name + ',')
-        outfile.write(str(model_dict['model_params']).replace(',', '') + ',')
-        outfile.write(str(model_dict['model_stats']['acc']) + ',')
-        outfile.write(str(model_dict['model_stats']['acc_balanced']) + ',')
-        outfile.write(str(model_dict['model_stats']['prec']) + ',')
-        outfile.write(str(model_dict['model_stats']['rcll']) + ',')
-        outfile.write(str(model_dict['model_stats']['f1_scr']) + ',')
-        for value in data_dict.values():
-            outfile.write(str(value))
-        outfile.write('\n')
+        outfile.write(model_string)
+        outfile.close()
+
     print("Model statistics appended to", filename)
     return None
 
@@ -118,7 +121,7 @@ def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, prep
         end_time = time.time()
         print('Training time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
         dict_model['model_stats'] = evaluate_model(dict_model['model'], X_test, y_test)
-        export_model(dict_model['model'], model_name)
+        #export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
     return None
