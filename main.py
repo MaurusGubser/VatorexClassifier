@@ -3,8 +3,7 @@ from data_handling import *
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, RidgeClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
 from sklearn.svm import SVC
-from sklearn.naive_bayes import GaussianNB, ComplementNB
-import time
+from sklearn.naive_bayes import GaussianNB
 
 # Define some different models for classification
 log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight='balanced'),
@@ -16,8 +15,11 @@ log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight=
                   LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=0.1, class_weight='balanced'),
                   LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=0.9, class_weight='balanced')]
 
-ridge_class_models = [RidgeClassifier(alpha=5.0), RidgeClassifier(alpha=1.0), RidgeClassifier(alpha=0.5),
-                      RidgeClassifier(alpha=0.1), RidgeClassifier(alpha=0.01)]
+ridge_class_models = [RidgeClassifier(alpha=5.0, class_weight='balanced'),
+                      RidgeClassifier(alpha=1.0, class_weight='balanced'),
+                      RidgeClassifier(alpha=0.5, class_weight='balanced'),
+                      RidgeClassifier(alpha=0.1, class_weight='balanced'),
+                      RidgeClassifier(alpha=0.01, class_weight='balanced')]
 
 random_forest_models = [RandomForestClassifier(n_estimators=200, class_weight='balanced'),
                         RandomForestClassifier(n_estimators=50), RandomForestClassifier(n_estimators=100),
@@ -25,7 +27,7 @@ random_forest_models = [RandomForestClassifier(n_estimators=200, class_weight='b
 
 svm_models = [SVC(class_weight='balanced', max_iter=200), SVC(class_weight='balanced')]
 
-naive_bayes = [GaussianNB(), ComplementNB()]
+naive_bayes_models = [GaussianNB()]
 
 ada_boost_models = [AdaBoostClassifier(n_estimators=50), AdaBoostClassifier(n_estimators=100),
                     AdaBoostClassifier(n_estimators=200)]
@@ -55,7 +57,7 @@ if __name__ == '__main__':
     gray_scale = False
     normalize_hist = True
     with_image = True
-    with_binary_patterns = False
+    with_binary_patterns = True
     with_haar_features = False
     with_mean = True
     with_std = True
@@ -68,7 +70,8 @@ if __name__ == '__main__':
     data_parameters = {'training_folder_names': training_folder_names, 'X_train': X_train, 'y_train': y_train,
                        'test_folder_names': test_folder_names, 'X_test': X_test, 'y_test': y_test}
 
-    # Define which models to train and evaluate; name describes the model type (log_reg, ridge_class, random_forest, ada_boost, etc)
+    # Define which models to train and evaluate; name describes the model type (log_reg, ridge_class, random_forest,
+    # ada_boost, etc)
 
     models = log_reg_models
     name = 'log_reg'
@@ -93,6 +96,12 @@ if __name__ == '__main__':
     train_and_evaluate_modelgroup(modelgroup=models, modelgroup_name=name, data_params=data_parameters,
                                   preproc_params=preprocessing_parameters)
     print("Trained svm.")
+
+    models = naive_bayes_models
+    name = 'naive_bayes'
+    train_and_evaluate_modelgroup(modelgroup=models, modelgroup_name=name, data_params=data_parameters,
+                                  preproc_params=preprocessing_parameters)
+    print("Trained naive bayes.")
 
     models = ada_boost_models
     name = 'ada_boost'

@@ -4,7 +4,7 @@ import numpy as np
 import re
 from skimage.io import imread, imshow
 from sklearn.preprocessing import scale
-from skimage.color import rgb2ycbcr, ycbcr2rgb
+from skimage.color import rgb2ycbcr, ycbcr2rgb, rgb2gray
 from skimage.feature import local_binary_pattern, haar_like_feature, haar_like_feature_coord, draw_haar_like_feature
 from skimage.transform import integral_image
 from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
@@ -65,17 +65,19 @@ def equalize_histogram_adaptive(image):
 
 def compute_local_binary_pattern(image, nb_pts=None, radius=3):
     if image.ndim != 2:
-        raise ValueError(f'Image must be 2-dimensional, got {image.ndim}-dimensional image')
+        img = rgb2gray(image)
+        #raise ValueError(f'Image must be 2-dimensional, got {image.ndim}-dimensional image')
     if nb_pts is None:
         nb_pts = 8 * radius
-    image_lbp = local_binary_pattern(image, nb_pts, radius)
+    image_lbp = local_binary_pattern(img, nb_pts, radius)
     return image_lbp
 
 
 def compute_haar_features(image, feature_type=None, feature_coord=None):
     if image.ndim != 2:
-        raise ValueError(f'Image must be 2-dimensional, got {image.ndim}-dimensional image')
-    int_img = integral_image(image)
+        img = rgb2gray(image)
+        #raise ValueError(f'Image must be 2-dimensional, got {image.ndim}-dimensional image')
+    int_img = integral_image(img)
     feature_vector = haar_like_feature(int_img, 0, 0, image.shape[0], image.shape[1], feature_type=feature_type,
                                        feature_coord=feature_coord)
     return feature_vector
