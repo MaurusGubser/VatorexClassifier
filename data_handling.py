@@ -4,10 +4,10 @@ import numpy as np
 import re
 from skimage.io import imread, imshow
 from sklearn.preprocessing import scale
-from skimage.color import rgb2ycbcr, ycbcr2rgb, rgb2gray
-from skimage.feature import local_binary_pattern, haar_like_feature, haar_like_feature_coord, draw_haar_like_feature
-from skimage.transform import integral_image
+from skimage.color import rgb2ycbcr, ycbcr2rgb
+from skimage.feature import local_binary_pattern
 from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
+from skimage.segmentation import slic
 import time
 
 
@@ -64,23 +64,35 @@ def equalize_histogram_adaptive(image):
 
 
 def compute_local_binary_pattern(image, nb_pts=None, radius=3):
-    if image.ndim != 2:
-        img = rgb2gray(image)
-        #raise ValueError(f'Image must be 2-dimensional, got {image.ndim}-dimensional image')
+    if image.ndim == 2:
+        image = np.reshape(image, (image.shape[0], image.shape[1], 1))
     if nb_pts is None:
         nb_pts = 8 * radius
-    image_lbp = local_binary_pattern(img, nb_pts, radius)
+    image_lbp = np.zeros(image.shape)
+    for ch in range(0, image.shape[-1]):
+        image_lbp[:, :, ch] = local_binary_pattern(image[:, :, ch], nb_pts, radius)
     return image_lbp
 
 
-def compute_haar_features(image, feature_type=None, feature_coord=None):
-    if image.ndim != 2:
-        img = rgb2gray(image)
-        #raise ValueError(f'Image must be 2-dimensional, got {image.ndim}-dimensional image')
-    int_img = integral_image(img)
-    feature_vector = haar_like_feature(int_img, 0, 0, image.shape[0], image.shape[1], feature_type=feature_type,
-                                       feature_coord=feature_coord)
-    return feature_vector
+def compute_histograms(image, nb_divisions=3, nb_bins=128):
+    width = image.shape[0]
+    length = image.shape[1]
+    if image.ndim == 2:
+        image = np.reshape(image, (width, length, 1))
+    width_subregion = width // nb_divisions
+    length_subregion = length // nb_divisions
+    histograms = np.zeros((image.shape[-1], nb_divisions ** 2, nb_bins))
+    for ch in range(0, image.shape[-1]):
+        for i in range(0, nb_divisions):
+            for j in range(0, nb_divisions):
+                sub_img = image[i * width_subregion:(i + 1) * width_subregion,
+                          j * length_subregion:(j + 1) * length_subregion, ch]
+                histograms[ch, i * nb_divisions + j, :] = np.histogram(sub_img, bins=nb_bins)[0]
+    return histograms
+
+
+def segment_image(img, nb_segments=10):
+    return slic(img, n_segments=nb_segments)
 
 
 def normalize_data(data, with_mean=True, with_std=True):
@@ -91,22 +103,26 @@ def prepare_data_and_labels(folder_list, preproc_params):
     start = time.time()
     images, labels = read_images(folder_list, preproc_params['gray_scale'], preproc_params['normalize_hist'])
     data = []
-    if not (preproc_params['with_image'] or preproc_params['with_binary_patterns'] or preproc_params['with_haar_features']):
-        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'with_haar_features' has to be True.")
+    if not (preproc_params['with_image'] or preproc_params['with_binary_patterns'] or preproc_params[
+        'with_histograms'] or preproc_params['with_segmentation']):
+        raise ValueError(
+            "At least one of 'with_image', 'with_binary_patterns', 'with_histograms', 'with_segmentation' has to be True.")
     for img in images:
         data_img = np.empty(0)
         if preproc_params['with_image']:
             data_img = np.append(data_img, img.flatten())
         if preproc_params['with_binary_patterns']:
             data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
-        if preproc_params['with_haar_features']:
-            data_img = np.append(data_img, compute_haar_features(img))
+        if preproc_params['with_histograms']:
+            data_img = np.append(data_img, compute_histograms(img))
+        if preproc_params['with_segmentation']:
+            data_img = np.append(data_img, segment_image(img).flatten())
         data.append(data_img)
 
     data = normalize_data(np.array(data), with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
     labels = np.array(labels)
     end = time.time()
-    print(f"Read data and labels in {(end - start)/60:.1f} minutes; data of shape {data.shape}")
+    print(f"Read data and labels in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
     return data, labels
 
 

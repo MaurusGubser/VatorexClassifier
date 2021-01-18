@@ -3,7 +3,6 @@ from pathlib import Path
 import pickle
 import numpy as np
 import json
-import matplotlib.pyplot as plt
 import time
 from sklearn.metrics import confusion_matrix, plot_confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, \
     precision_score, recall_score
@@ -23,7 +22,8 @@ def export_model_stats_json(model_dict, model_name, data_dict):
         os.mkdir('Model_Statistics')
     rel_file_path = 'Model_Statistics/' + model_name + '.json'
     del model_dict['model']
-    model_dict['model_stats']['conf_matrix'] = [int(k) for k in model_dict['model_stats']['conf_matrix'].flatten()]
+    model_dict['model_stats_train']['conf_matrix'] = [int(k) for k in model_dict['model_stats_train']['conf_matrix'].flatten()]
+    model_dict['model_stats_test']['conf_matrix'] = [int(k) for k in model_dict['model_stats_test']['conf_matrix'].flatten()]
     dict = {}
     dict.update(model_dict)
     dict.update(data_dict)
@@ -38,7 +38,7 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
         os.mkdir('Model_Statistics')
     filename = 'Model_Statistics/Model_Statistics.csv'
     if not os.path.exists(filename):
-        title_string = 'Model name,Model_params,Accuracy,Acc. Balanced,Precision,Recall,F1 Score,'
+        title_string = 'Model name,Model_params,Train Accuracy,Acc. Balanced,Precision,Recall,F1 Score,Test Accuracy,Acc. Balanced,Precision,Recall,F1 Score,'
         for i in data_dict.keys():
             title_string = title_string + str(i) + ','
         title_string = title_string + '\n'
@@ -47,7 +47,11 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
         initfile.close()
 
     model_string = model_name + ',' + str(model_dict['model_params']).replace(',', '') + ','
-    for key, model_value in model_dict['model_stats'].items():
+    for key, model_value in model_dict['model_stats_train'].items():
+        if key == 'conf_matrix':
+            continue
+        model_string = model_string + str(model_value) + ','
+    for key, model_value in model_dict['model_stats_test'].items():
         if key == 'conf_matrix':
             continue
         model_string = model_string + str(model_value) + ','
@@ -70,7 +74,8 @@ def read_model(model_path):
 def read_model_stats_json(stats_path):
     with open(stats_path) as infile:
         stats_dict = json.load(infile)
-    stats_dict['model_stats']['conf_matrix'] = np.reshape(stats_dict['model_stats']['conf_matrix'], (2, 2))
+    stats_dict['model_stats_train']['conf_matrix'] = np.reshape(stats_dict['model_stats_train']['conf_matrix'], (2, 2))
+    stats_dict['model_stats_test']['conf_matrix'] = np.reshape(stats_dict['model_stats_test']['conf_matrix'], (2, 2))
     return stats_dict
 
 
@@ -79,13 +84,11 @@ def train_model(model, X_train, y_train):
     return model
 
 
-def evaluate_model(model, X_test, y_test):
-    y_pred = model.predict(X_test)
-    plot_confusion_matrix(model, X_test, y_test, display_labels=['Non-Mite', 'Mite'])
-    plt.title('Confusion matrix of test set')
-    stats_dict = {'conf_matrix': confusion_matrix(y_test, y_pred), 'acc': accuracy_score(y_test, y_pred),
-                  'acc_balanced': balanced_accuracy_score(y_test, y_pred), 'prec': precision_score(y_test, y_pred),
-                  'rcll': recall_score(y_test, y_pred), 'f1_scr': f1_score(y_test, y_pred)}
+def evaluate_model(model, X, y):
+    y_pred = model.predict(X)
+    stats_dict = {'conf_matrix': confusion_matrix(y, y_pred), 'acc': accuracy_score(y, y_pred),
+                  'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
+                  'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
     return stats_dict
 
 
@@ -120,8 +123,9 @@ def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, prep
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
         end_time = time.time()
         print('Training time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
-        dict_model['model_stats'] = evaluate_model(dict_model['model'], X_test, y_test)
-        #export_model(dict_model['model'], model_name)
+        dict_model['model_stats_train'] = evaluate_model(dict_model['model'], X_train, y_train)
+        dict_model['model_stats_test'] = evaluate_model(dict_model['model'], X_test, y_test)
+        export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
     return None
