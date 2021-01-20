@@ -4,10 +4,13 @@ import numpy as np
 import re
 from skimage.io import imread, imshow
 from sklearn.preprocessing import scale
+from sklearn.feature_selection import VarianceThreshold
+from sklearn.decomposition import PCA, IncrementalPCA
 from skimage.color import rgb2ycbcr, ycbcr2rgb
 from skimage.feature import local_binary_pattern
 from skimage.exposure import equalize_hist, equalize_adapthist, rescale_intensity
 from skimage.segmentation import slic
+
 import time
 
 
@@ -74,7 +77,7 @@ def compute_local_binary_pattern(image, nb_pts=None, radius=3):
     return image_lbp
 
 
-def compute_histograms(image, nb_divisions=3, nb_bins=128):
+def compute_histograms(image, nb_divisions=5, nb_bins=128):
     width = image.shape[0]
     length = image.shape[1]
     if image.ndim == 2:
@@ -119,11 +122,29 @@ def prepare_data_and_labels(folder_list, preproc_params):
             data_img = np.append(data_img, segment_image(img).flatten())
         data.append(data_img)
 
-    data = normalize_data(np.array(data), with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
+    data = np.array(data)
     labels = np.array(labels)
     end = time.time()
     print(f"Read data and labels in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
     return data, labels
+
+
+def normalize_remove_var(X_train, X_test, preproc_params, nb_components=500, thres=0.9):
+    start = time.time()
+    if preproc_params['with_mean'] or preproc_params['with_std']:
+        X_train = scale(X_train, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
+        X_test = scale(X_test, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
+    if preproc_params['with_pca']:
+        pca = IncrementalPCA(n_components=nb_components)
+        X_train = pca.fit_transform(X_train)
+        X_test = pca.transform(X_test)
+    if preproc_params['remove_low_var']:
+        selector = VarianceThreshold(threshold=thres)
+        X_train = selector.fit_transform(X_train)
+        X_test = selector.transform(X_test)
+    end = time.time()
+    print(f"Prepared data in {(end - start) / 60:.1f} minutes; X_train of shape {X_train.shape}, X_test of shape {X_test.shape}")
+    return X_train, X_test
 
 
 def get_paths_of_image_folders(path_folder):

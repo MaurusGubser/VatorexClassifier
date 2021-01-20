@@ -18,6 +18,7 @@ def export_model(model, model_name):
 
 
 def export_model_stats_json(model_dict, model_name, data_dict):
+    start_time = time.time()
     if not os.path.exists('Model_Statistics'):
         os.mkdir('Model_Statistics')
     rel_file_path = 'Model_Statistics/' + model_name + '.json'
@@ -29,7 +30,8 @@ def export_model_stats_json(model_dict, model_name, data_dict):
     dict.update(data_dict)
     with open(rel_file_path, 'w') as outfile:
         json.dump(dict, outfile, indent=4)
-    print("Model statistics saved in", rel_file_path)
+    end_time = time.time()
+    print("Model statistics saved in", rel_file_path, f"in  {(start_time - end_time)/60:.1f} Minutes.")
     return None
 
 
@@ -123,9 +125,12 @@ def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, prep
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
         end_time = time.time()
         print('Training time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
+        start_time = time.time()
         dict_model['model_stats_train'] = evaluate_model(dict_model['model'], X_train, y_train)
         dict_model['model_stats_test'] = evaluate_model(dict_model['model'], X_test, y_test)
-        export_model(dict_model['model'], model_name)
+        end_time = time.time()
+        print('Evaluating time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
+        #export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
     return None
