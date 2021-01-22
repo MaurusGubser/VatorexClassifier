@@ -105,15 +105,12 @@ def get_name_index(model_name):
 
 def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, preproc_params):
     index = get_name_index(modelgroup_name)
-    training_folder_names = data_params['training_folder_names']
     X_train = data_params['X_train']
     y_train = data_params['y_train']
-    test_folder_names = data_params['test_folder_names']
     X_test = data_params['X_test']
     y_test = data_params['y_test']
 
-    dict_data = {'training_data': training_folder_names, 'training_size': y_train.size,
-                 'training_nb_mites': int(np.sum(y_train)), 'test_data': test_folder_names, 'test_size': y_test.size,
+    dict_data = {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
                  'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
     dict_data.update(preproc_params)
 

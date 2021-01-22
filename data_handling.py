@@ -4,6 +4,7 @@ import numpy as np
 import re
 from skimage.io import imread, imshow
 from sklearn.preprocessing import scale, normalize
+from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import PCA, IncrementalPCA
 from skimage.color import rgb2ycbcr, ycbcr2rgb
@@ -98,7 +99,7 @@ def segment_image(img, nb_segments=10):
     return slic(img, n_segments=nb_segments)
 
 
-def normalize_data(data, with_mean=True, with_std=True):
+def scale_data(data, with_mean=True, with_std=True):
     return scale(data, axis=-1, with_mean=with_mean, with_std=with_std)
 
 
@@ -129,25 +130,27 @@ def prepare_data_and_labels(folder_list, preproc_params):
     return data, labels
 
 
-def normalize_remove_var(X_train, X_test, preproc_params, nb_components=1000, thres=0.9):
+def normalize_remove_var(data, preproc_params, nb_components=1000, thres=0.9):
     start = time.time()
     if preproc_params['with_mean'] or preproc_params['with_std']:
-        X_train = scale(X_train, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
-        X_test = scale(X_test, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
+        data = scale(data, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
     if preproc_params['with_normalize']:
-        X_train = normalize(X_train)
-        X_test = normalize(X_test)
+        data = normalize(data)
     if preproc_params['with_pca']:
         pca = PCA(n_components=nb_components)
-        X_train = pca.fit_transform(X_train)
-        X_test = pca.transform(X_test)
+        data = pca.fit_transform(data)
     if preproc_params['remove_low_var']:
         selector = VarianceThreshold(threshold=thres)
-        X_train = selector.fit_transform(X_train)
-        X_test = selector.transform(X_test)
+        data = selector.fit_transform(data)
     end = time.time()
-    print(f"Prepared data in {(end - start) / 60:.1f} minutes; X_train of shape {X_train.shape}, X_test of shape {X_test.shape}")
-    return X_train, X_test
+    print(f"Prepared data in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
+    return data
+
+
+def prepare_train_and_test_set(folder_list, preproc_param):
+    data, labels = prepare_data_and_labels(folder_list, preproc_param)
+    data = normalize_remove_var(data, preproc_param, nb_components=1000, thres=0.9)
+    return train_test_split(data, labels, test_size=0.2, random_state=42, stratify=True)
 
 
 def get_paths_of_image_folders(path_folder):

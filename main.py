@@ -62,16 +62,8 @@ log_reg_cv_models = [
     LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
 if __name__ == '__main__':
-    rel_path = "Training_Images/"
+    rel_path = "Hand_Selection/"
     images_paths = get_paths_of_image_folders(rel_path)
-
-    # Choose training set and test set
-    training_paths = images_paths[2:]
-    test_paths = images_paths[0:2]
-    training_folder_names = [get_folder_name(path) for path in training_paths]
-    test_folder_names = [get_folder_name(path) for path in test_paths]
-    print("Train folders:", training_paths)
-    print("Test folders:", test_paths)
 
     # Define data preprocessing options
     gray_scale = False
@@ -80,7 +72,7 @@ if __name__ == '__main__':
     with_binary_patterns = False
     with_histograms = True
     with_segmentation = False
-    with_pca = False
+    with_pca = True
     remove_low_var = False
     with_normalize = True
     with_mean = False
@@ -92,12 +84,9 @@ if __name__ == '__main__':
                                 'remove_low_var': remove_low_var, 'with_normalize': with_normalize,
                                 'with_mean': with_mean, 'with_std': with_std}
 
-    X_train, y_train = prepare_data_and_labels(training_paths, preprocessing_parameters)
-    X_test, y_test = prepare_data_and_labels(test_paths, preprocessing_parameters)
-    X_train, X_test = normalize_remove_var(X_train, X_test, preproc_params=preprocessing_parameters)
+    X_train, y_train, X_test, y_test = prepare_train_and_test_set(images_paths, preprocessing_parameters)
 
-    data_parameters = {'training_folder_names': training_folder_names, 'X_train': X_train, 'y_train': y_train,
-                       'test_folder_names': test_folder_names, 'X_test': X_test, 'y_test': y_test}
+    data_parameters = {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
 
     models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
               'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'svm': svm_models,
