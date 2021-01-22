@@ -40,7 +40,7 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
         os.mkdir('Model_Statistics')
     filename = 'Model_Statistics/Model_Statistics.csv'
     if not os.path.exists(filename):
-        title_string = 'Model name,Model_params,Train Accuracy,Acc. Balanced,Precision,Recall,F1 Score,Test Accuracy,Acc. Balanced,Precision,Recall,F1 Score,'
+        title_string = 'Model name,Model_params,TRAIN Accuracy,Acc. Balanced,Precision,Recall,F1 Score,TEST Accuracy,Acc. Balanced,Precision,Recall,F1 Score,'
         for i in data_dict.keys():
             title_string = title_string + str(i) + ','
         title_string = title_string + '\n'
@@ -114,7 +114,7 @@ def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, prep
 
     dict_data = {'training_data': training_folder_names, 'training_size': y_train.size,
                  'training_nb_mites': int(np.sum(y_train)), 'test_data': test_folder_names, 'test_size': y_test.size,
-                 'test_nb_mites': int(np.sum(y_test))}
+                 'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
     dict_data.update(preproc_params)
 
     for i in range(0, len(modelgroup)):

@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import re
 from skimage.io import imread, imshow
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import scale, normalize
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import PCA, IncrementalPCA
 from skimage.color import rgb2ycbcr, ycbcr2rgb
@@ -77,7 +77,7 @@ def compute_local_binary_pattern(image, nb_pts=None, radius=3):
     return image_lbp
 
 
-def compute_histograms(image, nb_divisions=5, nb_bins=128):
+def compute_histograms(image, nb_divisions=10, nb_bins=20):
     width = image.shape[0]
     length = image.shape[1]
     if image.ndim == 2:
@@ -129,13 +129,16 @@ def prepare_data_and_labels(folder_list, preproc_params):
     return data, labels
 
 
-def normalize_remove_var(X_train, X_test, preproc_params, nb_components=500, thres=0.9):
+def normalize_remove_var(X_train, X_test, preproc_params, nb_components=1000, thres=0.9):
     start = time.time()
     if preproc_params['with_mean'] or preproc_params['with_std']:
         X_train = scale(X_train, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
         X_test = scale(X_test, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
+    if preproc_params['with_normalize']:
+        X_train = normalize(X_train)
+        X_test = normalize(X_test)
     if preproc_params['with_pca']:
-        pca = IncrementalPCA(n_components=nb_components)
+        pca = PCA(n_components=nb_components)
         X_train = pca.fit_transform(X_train)
         X_test = pca.transform(X_test)
     if preproc_params['remove_low_var']:

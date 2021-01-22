@@ -58,7 +58,8 @@ histogram_boost_models = [HistGradientBoostingClassifier(), HistGradientBoosting
 gradient_boost_models = [GradientBoostingClassifier(), GradientBoostingClassifier(max_features='sqrt'),
                          GradientBoostingClassifier(max_features='log2')]
 
-log_reg_cv_models = [LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
+log_reg_cv_models = [
+    LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
 if __name__ == '__main__':
     rel_path = "Training_Images/"
@@ -79,15 +80,17 @@ if __name__ == '__main__':
     with_binary_patterns = False
     with_histograms = True
     with_segmentation = False
-    with_pca = True
+    with_pca = False
     remove_low_var = False
-    with_mean = True
+    with_normalize = True
+    with_mean = False
     with_std = False
 
     preprocessing_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist, 'with_image': with_image,
                                 'with_binary_patterns': with_binary_patterns, 'with_histograms': with_histograms,
                                 'with_segmentation': with_segmentation, 'with_pca': with_pca,
-                                'remove_low_var': remove_low_var, 'with_mean': with_mean, 'with_std': with_std}
+                                'remove_low_var': remove_low_var, 'with_normalize': with_normalize,
+                                'with_mean': with_mean, 'with_std': with_std}
 
     X_train, y_train = prepare_data_and_labels(training_paths, preprocessing_parameters)
     X_test, y_test = prepare_data_and_labels(test_paths, preprocessing_parameters)
@@ -103,9 +106,9 @@ if __name__ == '__main__':
               'log_reg_cv': log_reg_cv_models}
 
     for key, value in models.items():
-        if key in ['histogram_boost', 'gradient_boost', 'log_reg_cv']:
+        if key in ['sgd', 'decision_tree', 'histogram_boost', 'gradient_boost', 'log_reg_cv']:
             print(f"Skipped {key} models.")
             continue
+        print(f"Trained {key} models.")
         train_and_evaluate_modelgroup(modelgroup=value, modelgroup_name=key, data_params=data_parameters,
                                       preproc_params=preprocessing_parameters)
-        print(f"Trained {key} models.")
