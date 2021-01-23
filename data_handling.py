@@ -78,7 +78,7 @@ def compute_local_binary_pattern(image, nb_pts=None, radius=3):
     return image_lbp
 
 
-def compute_histograms(image, nb_divisions=10, nb_bins=20):
+def compute_histograms(image, nb_divisions=1, nb_bins=16):
     width = image.shape[0]
     length = image.shape[1]
     if image.ndim == 2:
@@ -130,7 +130,7 @@ def prepare_data_and_labels(folder_list, preproc_params):
     return data, labels
 
 
-def normalize_remove_var(data, preproc_params, nb_components=1000, thres=0.9):
+def normalize_remove_var(data, preproc_params, nb_components, thres):
     start = time.time()
     if preproc_params['with_mean'] or preproc_params['with_std']:
         data = scale(data, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
@@ -149,8 +149,8 @@ def normalize_remove_var(data, preproc_params, nb_components=1000, thres=0.9):
 
 def prepare_train_and_test_set(folder_list, preproc_param):
     data, labels = prepare_data_and_labels(folder_list, preproc_param)
-    data = normalize_remove_var(data, preproc_param, nb_components=1000, thres=0.9)
-    return train_test_split(data, labels, test_size=0.2, random_state=42, stratify=True)
+    data = normalize_remove_var(data, preproc_param, nb_components=50, thres=0.9)
+    return train_test_split(data, labels, test_size=0.2, random_state=42)
 
 
 def get_paths_of_image_folders(path_folder):

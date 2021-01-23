@@ -68,9 +68,9 @@ if __name__ == '__main__':
     # Define data preprocessing options
     gray_scale = False
     normalize_hist = True
-    with_image = False
+    with_image = True
     with_binary_patterns = False
-    with_histograms = True
+    with_histograms = False
     with_segmentation = False
     with_pca = True
     remove_low_var = False
@@ -84,7 +84,7 @@ if __name__ == '__main__':
                                 'remove_low_var': remove_low_var, 'with_normalize': with_normalize,
                                 'with_mean': with_mean, 'with_std': with_std}
 
-    X_train, y_train, X_test, y_test = prepare_train_and_test_set(images_paths, preprocessing_parameters)
+    X_train, X_test, y_train, y_test = prepare_train_and_test_set(images_paths, preprocessing_parameters)
 
     data_parameters = {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
 
@@ -95,7 +95,7 @@ if __name__ == '__main__':
               'log_reg_cv': log_reg_cv_models}
 
     for key, value in models.items():
-        if key in ['sgd', 'decision_tree', 'histogram_boost', 'gradient_boost', 'log_reg_cv']:
+        if key in ['sgd', 'decision_tree', 'histogram_boost', 'gradient_boost']:
             print(f"Skipped {key} models.")
             continue
         print(f"Trained {key} models.")
