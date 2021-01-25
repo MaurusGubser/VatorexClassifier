@@ -46,8 +46,8 @@ svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced'
               LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced'),
               LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced'),
               LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced'),
-              SVC(kernel='linear', class_weight='balanced'),
-              SVC(class_weight='balanced')]
+              SVC(C=1.0, kernel='linear', class_weight='balanced'),
+              SVC(C=0.1, class_weight='balanced'), SVC(class_weight='balanced')]
 
 naive_bayes_models = [GaussianNB()]
 
@@ -65,26 +65,24 @@ if __name__ == '__main__':
     rel_path = "Hand_Selection/"
     images_paths = get_paths_of_image_folders(rel_path)
 
-    # Define data preprocessing options
+    # Define data preprocessing options, all but three must have boolean value
     gray_scale = False
     normalize_hist = True
-    with_image = True
+    with_image = False
     with_binary_patterns = False
-    with_histograms = False
+    histogram_params = (3, 64)      # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
     with_segmentation = False
-    with_pca = True
-    remove_low_var = False
-    with_normalize = True
+    nb_components_pca = 100     # must be None or a integer, which defines number of components
+    threshold_low_var = None   # mus be None or a float in [0.0, 1.0], which defines threshold for minimal variance
     with_mean = False
     with_std = False
 
     preprocessing_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist, 'with_image': with_image,
-                                'with_binary_patterns': with_binary_patterns, 'with_histograms': with_histograms,
-                                'with_segmentation': with_segmentation, 'with_pca': with_pca,
-                                'remove_low_var': remove_low_var, 'with_normalize': with_normalize,
-                                'with_mean': with_mean, 'with_std': with_std}
-
-    X_train, X_test, y_train, y_test = prepare_train_and_test_set(images_paths, preprocessing_parameters)
+                                'with_binary_patterns': with_binary_patterns, 'histogram_params': histogram_params,
+                                'with_segmentation': with_segmentation, 'nb_components_pca': nb_components_pca,
+                                'threshold_low_var': threshold_low_var, 'with_mean': with_mean, 'with_std': with_std}
+    test_size = 0.2
+    X_train, X_test, y_train, y_test = prepare_train_and_test_set(images_paths, test_size, preprocessing_parameters)
 
     data_parameters = {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
 
@@ -98,6 +96,6 @@ if __name__ == '__main__':
         if key in ['sgd', 'decision_tree', 'histogram_boost', 'gradient_boost']:
             print(f"Skipped {key} models.")
             continue
-        print(f"Trained {key} models.")
         train_and_evaluate_modelgroup(modelgroup=value, modelgroup_name=key, data_params=data_parameters,
                                       preproc_params=preprocessing_parameters)
+        print(f"Trained {key} models.")

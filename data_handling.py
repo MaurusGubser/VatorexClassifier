@@ -78,7 +78,7 @@ def compute_local_binary_pattern(image, nb_pts=None, radius=3):
     return image_lbp
 
 
-def compute_histograms(image, nb_divisions=1, nb_bins=16):
+def compute_histograms(image, nb_divisions, nb_bins):
     width = image.shape[0]
     length = image.shape[1]
     if image.ndim == 2:
@@ -99,7 +99,7 @@ def segment_image(img, nb_segments=10):
     return slic(img, n_segments=nb_segments)
 
 
-def scale_data(data, with_mean=True, with_std=True):
+def scale_data(data, with_mean, with_std):
     return scale(data, axis=-1, with_mean=with_mean, with_std=with_std)
 
 
@@ -107,18 +107,18 @@ def prepare_data_and_labels(folder_list, preproc_params):
     start = time.time()
     images, labels = read_images(folder_list, preproc_params['gray_scale'], preproc_params['normalize_hist'])
     data = []
-    if not (preproc_params['with_image'] or preproc_params['with_binary_patterns'] or preproc_params[
-        'with_histograms'] or preproc_params['with_segmentation']):
-        raise ValueError(
-            "At least one of 'with_image', 'with_binary_patterns', 'with_histograms', 'with_segmentation' has to be True.")
+    if not (preproc_params['with_image'] or preproc_params['with_binary_patterns'] or preproc_params['histogram_params']
+            or preproc_params['with_segmentation']):
+        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'with_segmentation' has to be True.")
     for img in images:
         data_img = np.empty(0)
         if preproc_params['with_image']:
             data_img = np.append(data_img, img.flatten())
         if preproc_params['with_binary_patterns']:
             data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
-        if preproc_params['with_histograms']:
-            data_img = np.append(data_img, compute_histograms(img))
+        if preproc_params['histogram_params'] is not None:
+            nb_divisions, nb_bins = preproc_params['histogram_params']
+            data_img = np.append(data_img, compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins))
         if preproc_params['with_segmentation']:
             data_img = np.append(data_img, segment_image(img).flatten())
         data.append(data_img)
@@ -130,27 +130,26 @@ def prepare_data_and_labels(folder_list, preproc_params):
     return data, labels
 
 
-def normalize_remove_var(data, preproc_params, nb_components, thres):
+def preprocess_data(data, preproc_params):
     start = time.time()
+    if preproc_params['nb_components_pca'] is not None:
+        pca = PCA(n_components=preproc_params['nb_components_pca'])
+        data = normalize(data)
+        data = pca.fit_transform(data)
     if preproc_params['with_mean'] or preproc_params['with_std']:
         data = scale(data, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
-    if preproc_params['with_normalize']:
-        data = normalize(data)
-    if preproc_params['with_pca']:
-        pca = PCA(n_components=nb_components)
-        data = pca.fit_transform(data)
-    if preproc_params['remove_low_var']:
-        selector = VarianceThreshold(threshold=thres)
+    if preproc_params['threshold_low_var']:
+        selector = VarianceThreshold(threshold=preproc_params['threshold_low_var'])
         data = selector.fit_transform(data)
     end = time.time()
     print(f"Prepared data in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
     return data
 
 
-def prepare_train_and_test_set(folder_list, preproc_param):
+def prepare_train_and_test_set(folder_list, test_size, preproc_param):
     data, labels = prepare_data_and_labels(folder_list, preproc_param)
-    data = normalize_remove_var(data, preproc_param, nb_components=50, thres=0.9)
-    return train_test_split(data, labels, test_size=0.2, random_state=42)
+    data = preprocess_data(data, preproc_param)
+    return train_test_split(data, labels, test_size=test_size, random_state=42)
 
 
 def get_paths_of_image_folders(path_folder):
