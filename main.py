@@ -77,7 +77,7 @@ if __name__ == '__main__':
     with_binary_patterns = False
     histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
     with_segmentation = True
-    nb_components_pca = 20  # must be None or a integer, which defines number of components
+    nb_components_pca = 1000  # must be None or a integer, which defines number of components
     threshold_low_var = None  # mus be None or a float in [0.0, 1.0], which defines threshold for minimal variance
     with_mean = True
     with_std = False
