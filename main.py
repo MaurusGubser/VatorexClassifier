@@ -61,8 +61,13 @@ gradient_boost_models = [GradientBoostingClassifier(), GradientBoostingClassifie
 log_reg_cv_models = [
     LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
+grid_search_models = [LogisticRegression(penalty='l2', max_iter=200, class_weight={0: 0.17, 1: 0.83}),
+                      RidgeClassifier(alpha=10.0, max_iter=200, class_weight={0: 0.17, 1: 0.83}),
+                      LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2',
+                                           class_weight={0: 0.17, 1: 0.83}), SVC(class_weight={0: 0.17, 1: 0.83})]
+
 if __name__ == '__main__':
-    rel_path = "Hand_Selection/"
+    rel_path = "Candidate_Images/Balanced_Dataset/"
     images_paths = get_paths_of_image_folders(rel_path)
 
     # Define data preprocessing options, all but three must have boolean value
@@ -70,11 +75,11 @@ if __name__ == '__main__':
     normalize_hist = True
     with_image = False
     with_binary_patterns = False
-    histogram_params = (3, 64)      # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-    with_segmentation = False
-    nb_components_pca = 100     # must be None or a integer, which defines number of components
-    threshold_low_var = None   # mus be None or a float in [0.0, 1.0], which defines threshold for minimal variance
-    with_mean = False
+    histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
+    with_segmentation = True
+    nb_components_pca = 20  # must be None or a integer, which defines number of components
+    threshold_low_var = None  # mus be None or a float in [0.0, 1.0], which defines threshold for minimal variance
+    with_mean = True
     with_std = False
 
     preprocessing_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist, 'with_image': with_image,
@@ -90,10 +95,10 @@ if __name__ == '__main__':
               'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'svm': svm_models,
               'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
               'histogram_boost': histogram_boost_models, 'gradient_boost': gradient_boost_models,
-              'log_reg_cv': log_reg_cv_models}
+              'log_reg_cv': log_reg_cv_models, 'grid_search_models': grid_search_models}
 
     for key, value in models.items():
-        if key in ['sgd', 'decision_tree', 'histogram_boost', 'gradient_boost']:
+        if key in ['sgd', 'decision_tree', 'histogram_boost', 'gradient_boost', 'log_reg_cv', 'grid_search_models']:
             print(f"Skipped {key} models.")
             continue
         train_and_evaluate_modelgroup(modelgroup=value, modelgroup_name=key, data_params=data_parameters,
