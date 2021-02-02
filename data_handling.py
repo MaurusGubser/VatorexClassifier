@@ -95,7 +95,7 @@ def compute_histograms(image, nb_divisions, nb_bins):
     return histograms
 
 
-def segment_image(img, nb_segments=10):
+def segment_image(img, nb_segments):
     return slic(img, n_segments=nb_segments)
 
 
@@ -120,7 +120,8 @@ def prepare_data_and_labels(folder_list, preproc_params):
             nb_divisions, nb_bins = preproc_params['histogram_params']
             data_img = np.append(data_img, compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins))
         if preproc_params['with_segmentation']:
-            data_img = np.append(data_img, segment_image(img).flatten())
+            nb_segments = preproc_params['with_segmentation']
+            data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
 
     data = np.array(data, dtype='float32')
@@ -166,3 +167,13 @@ def get_folder_name(path_folder):
     name_start = path_folder.rfind('/')
     folder_name = path_folder[name_start + 1:]
     return folder_name
+
+
+def export_data(data, path):
+    np.save(path, data, allow_pickle=False)
+    print(f'Saved numpy array to {path}')
+    return None
+
+
+def read_data(path):
+    np.load(path, )

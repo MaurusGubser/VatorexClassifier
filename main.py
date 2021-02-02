@@ -10,7 +10,7 @@ def main(training_session, data_path):
     with_image = False  # use image
     with_binary_patterns = False  # use local binary patterns of image
     histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-    with_segmentation = True  # segment image using k-means in color space
+    with_segmentation = 10  # must be None or a integer; segment image using k-means in color space
     nb_components_pca = 20  # must be None or a integer, which defines number of components
     threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
     with_mean = True  # data gets shifted such that mean is 0.0
