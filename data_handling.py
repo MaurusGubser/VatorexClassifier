@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import numpy as np
 import re
-from skimage.io import imread, imshow
+from skimage.io import imread, imread_collection
 from sklearn.preprocessing import scale, normalize
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import VarianceThreshold
@@ -15,7 +15,7 @@ from skimage.segmentation import slic
 import time
 
 
-def read_images_from_folder(path_folder, gray_scale=False, hist_eq=False):
+def read_images_from_folder(path_folder, gray_scale=False, hist_eq=True):
     image_folder = Path(path_folder).rglob('*.jpg')
     images_paths = [str(path) for path in image_folder]
     images = []
@@ -37,7 +37,7 @@ def read_images_from_folder(path_folder, gray_scale=False, hist_eq=False):
     return images, labels
 
 
-def read_images(folder_list, gray_scale=False, hist_eq=False):
+def read_images(folder_list, gray_scale=False, hist_eq=True):
     images = []
     labels = []
     for folder_path in folder_list:
@@ -123,7 +123,7 @@ def prepare_data_and_labels(folder_list, preproc_params):
             data_img = np.append(data_img, segment_image(img).flatten())
         data.append(data_img)
 
-    data = np.array(data)
+    data = np.array(data, dtype='float32')
     labels = np.array(labels)
     end = time.time()
     print(f"Read data and labels in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
@@ -133,9 +133,11 @@ def prepare_data_and_labels(folder_list, preproc_params):
 def preprocess_data(data, preproc_params):
     start = time.time()
     if preproc_params['nb_components_pca'] is not None:
-        pca = PCA(n_components=preproc_params['nb_components_pca'])
+        #pca = PCA(n_components=preproc_params['nb_components_pca'])
+        pca = IncrementalPCA(n_components=preproc_params['nb_components_pca'], batch_size=1000)
         data = normalize(data)
-        data = pca.fit_transform(data)
+        pca.fit(data)
+        data = pca.transform(data)
     if preproc_params['with_mean'] or preproc_params['with_std']:
         data = scale(data, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
     if preproc_params['threshold_low_var']:
@@ -146,7 +148,7 @@ def preprocess_data(data, preproc_params):
     return data
 
 
-def prepare_train_and_test_set(folder_list, test_size, preproc_param):
+def prepare_train_and_test_set(folder_list, preproc_param, test_size=0.2):
     data, labels = prepare_data_and_labels(folder_list, preproc_param)
     data = preprocess_data(data, preproc_param)
     return train_test_split(data, labels, test_size=test_size, random_state=42)
