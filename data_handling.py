@@ -138,8 +138,7 @@ def prepare_data_and_labels(images, preprocessing_params):
 def preprocess_data(data, preproc_params):
     start = time.time()
     if preproc_params['nb_components_pca'] is not None:
-        #pca = PCA(n_components=preproc_params['nb_components_pca'])
-        pca = IncrementalPCA(n_components=preproc_params['nb_components_pca'], batch_size=500)
+        pca = IncrementalPCA(n_components=preproc_params['nb_components_pca'], batch_size=1000)
         data = normalize(data)
         pca.fit(data)
         data = pca.transform(data)
@@ -180,4 +179,5 @@ def export_data(data, path):
 
 
 def read_data(path):
-    np.load(path, )
+    data = np.load(path)
+    return data
