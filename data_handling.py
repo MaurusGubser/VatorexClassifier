@@ -15,7 +15,7 @@ from skimage.segmentation import slic
 import time
 
 
-def read_images_from_folder(path_folder, gray_scale=False, hist_eq=True):
+def read_images_from_folder(path_folder, gray_scale, hist_eq):
     image_folder = Path(path_folder).rglob('*.jpg')
     images_paths = [str(path) for path in image_folder]
     images = []
@@ -37,9 +37,11 @@ def read_images_from_folder(path_folder, gray_scale=False, hist_eq=True):
     return images, labels
 
 
-def read_images(folder_list, gray_scale=False, hist_eq=True):
+def read_images(folder_list, img_read_parameters):
     images = []
     labels = []
+    gray_scale = img_read_parameters['gray_scale']
+    hist_eq = img_read_parameters['hist_eq']
     for folder_path in folder_list:
         imgs, lbls = read_images_from_folder(folder_path, gray_scale=gray_scale, hist_eq=hist_eq)
         images = images + imgs
@@ -103,24 +105,26 @@ def scale_data(data, with_mean, with_std):
     return scale(data, axis=-1, with_mean=with_mean, with_std=with_std)
 
 
-def prepare_data_and_labels(folder_list, preproc_params):
+def prepare_data_and_labels(images, preprocessing_params):
+    with_image = preprocessing_params['with_image']
+    with_binary_patterns = preprocessing_params['with_binary_patterns']
+    histogram_params = preprocessing_params['histogram_params']
+    nb_segments = preprocessing_params['nb_segments']
+    if not (with_image or with_binary_patterns or histogram_params or nb_segments):
+        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
+
     start = time.time()
-    images, labels = read_images(folder_list, preproc_params['gray_scale'], preproc_params['normalize_hist'])
     data = []
-    if not (preproc_params['with_image'] or preproc_params['with_binary_patterns'] or preproc_params['histogram_params']
-            or preproc_params['with_segmentation']):
-        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'with_segmentation' has to be True.")
     for img in images:
         data_img = np.empty(0)
-        if preproc_params['with_image']:
+        if with_image:
             data_img = np.append(data_img, img.flatten())
-        if preproc_params['with_binary_patterns']:
+        if with_binary_patterns:
             data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
-        if preproc_params['histogram_params'] is not None:
-            nb_divisions, nb_bins = preproc_params['histogram_params']
-            data_img = np.append(data_img, compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins))
-        if preproc_params['with_segmentation']:
-            nb_segments = preproc_params['with_segmentation']
+        if histogram_params is not None:
+            nb_divisions, nb_bins = histogram_params
+            data_img = np.append(data_img, compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
+        if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
 

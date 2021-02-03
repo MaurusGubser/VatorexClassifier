@@ -11,7 +11,7 @@ def main(training_session, data_path):
     with_image = False  # use image
     with_binary_patterns = False  # use local binary patterns of image
     histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-    with_segmentation = 10  # must be None or a integer; segment image using k-means in color space
+    nb_segments = 10  # must be None or a integer; segment image using k-means in color space
     threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
     nb_components_pca = 20  # must be None or a integer, which defines number of components
     batch_size_pca = 500  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
@@ -21,10 +21,12 @@ def main(training_session, data_path):
 
     img_read_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist}
     preprocessing_parameters = {'with_image': with_image, 'with_binary_patterns': with_binary_patterns,
-                                'histogram_params': histogram_params, 'with_segmentation': with_segmentation,
-                                'threshold_low_var': threshold_low_var}
-    pipeline_parameters = {'model': None, 'nb_components_pca': nb_components_pca, 'batch_size_pca': batch_size_pca,
-                           'with_mean': with_mean, 'with_std': with_std, 'test_size': test_size}
+                                'histogram_params': histogram_params, 'nb_segments': nb_segments,
+                                'threshold_low_var': threshold_low_var, 'nb_components_pca': nb_components_pca, 'batch_size_pca': batch_size_pca}
+    pipeline_parameters = {'clf_model': None, 'pca_model': pca, 'with_mean': with_mean, 'with_std': with_std, 'test_size': test_size}
+
+    images, labels = read_images(data_path, img_read_parameters)
+    data, pca = preprocess_data(images, preprocessing_parameters)
 
     if training_session:
         log_reg = True
