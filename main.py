@@ -1,106 +1,82 @@
-from model_handling import *
-from data_handling import *
-from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, LogisticRegressionCV
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
-from sklearn.svm import SVC, LinearSVC
-from sklearn.naive_bayes import GaussianNB, CategoricalNB
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.experimental import enable_hist_gradient_boosting
-from sklearn.ensemble import HistGradientBoostingClassifier
+from data_handling import get_paths_of_image_folders, prepare_train_and_test_set, prepare_data_and_labels, preprocess_data
+from model_handling import train_and_evaluate_modelgroup, define_models, read_models, test_model, get_feature_dims
 
-# Define some different models for classification
-log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight='balanced'),
-                  LogisticRegression(penalty='l2', C=0.5, max_iter=200, class_weight='balanced'),
-                  LogisticRegression(penalty='l1', C=0.5, max_iter=200, solver='saga', class_weight='balanced'),
-                  LogisticRegression(penalty='elasticnet', C=0.5, solver='saga', l1_ratio=0.1, class_weight='balanced'),
-                  LogisticRegression(penalty='l2', C=0.1, max_iter=200, class_weight='balanced'),
-                  LogisticRegression(penalty='l1', C=0.1, max_iter=200, solver='saga', class_weight='balanced'),
-                  LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1, class_weight='balanced'),
-                  LogisticRegression(penalty='l2', C=0.01, max_iter=200, class_weight='balanced'),
-                  LogisticRegression(penalty='l1', C=0.01, max_iter=200, solver='saga', class_weight='balanced'),
-                  LogisticRegression(penalty='elasticnet', C=0.01, solver='saga', l1_ratio=0.1,
-                                     class_weight='balanced'),
-                  LogisticRegression(penalty='l2', C=0.001, max_iter=200, class_weight='balanced'),
-                  LogisticRegression(penalty='l1', C=0.001, max_iter=200, solver='saga', class_weight='balanced'),
-                  LogisticRegression(penalty='elasticnet', C=0.001, solver='saga', l1_ratio=0.1,
-                                     class_weight='balanced')]
 
-sgd_models = [SGDClassifier(penalty='l2', alpha=0.01, class_weight='balanced'),
-              SGDClassifier(penalty='l2', alpha=0.8, class_weight='balanced'),
-              SGDClassifier(penalty='l2', alpha=2.0, class_weight='balanced')]
+def main(training_session, data_path):
+    images_paths = get_paths_of_image_folders(data_path)
 
-ridge_class_models = [RidgeClassifier(alpha=10.0, normalize=True, class_weight='balanced'),
-                      RidgeClassifier(alpha=50.0, normalize=True, class_weight='balanced'),
-                      RidgeClassifier(alpha=100.0, normalize=True, class_weight='balanced')]
-
-decision_tree_models = [DecisionTreeClassifier(max_depth=10, max_features='sqrt', class_weight='balanced'),
-                        DecisionTreeClassifier(max_depth=100, max_features='sqrt', class_weight='balanced'),
-                        DecisionTreeClassifier(max_features='sqrt', class_weight='balanced')]
-
-random_forest_models = [
-    RandomForestClassifier(n_estimators=20, max_depth=3, max_features='sqrt', class_weight='balanced'),
-    RandomForestClassifier(n_estimators=20, max_depth=10, max_features='sqrt', class_weight='balanced'),
-    RandomForestClassifier(n_estimators=20, max_depth=100, max_features='sqrt', class_weight='balanced')]
-
-svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced'),
-              LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced'),
-              LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced'),
-              LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced'),
-              SVC(C=1.0, kernel='linear', class_weight='balanced'),
-              SVC(C=0.1, class_weight='balanced'), SVC(class_weight='balanced')]
-
-naive_bayes_models = [GaussianNB()]
-
-ada_boost_models = [AdaBoostClassifier(n_estimators=50), AdaBoostClassifier(n_estimators=100)]
-
-histogram_boost_models = [HistGradientBoostingClassifier(), HistGradientBoostingClassifier(l2_regularization=1.0)]
-
-gradient_boost_models = [GradientBoostingClassifier(), GradientBoostingClassifier(max_features='sqrt'),
-                         GradientBoostingClassifier(max_features='log2')]
-
-log_reg_cv_models = [
-    LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
-
-grid_search_models = [LogisticRegression(penalty='l2', max_iter=200, class_weight={0: 0.17, 1: 0.83}),
-                      RidgeClassifier(alpha=10.0, max_iter=200, class_weight={0: 0.17, 1: 0.83}),
-                      LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2',
-                                           class_weight={0: 0.17, 1: 0.83}), SVC(class_weight={0: 0.17, 1: 0.83})]
-
-if __name__ == '__main__':
-    rel_path = "Candidate_Images/Balanced_Dataset/"
-    images_paths = get_paths_of_image_folders(rel_path)
-
-    # Define data preprocessing options, all but three must have boolean value
-    gray_scale = False
-    normalize_hist = True
-    with_image = False
-    with_binary_patterns = False
+    gray_scale = False  # only use gray scale image
+    normalize_hist = True  # normalize histogram of image
+    with_image = False  # use image
+    with_binary_patterns = False  # use local binary patterns of image
     histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-    with_segmentation = True
-    nb_components_pca = 1000  # must be None or a integer, which defines number of components
-    threshold_low_var = None  # mus be None or a float in [0.0, 1.0], which defines threshold for minimal variance
-    with_mean = True
-    with_std = False
+    with_segmentation = 10  # must be None or a integer; segment image using k-means in color space
+    nb_components_pca = 20  # must be None or a integer, which defines number of components
+    threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
+    with_mean = True  # data gets shifted such that mean is 0.0
+    with_std = False  # data gets scaled such that std is 1.0
+
+    test_size = 0.2  # fraction of test set; only relevant if models are trained
 
     preprocessing_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist, 'with_image': with_image,
                                 'with_binary_patterns': with_binary_patterns, 'histogram_params': histogram_params,
                                 'with_segmentation': with_segmentation, 'nb_components_pca': nb_components_pca,
                                 'threshold_low_var': threshold_low_var, 'with_mean': with_mean, 'with_std': with_std}
-    test_size = 0.2
-    X_train, X_test, y_train, y_test = prepare_train_and_test_set(images_paths, test_size, preprocessing_parameters)
 
-    data_parameters = {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
+    if training_session:
+        log_reg = True
+        sgd = False
+        ridge_class = True
+        decision_tree = False
+        random_forest = True
+        svm = True
+        naive_bayes = True
+        ada_boost = True
+        histogram_boost = False
+        gradient_boost = False
+        log_reg_cv = True
+        model_selection = {'log_reg': log_reg, 'sgd': sgd, 'ridge_class': ridge_class, 'decision_tree': decision_tree,
+                           'random_forest': random_forest, 'svm': svm, 'naive_bayes': naive_bayes,
+                           'ada_boost': ada_boost,
+                           'histogram_boost': histogram_boost, 'gradient_boost': gradient_boost,
+                           'log_reg_cv': log_reg_cv}
+        models = define_models(model_selection=model_selection)
 
-    models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
-              'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'svm': svm_models,
-              'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
-              'histogram_boost': histogram_boost_models, 'gradient_boost': gradient_boost_models,
-              'log_reg_cv': log_reg_cv_models, 'grid_search_models': grid_search_models}
+        X_train, X_test, y_train, y_test = prepare_train_and_test_set(images_paths, preprocessing_parameters,
+                                                                      test_size=test_size)
+        data_parameters = {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
+        for key, value in models.items():
+            train_and_evaluate_modelgroup(modelgroup=value, modelgroup_name=key, data_params=data_parameters,
+                                          preproc_params=preprocessing_parameters)
+            print(f"Trained {key} models.")
 
-    for key, value in models.items():
-        if key in ['sgd', 'decision_tree', 'histogram_boost', 'gradient_boost', 'log_reg_cv', 'grid_search_models']:
-            print(f"Skipped {key} models.")
-            continue
-        train_and_evaluate_modelgroup(modelgroup=value, modelgroup_name=key, data_params=data_parameters,
-                                      preproc_params=preprocessing_parameters)
-        print(f"Trained {key} models.")
+    else:
+        trained_models = ['log_reg_2044', 'log_reg_2058', 'log_reg_2072', 'log_reg_2086', 'log_reg_2085',
+                          'log_reg_2087', 'svm_932', 'svm_934', 'svm_920', 'svm_927', 'svm_913']
+        models = read_models(model_list=trained_models)
+        same_nb_features = True
+        feature_dims = get_feature_dims(models)
+        for feature_dim in feature_dims:
+            if feature_dim != list(feature_dims.values())[0]:
+                print('Models use different number of features; computation takes longer.')
+                same_nb_features = False
+                k = 0
+                break
+
+        data, labels = prepare_data_and_labels(images_paths, preprocessing_parameters)
+        if same_nb_features:
+            X_test = preprocess_data(data, preprocessing_parameters)
+        for key, value in models.items():
+            if not same_nb_features:
+                preprocessing_parameters['nb_components_pca'] = feature_dims[key]
+                X_test = preprocess_data(data, preprocessing_parameters)
+                k += 1
+            print(key)
+            test_model(value, X_test, labels)
+    return None
+
+
+if __name__ == '__main__':
+    training_session = False
+    data_path = "Candidate_Images/Medium_Dataset/"
+    main(training_session, data_path)
