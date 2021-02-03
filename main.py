@@ -1,4 +1,5 @@
-from data_handling import get_paths_of_image_folders, prepare_train_and_test_set, prepare_data_and_labels, preprocess_data
+from data_handling import get_paths_of_image_folders, prepare_train_and_test_set, prepare_data_and_labels, \
+    preprocess_data
 from model_handling import train_and_evaluate_modelgroup, define_models, read_models, test_model, get_feature_dims
 
 
@@ -11,17 +12,19 @@ def main(training_session, data_path):
     with_binary_patterns = False  # use local binary patterns of image
     histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
     with_segmentation = 10  # must be None or a integer; segment image using k-means in color space
-    nb_components_pca = 20  # must be None or a integer, which defines number of components
     threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
+    nb_components_pca = 20  # must be None or a integer, which defines number of components
+    batch_size_pca = 500  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
     with_mean = True  # data gets shifted such that mean is 0.0
     with_std = False  # data gets scaled such that std is 1.0
-
     test_size = 0.2  # fraction of test set; only relevant if models are trained
 
-    preprocessing_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist, 'with_image': with_image,
-                                'with_binary_patterns': with_binary_patterns, 'histogram_params': histogram_params,
-                                'with_segmentation': with_segmentation, 'nb_components_pca': nb_components_pca,
-                                'threshold_low_var': threshold_low_var, 'with_mean': with_mean, 'with_std': with_std}
+    img_read_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist}
+    preprocessing_parameters = {'with_image': with_image, 'with_binary_patterns': with_binary_patterns,
+                                'histogram_params': histogram_params, 'with_segmentation': with_segmentation,
+                                'threshold_low_var': threshold_low_var}
+    pipeline_parameters = {'model': None, 'nb_components_pca': nb_components_pca, 'batch_size_pca': batch_size_pca,
+                           'with_mean': with_mean, 'with_std': with_std, 'test_size': test_size}
 
     if training_session:
         log_reg = True
@@ -37,10 +40,9 @@ def main(training_session, data_path):
         log_reg_cv = True
         model_selection = {'log_reg': log_reg, 'sgd': sgd, 'ridge_class': ridge_class, 'decision_tree': decision_tree,
                            'random_forest': random_forest, 'svm': svm, 'naive_bayes': naive_bayes,
-                           'ada_boost': ada_boost,
-                           'histogram_boost': histogram_boost, 'gradient_boost': gradient_boost,
+                           'ada_boost': ada_boost, 'histogram_boost': histogram_boost, 'gradient_boost': gradient_boost,
                            'log_reg_cv': log_reg_cv}
-        models = define_models(model_selection=model_selection)
+        models = define_models(model_selection=model_selection, pipeline_parameters=pipeline_parameters)
 
         X_train, X_test, y_train, y_test = prepare_train_and_test_set(images_paths, preprocessing_parameters,
                                                                       test_size=test_size)
@@ -78,5 +80,5 @@ def main(training_session, data_path):
 
 if __name__ == '__main__':
     training_session = False
-    data_path = "Candidate_Images/Medium_Dataset/"
+    data_path = "Candidate_Images/Large/"
     main(training_session, data_path)

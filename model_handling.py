@@ -7,7 +7,7 @@ import json
 import time
 
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
-    recall_score, plot_confusion_matrix, classification_report, precision_recall_curve, plot_precision_recall_curve
+    recall_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, LogisticRegressionCV
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, \
@@ -15,6 +15,7 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, Gradien
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.decomposition import IncrementalPCA
 
 
 def export_model(model, model_name):
@@ -139,11 +140,11 @@ def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, prep
     return None
 
 
-def define_models(model_selection):
+def define_models(model_selection, pipeline_parameters):
     log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.5, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.5, max_iter=200, solver='saga', class_weight='balanced'),
-                      LogisticRegression(penalty='elasticnet', C=0.5, solver='saga', l1_ratio=0.1,
+                      LogisticRegression(penalty='l2', C=1.0, max_iter=200, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=1.0, max_iter=200, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='elasticnet', C=1.0, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced'),
                       LogisticRegression(penalty='l2', C=0.1, max_iter=200, class_weight='balanced'),
                       LogisticRegression(penalty='l1', C=0.1, max_iter=200, solver='saga', class_weight='balanced'),
@@ -159,7 +160,7 @@ def define_models(model_selection):
                                          class_weight='balanced')]
 
     sgd_models = [SGDClassifier(penalty='l2', alpha=0.01, class_weight='balanced'),
-                  SGDClassifier(penalty='l2', alpha=0.8, class_weight='balanced'),
+                  SGDClassifier(penalty='l2', alpha=0.5, class_weight='balanced'),
                   SGDClassifier(penalty='l2', alpha=2.0, class_weight='balanced')]
 
     ridge_class_models = [RidgeClassifier(alpha=10.0, normalize=True, class_weight='balanced'),
@@ -195,6 +196,9 @@ def define_models(model_selection):
     log_reg_cv_models = [
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
+    pca = IncrementalPCA(n_components=pipeline_parameters['nb_components'],
+                         batch_size=pipeline_parameters['batch_size_pca'])
+
     models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
               'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'svm': svm_models,
               'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
@@ -211,7 +215,7 @@ def define_models(model_selection):
 def read_models(model_list):
     model_dict = {}
     for name in model_list:
-        model = pickle.load(open('Models_Trained/'+name+'.sav', 'rb'))
+        model = pickle.load(open('Models_Trained/' + name + '.sav', 'rb'))
         model_dict[name] = model
     return model_dict
 

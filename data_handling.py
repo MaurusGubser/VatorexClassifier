@@ -135,7 +135,7 @@ def preprocess_data(data, preproc_params):
     start = time.time()
     if preproc_params['nb_components_pca'] is not None:
         #pca = PCA(n_components=preproc_params['nb_components_pca'])
-        pca = IncrementalPCA(n_components=preproc_params['nb_components_pca'], batch_size=1000)
+        pca = IncrementalPCA(n_components=preproc_params['nb_components_pca'], batch_size=500)
         data = normalize(data)
         pca.fit(data)
         data = pca.transform(data)
