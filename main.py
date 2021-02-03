@@ -9,7 +9,7 @@ def main(training_session, data_path):
     normalize_hist = True  # normalize histogram of image
     with_image = True  # use image
     with_binary_patterns = False  # use local binary patterns of image
-    histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
+    histogram_params = (3, 32)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
     with_segmentation = 10  # must be None or a integer; segment image using k-means in color space
     nb_components_pca = 1000  # must be None or a integer, which defines number of components
     threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
@@ -78,5 +78,5 @@ def main(training_session, data_path):
 
 if __name__ == '__main__':
     training_session = True
-    data_path = "Candidate_Images/Large_Dataset/"
+    data_path = "Candidate_Images/Small_Dataset/"
     main(training_session, data_path)

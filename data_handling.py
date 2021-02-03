@@ -118,7 +118,7 @@ def prepare_data_and_labels(folder_list, preproc_params):
             data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
         if preproc_params['histogram_params'] is not None:
             nb_divisions, nb_bins = preproc_params['histogram_params']
-            data_img = np.append(data_img, compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins))
+            data_img = np.append(data_img, compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
         if preproc_params['with_segmentation']:
             nb_segments = preproc_params['with_segmentation']
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
