@@ -218,8 +218,7 @@ def read_models(model_list):
 
 def test_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
-    probs = model.predict_proba(X_test)
-    #print(classification_report(y_test, y_pred, labels=['Non-mite', 'Mite']))
+    print(classification_report(y_test, y_pred, target_names=['Non-mite', 'Mite']))
     plot_confusion_matrix(model, X_test, y_test, display_labels=['Non-mite', 'Mite'])
     plot_precision_recall_curve(model, X_test, y_test)
     plt.show()
@@ -227,19 +226,19 @@ def test_model(model, X_test, y_test):
 
 
 def get_feature_dims(model_dict):
-    feature_dims = []
+    feature_dims = {}
     for key, value in model_dict.items():
         model_type = key[0:key.rfind('_')]
         if model_type in ['log_reg', 'sgd', 'ridge_class', 'log_reg_cv']:
-            feature_dims.append(value.coef_.shape[1])
+            feature_dims[key] = value.coef_.shape[1]
         elif model_type in ['svm']:
-            feature_dims.append(value.support_vectors_.shape[1])
+            feature_dims[key] = value.support_vectors_.shape[1]
         elif model_type in ['naive_bayes']:
-            feature_dims.append(value.theta_.shape[1])
+            feature_dims[key] = value.theta_.shape[1]
         elif model_type in ['ada_boost', 'gradien_boost']:
-            feature_dims.append(value.feature_importance_.shape[0])
+            feature_dims[key] = value.feature_importance_.shape[0]
         elif model_type in ['histogram_boost']:
-            feature_dims.append(value.is_categorical_.shape[0])
+            feature_dims[key] = value.is_categorical_.shape[0]
         else:
-            feature_dims.append(value.n_features_)
+            feature_dims[key] = value.n_features_
     return feature_dims

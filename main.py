@@ -52,30 +52,31 @@ def main(training_session, data_path):
 
     else:
         trained_models = ['log_reg_2044', 'log_reg_2058', 'log_reg_2072', 'log_reg_2086', 'log_reg_2085',
-                          'log_reg_2087',
-                          'svm_932', 'svm_934', 'svm_920', 'svm_927', 'svm_913']
+                          'log_reg_2087', 'svm_932', 'svm_934', 'svm_920', 'svm_927', 'svm_913']
         models = read_models(model_list=trained_models)
         same_nb_features = True
         feature_dims = get_feature_dims(models)
         for feature_dim in feature_dims:
-            if feature_dim != feature_dims[0]:
+            if feature_dim != list(feature_dims.values())[0]:
                 print('Models use different number of features; computation takes longer.')
                 same_nb_features = False
                 k = 0
                 break
-        X_test, y_test = prepare_data_and_labels(images_paths, preprocessing_parameters)
 
+        data, labels = prepare_data_and_labels(images_paths, preprocessing_parameters)
+        if same_nb_features:
+            X_test = preprocess_data(data, preprocessing_parameters)
         for key, value in models.items():
             if not same_nb_features:
-                preprocessing_parameters['nb_components_pca'] = feature_dims[k]
-                X_test = preprocess_data(X_test, preprocessing_parameters)
+                preprocessing_parameters['nb_components_pca'] = feature_dims[key]
+                X_test = preprocess_data(data, preprocessing_parameters)
                 k += 1
             print(key)
-            test_model(value, X_test, y_test)
+            test_model(value, X_test, labels)
     return None
 
 
 if __name__ == '__main__':
     training_session = False
-    data_path = "Candidate_Images/Large_Dataset/"
+    data_path = "Candidate_Images/Medium_Dataset/"
     main(training_session, data_path)
