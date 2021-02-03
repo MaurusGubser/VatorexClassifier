@@ -165,11 +165,11 @@ def preprocess_data(images_list, preprocessing_params):
 
 
 def get_paths_of_image_folders(path_folder):
-    images_paths = []
+    folder_list = []
     for root, dirs, files in os.walk(path_folder):
         for name in dirs:
-            images_paths.append(path_folder + name)
-    return images_paths
+            folder_list.append(path_folder + name)
+    return folder_list
 
 
 def get_folder_name(path_folder):

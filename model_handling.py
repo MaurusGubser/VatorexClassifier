@@ -45,7 +45,7 @@ def export_model_stats_json(model_dict, model_name, data_dict):
     with open(rel_file_path, 'w') as outfile:
         json.dump(dict, outfile, indent=4)
     end_time = time.time()
-    print("Model statistics saved in", rel_file_path, f"in  {(start_time - end_time) / 60:.1f} Minutes.")
+    print("Model statistics saved in", rel_file_path)
     return None
 
 

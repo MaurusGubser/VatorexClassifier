@@ -5,7 +5,7 @@ import numpy as np
 
 
 def main(training_session, data_path):
-    images_paths = get_paths_of_image_folders(data_path)
+    folder_list = get_paths_of_image_folders(data_path)
 
     gray_scale = False  # only use gray scale image
     normalize_hist = True  # normalize histogram of image
@@ -26,7 +26,7 @@ def main(training_session, data_path):
                                 'threshold_low_var': threshold_low_var, 'nb_components_pca': nb_components_pca,
                                 'batch_size_pca': batch_size_pca, 'with_mean': with_mean, 'with_std': with_std}
 
-    images_list, labels_list = read_images(data_path, img_read_parameters)
+    images_list, labels_list = read_images(folder_list, img_read_parameters)
     labels = np.array(labels_list)
     data = preprocess_data(images_list, preprocessing_parameters)
     data_name = set_export_data_name(preprocessing_parameters)
@@ -49,7 +49,8 @@ def main(training_session, data_path):
                            'ada_boost': ada_boost, 'histogram_boost': histogram_boost, 'gradient_boost': gradient_boost,
                            'log_reg_cv': log_reg_cv}
         models = define_models(model_selection)
-        data_parameters = img_read_parameters.update(preprocessing_parameters)
+        data_parameters = img_read_parameters
+        data_parameters.update(preprocessing_parameters)
         data_parameters['test_size'] = test_size
 
         for key, value in models.items():
@@ -87,6 +88,6 @@ def main(training_session, data_path):
 
 
 if __name__ == '__main__':
-    training_session = False
-    data_path = "Candidate_Images/Balanced_Dataset"
+    training_session = True
+    data_path = "Candidate_Images/Medium_Dataset/"
     main(training_session=training_session, data_path=data_path)
