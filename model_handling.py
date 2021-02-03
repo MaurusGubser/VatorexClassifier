@@ -140,31 +140,31 @@ def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, prep
 
 
 def define_models(model_selection):
-    log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.5, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.5, max_iter=200, solver='saga', class_weight='balanced'),
+    log_reg_models = [LogisticRegression(penalty='none', max_iter=1000, class_weight='balanced'),
+                      LogisticRegression(penalty='l2', C=0.5, max_iter=1000, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=0.5, max_iter=1000, solver='saga', class_weight='balanced'),
                       LogisticRegression(penalty='elasticnet', C=0.5, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.1, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.1, max_iter=200, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='l2', C=0.1, max_iter=1000, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=0.1, max_iter=1000, solver='saga', class_weight='balanced'),
                       LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.01, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.01, max_iter=200, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='l2', C=0.01, max_iter=1000, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=0.01, max_iter=1000, solver='saga', class_weight='balanced'),
                       LogisticRegression(penalty='elasticnet', C=0.01, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.001, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.001, max_iter=200, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='l2', C=0.001, max_iter=1000, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=0.001, max_iter=1000, solver='saga', class_weight='balanced'),
                       LogisticRegression(penalty='elasticnet', C=0.001, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced')]
 
-    sgd_models = [SGDClassifier(penalty='l2', alpha=0.01, class_weight='balanced'),
-                  SGDClassifier(penalty='l2', alpha=0.8, class_weight='balanced'),
-                  SGDClassifier(penalty='l2', alpha=2.0, class_weight='balanced')]
+    sgd_models = [SGDClassifier(penalty='l2', max_iter=5000, alpha=0.01, class_weight='balanced'),
+                  SGDClassifier(penalty='l2', max_iter=5000, alpha=0.8, class_weight='balanced'),
+                  SGDClassifier(penalty='l2', max_iter=5000, alpha=2.0, class_weight='balanced')]
 
-    ridge_class_models = [RidgeClassifier(alpha=10.0, normalize=True, class_weight='balanced'),
-                          RidgeClassifier(alpha=50.0, normalize=True, class_weight='balanced'),
-                          RidgeClassifier(alpha=100.0, normalize=True, class_weight='balanced')]
+    ridge_class_models = [RidgeClassifier(alpha=10.0, normalize=True, max_iter=1000, class_weight='balanced'),
+                          RidgeClassifier(alpha=50.0, normalize=True, max_iter=1000, class_weight='balanced'),
+                          RidgeClassifier(alpha=100.0, normalize=True, max_iter=1000, class_weight='balanced')]
 
     decision_tree_models = [DecisionTreeClassifier(max_depth=10, max_features='sqrt', class_weight='balanced'),
                             DecisionTreeClassifier(max_depth=100, max_features='sqrt', class_weight='balanced'),
@@ -193,7 +193,7 @@ def define_models(model_selection):
                              GradientBoostingClassifier(max_features='log2')]
 
     log_reg_cv_models = [
-        LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
+        LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=1000, penalty='l2', class_weight='balanced')]
 
     models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
               'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'svm': svm_models,
