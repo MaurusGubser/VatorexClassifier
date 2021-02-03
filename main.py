@@ -1,6 +1,7 @@
-from data_handling import get_paths_of_image_folders, prepare_train_and_test_set, prepare_data_and_labels, \
-    preprocess_data
+from data_handling import get_paths_of_image_folders, feature_computation, preprocess_data, set_export_data_name, \
+    export_data, read_images, read_data
 from model_handling import train_and_evaluate_modelgroup, define_models, read_models, test_model, get_feature_dims
+import numpy as np
 
 
 def main(training_session, data_path):
@@ -22,11 +23,14 @@ def main(training_session, data_path):
     img_read_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist}
     preprocessing_parameters = {'with_image': with_image, 'with_binary_patterns': with_binary_patterns,
                                 'histogram_params': histogram_params, 'nb_segments': nb_segments,
-                                'threshold_low_var': threshold_low_var, 'nb_components_pca': nb_components_pca, 'batch_size_pca': batch_size_pca}
-    pipeline_parameters = {'clf_model': None, 'pca_model': pca, 'with_mean': with_mean, 'with_std': with_std, 'test_size': test_size}
+                                'threshold_low_var': threshold_low_var, 'nb_components_pca': nb_components_pca,
+                                'batch_size_pca': batch_size_pca, 'with_mean': with_mean, 'with_std': with_std}
 
-    images, labels = read_images(data_path, img_read_parameters)
-    data, pca = preprocess_data(images, preprocessing_parameters)
+    images_list, labels_list = read_images(data_path, img_read_parameters)
+    labels = np.array(labels_list)
+    data = preprocess_data(images_list, preprocessing_parameters)
+    data_name = set_export_data_name(preprocessing_parameters)
+    export_data(data, labels, data_name)
 
     if training_session:
         log_reg = True
@@ -44,14 +48,16 @@ def main(training_session, data_path):
                            'random_forest': random_forest, 'svm': svm, 'naive_bayes': naive_bayes,
                            'ada_boost': ada_boost, 'histogram_boost': histogram_boost, 'gradient_boost': gradient_boost,
                            'log_reg_cv': log_reg_cv}
-        models = define_models(model_selection=model_selection, pipeline_parameters=pipeline_parameters)
+        models = define_models(model_selection)
+        data_parameters = img_read_parameters.update(preprocessing_parameters)
+        data_parameters['test_size'] = test_size
 
-        X_train, X_test, y_train, y_test = prepare_train_and_test_set(images_paths, preprocessing_parameters,
-                                                                      test_size=test_size)
-        data_parameters = {'X_train': X_train, 'y_train': y_train, 'X_test': X_test, 'y_test': y_test}
         for key, value in models.items():
-            train_and_evaluate_modelgroup(modelgroup=value, modelgroup_name=key, data_params=data_parameters,
-                                          preproc_params=preprocessing_parameters)
+            train_and_evaluate_modelgroup(modelgroup=value,
+                                          modelgroup_name=key,
+                                          data=data,
+                                          labels=labels,
+                                          data_params=data_parameters)
             print(f"Trained {key} models.")
 
     else:
@@ -67,7 +73,7 @@ def main(training_session, data_path):
                 k = 0
                 break
 
-        data, labels = prepare_data_and_labels(images_paths, preprocessing_parameters)
+        data, labels = feature_computation(images_paths, preprocessing_parameters)
         if same_nb_features:
             X_test = preprocess_data(data, preprocessing_parameters)
         for key, value in models.items():
@@ -82,5 +88,5 @@ def main(training_session, data_path):
 
 if __name__ == '__main__':
     training_session = False
-    data_path = "Candidate_Images/Large/"
-    main(training_session, data_path)
+    data_path = "Candidate_Images/Balanced_Dataset"
+    main(training_session=training_session, data_path=data_path)
