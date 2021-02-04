@@ -16,8 +16,7 @@ from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-
-from sklearn.decomposition import IncrementalPCA
+from data_handling import read_data_and_labels
 
 
 def export_model(model, model_name):
@@ -30,7 +29,6 @@ def export_model(model, model_name):
 
 
 def export_model_stats_json(model_dict, model_name, data_dict):
-    start_time = time.time()
     if not os.path.exists('Model_Statistics'):
         os.mkdir('Model_Statistics')
     rel_file_path = 'Model_Statistics/' + model_name + '.json'
@@ -39,12 +37,11 @@ def export_model_stats_json(model_dict, model_name, data_dict):
                                                       model_dict['model_stats_train']['conf_matrix'].flatten()]
     model_dict['model_stats_test']['conf_matrix'] = [int(k) for k in
                                                      model_dict['model_stats_test']['conf_matrix'].flatten()]
-    dict = {}
-    dict.update(model_dict)
-    dict.update(data_dict)
+    dict_params = {}
+    dict_params.update(model_dict)
+    dict_params.update(data_dict)
     with open(rel_file_path, 'w') as outfile:
-        json.dump(dict, outfile, indent=4)
-    end_time = time.time()
+        json.dump(dict_params, outfile, indent=4)
     print("Model statistics saved in", rel_file_path)
     return None
 
@@ -118,9 +115,8 @@ def get_name_index(model_name):
     return idx
 
 
-def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, data_params):
+def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, preprocessing_params, test_size):
     index = get_name_index(modelgroup_name)
-    test_size = data_params['test_size']
     X_train, X_test, y_train, y_test = train_test_split(data,
                                                         labels,
                                                         test_size=test_size,
@@ -129,7 +125,7 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, data_pa
 
     dict_data = {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
                  'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
-    dict_data.update(data_params)
+    dict_data.update(preprocessing_params)
 
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
@@ -145,8 +141,12 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, data_pa
     return None
 
 
-def train_and_test_model_selection(model_selection, ):
+def train_and_test_model_selection(model_selection, folder_path, preprocessing_params, test_size):
+    models = define_models(model_selection)
+    data, labels = read_data_and_labels(folder_path, preprocessing_params)
 
+    for key, value in models.items():
+        train_and_test_modelgroup(value, key, data, labels, preprocessing_params, test_size)
     return None
 
 

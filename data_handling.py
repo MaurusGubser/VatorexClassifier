@@ -2,9 +2,8 @@ import os
 from pathlib import Path
 import numpy as np
 import re
-from skimage.io import imread, imread_collection
-from sklearn.preprocessing import scale, normalize
-from sklearn.model_selection import train_test_split
+from skimage.io import imread
+from sklearn.preprocessing import scale
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import PCA, IncrementalPCA
 from skimage.color import rgb2ycbcr, ycbcr2rgb
@@ -114,7 +113,8 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
             data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
         if histogram_params:
             nb_divisions, nb_bins = histogram_params
-            data_img = np.append(data_img, compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
+            data_img = np.append(data_img,
+                                 compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
         if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
@@ -153,7 +153,8 @@ def preprocess_data(images_list, preprocessing_params):
     with_std = preprocessing_params['with_std']
 
     if not (with_image or with_binary_patterns or histogram_params or nb_segments):
-        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
+        raise ValueError(
+            "At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
     data = feature_computation(images_list, with_image, with_binary_patterns, histogram_params, nb_segments)
     if threshold_low_var or nb_components_pca or batch_size_pca:
         data = dimension_reduction(data, threshold_low_var, nb_components_pca, batch_size_pca)
@@ -171,7 +172,7 @@ def get_paths_of_image_folders(path_folder):
 
 
 def get_folder_name(path_folder):
-    name_start = path_folder[:len(path_folder)-1].rfind('/')
+    name_start = path_folder[:len(path_folder) - 1].rfind('/')
     folder_name = path_folder[name_start + 1:]
     folder_name = folder_name.replace('/', '')
     return folder_name
@@ -187,7 +188,7 @@ def set_export_data_name(folder_name, preprocessing_params):
 def export_data(data, labels, data_name):
     path_data = 'Preprocessed_Data/' + data_name + '_data'
     path_labels = 'Preprocessed_Data/' + data_name + '_labels'
-    if os.path.exists(path_data+'.npy'):
+    if os.path.exists(path_data + '.npy'):
         print('Preprocessed data with these parameters already exported.')
         return None
     if not os.path.exists('Preprocessed_Data'):
