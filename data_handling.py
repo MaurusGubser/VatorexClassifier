@@ -2,9 +2,8 @@ import os
 from pathlib import Path
 import numpy as np
 import re
-from skimage.io import imread, imread_collection
-from sklearn.preprocessing import scale, normalize
-from sklearn.model_selection import train_test_split
+from skimage.io import imread
+from sklearn.preprocessing import scale
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import PCA, IncrementalPCA
 from skimage.color import rgb2ycbcr, ycbcr2rgb
@@ -15,7 +14,7 @@ from skimage.segmentation import slic
 import time
 
 
-def read_images_from_folder(path_folder, gray_scale=False, hist_eq=True):
+def read_images_from_folder(path_folder, gray_scale, normalize_hist):
     image_folder = Path(path_folder).rglob('*.jpg')
     images_paths = [str(path) for path in image_folder]
     images = []
@@ -25,7 +24,7 @@ def read_images_from_folder(path_folder, gray_scale=False, hist_eq=True):
 
     for path in images_paths:
         image = imread(path, as_gray=gray_scale)
-        if hist_eq:
+        if normalize_hist:
             image = equalize_histogram_adaptive(image)
         images.append(image)
         if re.search(pattern_true, path):
@@ -37,11 +36,11 @@ def read_images_from_folder(path_folder, gray_scale=False, hist_eq=True):
     return images, labels
 
 
-def read_images(folder_list, gray_scale=False, hist_eq=True):
+def read_images(folder_list):
     images = []
     labels = []
     for folder_path in folder_list:
-        imgs, lbls = read_images_from_folder(folder_path, gray_scale=gray_scale, hist_eq=hist_eq)
+        imgs, lbls = read_images_from_folder(folder_path, gray_scale=False, normalize_hist=True)
         images = images + imgs
         labels = labels + lbls
     return images, labels
@@ -103,77 +102,122 @@ def scale_data(data, with_mean, with_std):
     return scale(data, axis=-1, with_mean=with_mean, with_std=with_std)
 
 
-def prepare_data_and_labels(folder_list, preproc_params):
+def feature_computation(images_list, with_image, with_binary_patterns, histogram_params, nb_segments):
     start = time.time()
-    images, labels = read_images(folder_list, preproc_params['gray_scale'], preproc_params['normalize_hist'])
     data = []
-    if not (preproc_params['with_image'] or preproc_params['with_binary_patterns'] or preproc_params['histogram_params']
-            or preproc_params['with_segmentation']):
-        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'with_segmentation' has to be True.")
-    for img in images:
+    for img in images_list:
         data_img = np.empty(0)
-        if preproc_params['with_image']:
+        if with_image:
             data_img = np.append(data_img, img.flatten())
-        if preproc_params['with_binary_patterns']:
+        if with_binary_patterns:
             data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
-        if preproc_params['histogram_params'] is not None:
-            nb_divisions, nb_bins = preproc_params['histogram_params']
-            data_img = np.append(data_img, compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
-        if preproc_params['with_segmentation']:
-            nb_segments = preproc_params['with_segmentation']
+        if histogram_params:
+            nb_divisions, nb_bins = histogram_params
+            data_img = np.append(data_img,
+                                 compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
+        if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
 
-    data = np.array(data, dtype='float32')
-    labels = np.array(labels)
+    data = np.array(data)
     end = time.time()
-    print(f"Read data and labels in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
-    return data, labels
-
-
-def preprocess_data(data, preproc_params):
-    start = time.time()
-    if preproc_params['nb_components_pca'] is not None:
-        #pca = PCA(n_components=preproc_params['nb_components_pca'])
-        pca = IncrementalPCA(n_components=preproc_params['nb_components_pca'], batch_size=1000)
-        data = normalize(data)
-        pca.fit(data)
-        data = pca.transform(data)
-    if preproc_params['with_mean'] or preproc_params['with_std']:
-        data = scale(data, with_mean=preproc_params['with_mean'], with_std=preproc_params['with_std'])
-    if preproc_params['threshold_low_var']:
-        selector = VarianceThreshold(threshold=preproc_params['threshold_low_var'])
-        data = selector.fit_transform(data)
-    end = time.time()
-    print(f"Prepared data in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
+    print(f"Computed features in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
     return data
 
 
-def prepare_train_and_test_set(folder_list, preproc_param, test_size=0.2):
-    data, labels = prepare_data_and_labels(folder_list, preproc_param)
-    data = preprocess_data(data, preproc_param)
-    return train_test_split(data, labels, test_size=test_size, random_state=42)
+def dimension_reduction(data, threshold_low_var, nb_components_pca, batch_size_pca):
+    start = time.time()
+    old_shape = data.shape
+    if threshold_low_var:
+        selector = VarianceThreshold(threshold=threshold_low_var)
+        data = selector.fit_transform(data)
+    if nb_components_pca:
+        pca = IncrementalPCA(n_components=nb_components_pca, batch_size=batch_size_pca)
+        # data = normalize(data)
+        pca.fit(data)
+        data = pca.transform(data)
+    end = time.time()
+    print(f"Dimensionality reduction took {(end - start) / 60:.1f} minutes; reduction from {old_shape} to {data.shape}")
+    return data
+
+
+def preprocess_data(images_list, preprocessing_params):
+    with_image = preprocessing_params['with_image']
+    with_binary_patterns = preprocessing_params['with_binary_patterns']
+    histogram_params = preprocessing_params['histogram_params']
+    nb_segments = preprocessing_params['nb_segments']
+    threshold_low_var = preprocessing_params['threshold_low_var']
+    nb_components_pca = preprocessing_params['nb_components_pca']
+    batch_size_pca = preprocessing_params['batch_size_pca']
+    with_mean = preprocessing_params['with_mean']
+    with_std = preprocessing_params['with_std']
+
+    if not (with_image or with_binary_patterns or histogram_params or nb_segments):
+        raise ValueError(
+            "At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
+    data = feature_computation(images_list, with_image, with_binary_patterns, histogram_params, nb_segments)
+    if threshold_low_var or nb_components_pca or batch_size_pca:
+        data = dimension_reduction(data, threshold_low_var, nb_components_pca, batch_size_pca)
+    if with_mean or with_std:
+        data = scale_data(data, with_mean, with_std)
+    return data
 
 
 def get_paths_of_image_folders(path_folder):
-    images_paths = []
+    folder_list = []
     for root, dirs, files in os.walk(path_folder):
         for name in dirs:
-            images_paths.append(path_folder + name)
-    return images_paths
+            folder_list.append(path_folder + name)
+    return folder_list
 
 
 def get_folder_name(path_folder):
-    name_start = path_folder.rfind('/')
+    name_start = path_folder[:len(path_folder) - 1].rfind('/')
     folder_name = path_folder[name_start + 1:]
+    folder_name = folder_name.replace('/', '')
     return folder_name
 
 
-def export_data(data, path):
-    np.save(path, data, allow_pickle=False)
-    print(f'Saved numpy array to {path}')
+def set_export_data_name(folder_name, preprocessing_params):
+    name = folder_name
+    for value in preprocessing_params.values():
+        name = name + '_' + str(value)
+    return name
+
+
+def export_data(data, labels, data_name):
+    path_data = 'Preprocessed_Data/' + data_name + '_data'
+    path_labels = 'Preprocessed_Data/' + data_name + '_labels'
+    if os.path.exists(path_data + '.npy'):
+        print('Preprocessed data with these parameters already exported.')
+        return None
+    if not os.path.exists('Preprocessed_Data'):
+        os.mkdir('Preprocessed_Data')
+    np.save(path_data, data, allow_pickle=False)
+    np.save(path_labels, labels, allow_pickle=False)
+    print(f'Saved data and labels in files {path_data} and {path_labels}')
     return None
 
 
-def read_data(path):
-    np.load(path, )
+def load_data_and_labels(path_data):
+    data = np.load(path_data)
+    path_labels = path_data.replace('data', 'labels')
+    labels = np.load(path_labels)
+    return data, labels
+
+
+def read_data_and_labels(path, preprocessing_params):
+    folder_name = get_folder_name(path)
+    path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, preprocessing_params) + '_data.npy'
+    if os.path.exists(path_preprocessed):
+        data, labels = load_data_and_labels(path_preprocessed)
+        print(f'Re-loaded preprocessed data and labels from {path_preprocessed}')
+        return data, labels
+    else:
+        folder_list = get_paths_of_image_folders(path)
+        images_list, labels_list = read_images(folder_list)
+        labels = np.array(labels_list)
+        data = preprocess_data(images_list, preprocessing_params)
+        data_name = set_export_data_name(folder_name, preprocessing_params)
+        export_data(data, labels, data_name)
+        return data, labels

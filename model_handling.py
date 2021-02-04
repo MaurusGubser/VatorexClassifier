@@ -7,7 +7,7 @@ import json
 import time
 
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
-    recall_score, plot_confusion_matrix, classification_report, precision_recall_curve, plot_precision_recall_curve
+    recall_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, LogisticRegressionCV
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, \
@@ -15,6 +15,8 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, Gradien
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from data_handling import read_data_and_labels
 
 
 def export_model(model, model_name):
@@ -27,7 +29,6 @@ def export_model(model, model_name):
 
 
 def export_model_stats_json(model_dict, model_name, data_dict):
-    start_time = time.time()
     if not os.path.exists('Model_Statistics'):
         os.mkdir('Model_Statistics')
     rel_file_path = 'Model_Statistics/' + model_name + '.json'
@@ -36,13 +37,12 @@ def export_model_stats_json(model_dict, model_name, data_dict):
                                                       model_dict['model_stats_train']['conf_matrix'].flatten()]
     model_dict['model_stats_test']['conf_matrix'] = [int(k) for k in
                                                      model_dict['model_stats_test']['conf_matrix'].flatten()]
-    dict = {}
-    dict.update(model_dict)
-    dict.update(data_dict)
+    dict_params = {}
+    dict_params.update(model_dict)
+    dict_params.update(data_dict)
     with open(rel_file_path, 'w') as outfile:
-        json.dump(dict, outfile, indent=4)
-    end_time = time.time()
-    print("Model statistics saved in", rel_file_path, f"in  {(start_time - end_time) / 60:.1f} Minutes.")
+        json.dump(dict_params, outfile, indent=4)
+    print("Model statistics saved in", rel_file_path)
     return None
 
 
@@ -88,15 +88,21 @@ def read_model_stats_json(stats_path):
 
 
 def train_model(model, X_train, y_train):
+    start_time = time.time()
     model.fit(X_train, y_train)
+    end_time = time.time()
+    print(f'Training time: {(end_time - start_time)/60:.1f} minutes')
     return model
 
 
 def evaluate_model(model, X, y):
+    start_time = time.time()
     y_pred = model.predict(X)
     stats_dict = {'conf_matrix': confusion_matrix(y, y_pred), 'acc': accuracy_score(y, y_pred),
                   'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
                   'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
+    end_time = time.time()
+    print(f'Evaluating time: {(end_time - start_time) / 60:.1f} minutes')
     return stats_dict
 
 
@@ -109,62 +115,67 @@ def get_name_index(model_name):
     return idx
 
 
-def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, preproc_params):
+def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, preprocessing_params, test_size):
     index = get_name_index(modelgroup_name)
-    X_train = data_params['X_train']
-    y_train = data_params['y_train']
-    X_test = data_params['X_test']
-    y_test = data_params['y_test']
+    X_train, X_test, y_train, y_test = train_test_split(data,
+                                                        labels,
+                                                        test_size=test_size,
+                                                        random_state=42,
+                                                        stratify=labels)
 
     dict_data = {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
                  'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
-    dict_data.update(preproc_params)
+    dict_data.update(preprocessing_params)
 
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = {'model': modelgroup[i], 'model_params': modelgroup[i].get_params()}
 
-        start_time = time.time()
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
-        end_time = time.time()
-        print('Training time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
-        start_time = time.time()
         dict_model['model_stats_train'] = evaluate_model(dict_model['model'], X_train, y_train)
         dict_model['model_stats_test'] = evaluate_model(dict_model['model'], X_test, y_test)
-        end_time = time.time()
-        print('Evaluating time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
+
         export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
     return None
 
 
+def train_and_test_model_selection(model_selection, folder_path, preprocessing_params, test_size):
+    models = define_models(model_selection)
+    data, labels = read_data_and_labels(folder_path, preprocessing_params)
+
+    for key, value in models.items():
+        train_and_test_modelgroup(value, key, data, labels, preprocessing_params, test_size)
+    return None
+
+
 def define_models(model_selection):
-    log_reg_models = [LogisticRegression(penalty='none', max_iter=1000, class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.5, max_iter=1000, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.5, max_iter=1000, solver='saga', class_weight='balanced'),
-                      LogisticRegression(penalty='elasticnet', C=0.5, solver='saga', l1_ratio=0.1,
+    log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight='balanced'),
+                      LogisticRegression(penalty='l2', C=1.0, max_iter=200, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=1.0, max_iter=200, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='elasticnet', C=1.0, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.1, max_iter=1000, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.1, max_iter=1000, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='l2', C=0.1, max_iter=200, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=0.1, max_iter=200, solver='saga', class_weight='balanced'),
                       LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.01, max_iter=1000, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.01, max_iter=1000, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='l2', C=0.01, max_iter=200, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=0.01, max_iter=200, solver='saga', class_weight='balanced'),
                       LogisticRegression(penalty='elasticnet', C=0.01, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.001, max_iter=1000, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.001, max_iter=1000, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='l2', C=0.001, max_iter=200, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=0.001, max_iter=200, solver='saga', class_weight='balanced'),
                       LogisticRegression(penalty='elasticnet', C=0.001, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced')]
 
-    sgd_models = [SGDClassifier(penalty='l2', max_iter=5000, alpha=0.01, class_weight='balanced'),
-                  SGDClassifier(penalty='l2', max_iter=5000, alpha=0.8, class_weight='balanced'),
-                  SGDClassifier(penalty='l2', max_iter=5000, alpha=2.0, class_weight='balanced')]
+    sgd_models = [SGDClassifier(penalty='l2', alpha=0.01, class_weight='balanced'),
+                  SGDClassifier(penalty='l2', alpha=0.5, class_weight='balanced'),
+                  SGDClassifier(penalty='l2', alpha=2.0, class_weight='balanced')]
 
-    ridge_class_models = [RidgeClassifier(alpha=10.0, normalize=True, max_iter=1000, class_weight='balanced'),
-                          RidgeClassifier(alpha=50.0, normalize=True, max_iter=1000, class_weight='balanced'),
-                          RidgeClassifier(alpha=100.0, normalize=True, max_iter=1000, class_weight='balanced')]
+    ridge_class_models = [RidgeClassifier(alpha=10.0, normalize=True, class_weight='balanced'),
+                          RidgeClassifier(alpha=50.0, normalize=True, class_weight='balanced'),
+                          RidgeClassifier(alpha=100.0, normalize=True, class_weight='balanced')]
 
     decision_tree_models = [DecisionTreeClassifier(max_depth=10, max_features='sqrt', class_weight='balanced'),
                             DecisionTreeClassifier(max_depth=100, max_features='sqrt', class_weight='balanced'),
@@ -193,7 +204,7 @@ def define_models(model_selection):
                              GradientBoostingClassifier(max_features='log2')]
 
     log_reg_cv_models = [
-        LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=1000, penalty='l2', class_weight='balanced')]
+        LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
     models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
               'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'svm': svm_models,
@@ -211,7 +222,7 @@ def define_models(model_selection):
 def read_models(model_list):
     model_dict = {}
     for name in model_list:
-        model = pickle.load(open('Models_Trained/'+name+'.sav', 'rb'))
+        model = pickle.load(open('Models_Trained/' + name + '.sav', 'rb'))
         model_dict[name] = model
     return model_dict
 
