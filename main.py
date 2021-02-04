@@ -1,4 +1,4 @@
-from model_handling import read_models, train_and_test_model_selection
+from model_train_test import read_models, train_and_test_model_selection
 
 # ----- data parameters -----
 with_image = False  # use image
