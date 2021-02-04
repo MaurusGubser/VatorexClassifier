@@ -118,7 +118,7 @@ def get_name_index(model_name):
     return idx
 
 
-def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data, labels, data_params):
+def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, data_params):
     index = get_name_index(modelgroup_name)
     test_size = data_params['test_size']
     X_train, X_test, y_train, y_test = train_test_split(data,
@@ -142,6 +142,11 @@ def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data, labels, dat
         export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
+    return None
+
+
+def train_and_test_model_selection(model_selection, ):
+
     return None
 
 

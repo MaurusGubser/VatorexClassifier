@@ -173,16 +173,16 @@ def get_paths_of_image_folders(path_folder):
 
 
 def get_folder_name(path_folder):
-    name_start = path_folder.rfind('/')
+    name_start = path_folder[:len(path_folder)-1].rfind('/')
     folder_name = path_folder[name_start + 1:]
+    folder_name = folder_name.replace('/', '')
     return folder_name
 
 
-def set_export_data_name(preprocessing_params):
-    name = ''
+def set_export_data_name(folder_name, preprocessing_params):
+    name = folder_name
     for value in preprocessing_params.values():
-        name = name + str(value) + '_'
-    name = name[0:len(name)-1]
+        name = name + '_' + str(value)
     return name
 
 
@@ -196,10 +196,29 @@ def export_data(data, labels, data_name):
         os.mkdir('Preprocessed_Data')
     np.save(path_data, data, allow_pickle=False)
     np.save(path_labels, labels, allow_pickle=False)
-    print(f'Saved data and labels in files {data_name}')
+    print(f'Saved data and labels in files {path_data} and {path_labels}')
     return None
 
 
-def read_data(path):
-    data = np.load(path)
-    return data
+def load_data_and_labels(path_data):
+    data = np.load(path_data)
+    path_labels = path_data.replace('data', 'labels')
+    labels = np.load(path_labels)
+    return data, labels
+
+
+def read_data_and_labels(path, img_read_params, preprocessing_params):
+    folder_name = get_folder_name(path)
+    path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, preprocessing_params) + '_data.npy'
+    if os.path.exists(path_preprocessed):
+        data, labels = load_data_and_labels(path_preprocessed)
+        print(f'Re-loaded preprocessed data and labels from {path_preprocessed}')
+        return data, labels
+    else:
+        folder_list = get_paths_of_image_folders(path)
+        images_list, labels_list = read_images(folder_list, img_read_params)
+        labels = np.array(labels_list)
+        data = preprocess_data(images_list, preprocessing_params)
+        data_name = set_export_data_name(folder_name, preprocessing_params)
+        export_data(data, labels, data_name)
+        return data, labels
