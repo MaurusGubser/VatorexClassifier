@@ -37,13 +37,11 @@ def read_images_from_folder(path_folder, gray_scale, normalize_hist):
     return images, labels
 
 
-def read_images(folder_list, img_read_parameters):
+def read_images(folder_list):
     images = []
     labels = []
-    gray_scale = img_read_parameters['gray_scale']
-    normalize_hist = img_read_parameters['normalize_hist']
     for folder_path in folder_list:
-        imgs, lbls = read_images_from_folder(folder_path, gray_scale=gray_scale, normalize_hist=normalize_hist)
+        imgs, lbls = read_images_from_folder(folder_path, gray_scale=False, normalize_hist=True)
         images = images + imgs
         labels = labels + lbls
     return images, labels
@@ -207,7 +205,7 @@ def load_data_and_labels(path_data):
     return data, labels
 
 
-def read_data_and_labels(path, img_read_params, preprocessing_params):
+def read_data_and_labels(path, preprocessing_params):
     folder_name = get_folder_name(path)
     path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, preprocessing_params) + '_data.npy'
     if os.path.exists(path_preprocessed):
@@ -216,7 +214,7 @@ def read_data_and_labels(path, img_read_params, preprocessing_params):
         return data, labels
     else:
         folder_list = get_paths_of_image_folders(path)
-        images_list, labels_list = read_images(folder_list, img_read_params)
+        images_list, labels_list = read_images(folder_list)
         labels = np.array(labels_list)
         data = preprocess_data(images_list, preprocessing_params)
         data_name = set_export_data_name(folder_name, preprocessing_params)

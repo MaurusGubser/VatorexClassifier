@@ -5,10 +5,6 @@ import numpy as np
 
 
 # ----- data parameters -----
-gray_scale = False  # only use gray scale image
-normalize_hist = True  # normalize histogram of image
-img_read_parameters = {'gray_scale': gray_scale, 'normalize_hist': normalize_hist}
-
 with_image = False  # use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
@@ -90,8 +86,6 @@ def asdf(training_session, data_path):
 
 if __name__ == '__main__':
     folder_path = "Candidate_Images/Small_Dataset/"
-    # data_path = "Preprocessed_Data/"
+    data, labels = read_data_and_labels(folder_path, preprocessing_parameters)
 
-    data, labels = read_data_and_labels(folder_path, img_read_parameters, preprocessing_parameters)
-
-    train_and_test_model_selection(model_selection, folder_path)
+    train_and_test_model_selection(model_selection, folder_path, preprocessing_parameters)
