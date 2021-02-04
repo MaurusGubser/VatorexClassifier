@@ -16,7 +16,8 @@ from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from data_handling import read_data_and_labels
+
+from data_reading_writing import read_data_and_labels
 
 
 def export_model(model, model_name):

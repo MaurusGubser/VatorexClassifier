@@ -39,5 +39,4 @@ models = read_models(model_list=trained_models)
 
 if __name__ == '__main__':
     folder_path = "Candidate_Images/Small_Dataset/"
-
     train_and_test_model_selection(model_selection, folder_path, preprocessing_parameters, test_size)
