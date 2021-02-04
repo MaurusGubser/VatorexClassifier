@@ -8,34 +8,67 @@ from skimage.exposure import equalize_adapthist
 from data_handling import preprocess_data
 
 
-def read_images_from_folder(path_folder, gray_scale, normalize_hist):
-    image_folder = Path(path_folder).rglob('*.jpg')
-    images_paths = [str(path) for path in image_folder]
+def hist_read(path):
+    with open(path, 'r') as read_file:
+        for line in read_file.readlines():
+            line_tokens = line.replace('\n', '').split(':')
+            if line_tokens[0] == 'size(h,l,s)':
+                size_h = int(line_tokens[1])
+                size_l = int(line_tokens[2])
+                size_s = int(line_tokens[3])
+                pdf_hls = np.zeros((size_h, size_l, size_s))
+                pdf_h = np.zeros(size_h)
+                pdf_l = np.zeros(size_l)
+                pdf_s = np.zeros(size_s)
+                mode = 'hls'
+            elif line_tokens[0] in ['h', 'l', 's']:
+                mode = line_tokens[0]
+            elif mode == 'hls':
+                pdf_hls[int(line_tokens[0]), int(line_tokens[1]), int(line_tokens[2])] = float(line_tokens[3])
+            elif mode == 'h':
+                pdf_h[int(line_tokens[0])] = float(line_tokens[1])
+            elif mode == 'l':
+                pdf_l[int(line_tokens[0])] = float(line_tokens[1])
+            elif mode == 's':
+                pdf_s[int(line_tokens[0])] = float(line_tokens[1])
+            else:
+                raise ValueError(f'Line {line} does not correspond to expected pattern.')
+    histograms = [pdf_hls, pdf_h, pdf_l, pdf_s]
+    return histograms
+
+
+def read_images_hist_from_folder(path_folder):
+    images_folder = Path(path_folder).rglob('*.jpg')
+    histograms_folder = Path(path_folder).rglob('*.hist')
+    images_paths = [str(path) for path in images_folder]
+    histogram_paths = [str(path) for path in histograms_folder]
     images = []
+    histograms = []
     labels = []
     pattern_true = r'true'
     pattern_false = r'false'
-
-    for path in images_paths:
-        image = imread(path, as_gray=gray_scale)
-        if normalize_hist:
-            image = equalize_adapthist(image)
+    for path_img, path_hist in zip(images_paths, histogram_paths):
+        image = imread(path_img, as_gray=False)
+        image = equalize_adapthist(image)
         images.append(image)
-        if re.search(pattern_true, path):
+        histograms.append(hist_read(path_hist))
+        if re.search(pattern_true, path_img) and re.search(pattern_true, path_hist):
             labels.append(1)
-        elif re.search(pattern_false, path):
+        elif re.search(pattern_false, path_img) and re.search(pattern_false, path_hist):
             labels.append(0)
         else:
-            raise AssertionError(f"Image path is {path} and does not contain 'true' or 'false'.")
-    return images, labels
+            raise AssertionError(f"Image path {path_img} and histogram path {path_hist} are not compatible.")
+    return images, histograms, labels
 
 
-def read_images(folder_list):
+def read_images_and_histograms(folder_list):
     images = []
+    histograms = []
     labels = []
     for folder_path in folder_list:
-        imgs, lbls = read_images_from_folder(folder_path, gray_scale=False, normalize_hist=True)
+        imgs, hists, lbls = read_images_hist_from_folder(folder_path)
         images = images + imgs
+        histograms = histograms + hists
         labels = labels + lbls
     return images, labels
 
@@ -92,7 +125,7 @@ def read_data_and_labels(path, preprocessing_params):
         return data, labels
     else:
         folder_list = get_paths_of_image_folders(path)
-        images_list, labels_list = read_images(folder_list)
+        images_list, histograms_list, labels_list = read_images_and_histograms(folder_list)
         labels = np.array(labels_list)
         data = preprocess_data(images_list, preprocessing_params)
         data_name = set_export_data_name(folder_name, preprocessing_params)

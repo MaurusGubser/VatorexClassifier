@@ -58,7 +58,6 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
         title_string = title_string + '\n'
         with open(filename, 'w') as initfile:
             initfile.write(title_string)
-        initfile.close()
 
     model_string = model_name + ',' + str(model_dict['model_params']).replace(',', '') + ','
     for key, model_value in model_dict['model_stats_train'].items():
@@ -74,7 +73,6 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
     model_string = model_string + '\n'
     with open(filename, 'a') as outfile:
         outfile.write(model_string)
-        outfile.close()
 
     print("Model statistics appended to", filename)
     return None
