@@ -58,7 +58,6 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
         title_string = title_string + '\n'
         with open(filename, 'w') as initfile:
             initfile.write(title_string)
-        initfile.close()
 
     model_string = model_name + ',' + str(model_dict['model_params']).replace(',', '') + ','
     for key, model_value in model_dict['model_stats_train'].items():
@@ -74,7 +73,6 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
     model_string = model_string + '\n'
     with open(filename, 'a') as outfile:
         outfile.write(model_string)
-        outfile.close()
 
     print("Model statistics appended to", filename)
     return None
@@ -92,7 +90,7 @@ def train_model(model, X_train, y_train):
     start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
-    print(f'Training time: {(end_time - start_time)/60:.1f} minutes')
+    print(f'Training time: {(end_time - start_time):.1f} seconds')
     return model
 
 
@@ -103,7 +101,7 @@ def evaluate_model(model, X, y):
                   'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
                   'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
     end_time = time.time()
-    print(f'Evaluating time: {(end_time - start_time) / 60:.1f} minutes')
+    print(f'Evaluating time: {(end_time - start_time):.1f} seconds')
     return stats_dict
 
 

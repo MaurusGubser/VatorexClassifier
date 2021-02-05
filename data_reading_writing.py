@@ -4,6 +4,7 @@ import re
 import numpy as np
 from skimage.io import imread
 from skimage.exposure import equalize_adapthist
+import time
 
 from data_handling import preprocess_data
 
@@ -31,12 +32,15 @@ def read_images_from_folder(path_folder, gray_scale, normalize_hist):
 
 
 def read_images(folder_list):
+    start_time = time.time()
     images = []
     labels = []
     for folder_path in folder_list:
         imgs, lbls = read_images_from_folder(folder_path, gray_scale=False, normalize_hist=True)
         images = images + imgs
         labels = labels + lbls
+    end_time = time.time()
+    print(f'Time used for reading images: {(end_time - start_time):.1f} seconds')
     return images, labels
 
 
