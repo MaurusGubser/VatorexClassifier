@@ -104,13 +104,13 @@ def preprocess_data(images_list, data_params):
     return data
 
 
-def hists_to_arr(histograms_list):
+def rearrange_hists(histograms_list):
     hist_0 = []
     hist_1 = []
     hist_2 = []
     hist_3 = []
     for hists in histograms_list:
-        hist_0.append(hists[0])
+        hist_0.append(hists[0].flatten())
         hist_1.append(hists[1])
         hist_2.append(hists[2])
         hist_3.append(hists[3])

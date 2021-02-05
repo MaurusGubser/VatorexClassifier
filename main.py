@@ -1,8 +1,8 @@
 from model_train_test import read_models, train_and_test_model_selection
 
 # ----- data parameters -----
-read_image = False
-read_hist = True
+read_image = True
+read_hist = False
 with_image = False  # use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
@@ -15,9 +15,9 @@ with_std = False  # data gets scaled such that std is 1.0
 
 data_parameters = {'read_image': read_image, 'read_hist': read_hist, 'with_image': with_image,
                    'with_binary_patterns': with_binary_patterns, 'histogram_params': histogram_params,
-                   'nb_segments': nb_segments, 'threshold_low_var': threshold_low_var, 'with_mean': with_mean,
+                   'nb_segments': nb_segments, 'threshold_low_var': threshold_low_var,
+                   'nb_components_pca': nb_components_pca, 'batch_size_pca': batch_size_pca, 'with_mean': with_mean,
                    'with_std': with_std}
-pca_parameters = {'nb_components_pca': nb_components_pca, 'batch_size_pca': batch_size_pca}
 test_size = 0.2  # fraction of test set
 
 # ----- training models -----
@@ -42,5 +42,5 @@ trained_models = ['log_reg_2044', 'log_reg_2058', 'log_reg_2072', 'log_reg_2086'
 models = read_models(model_list=trained_models)
 
 if __name__ == '__main__':
-    folder_path = "Candidate_Images/mite_4_small_test/"
-    train_and_test_model_selection(model_selection, pca_parameters, folder_path, data_parameters, test_size)
+    folder_path = "Candidate_Images/Large_Dataset/"
+    train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)

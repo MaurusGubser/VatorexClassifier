@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 import re
@@ -6,7 +5,7 @@ import numpy as np
 from skimage.io import imread
 from skimage.exposure import equalize_adapthist
 
-from data_handling import preprocess_data, hists_to_arr
+from data_handling import preprocess_data, rearrange_hists
 
 
 def hist_read(path):
@@ -40,23 +39,31 @@ def hist_read(path):
 
 def read_images_hist_from_folder(path_folder):
     histograms_paths = [str(path) for path in Path(path_folder).rglob('*.hist')]
-    images_paths = [path.replace('.hist', '.jpg') for path in histograms_paths]
+    images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')]
     images = []
     histograms = []
     labels = []
     pattern_true = r'true'
     pattern_false = r'false'
-    for path_img, path_hist in zip(images_paths, histograms_paths):
+    for path_img in images_paths:
         image = imread(path_img, as_gray=False)
         image = equalize_adapthist(image)
         images.append(image)
-        histograms.append(hist_read(path_hist))
-        if re.search(pattern_true, path_img) and re.search(pattern_true, path_hist):
+        if re.search(pattern_true, path_img):
             labels.append(1)
-        elif re.search(pattern_false, path_img) and re.search(pattern_false, path_hist):
+        elif re.search(pattern_false, path_img):
             labels.append(0)
         else:
-            raise AssertionError(f"Image path {path_img} and histogram path {path_hist} are not compatible.")
+            raise AssertionError(f"Image path {path_img} does not contain true or false.")
+    for path_hist in histograms_paths:
+        histograms.append(hist_read(path_hist))
+        if re.search(pattern_true, path_img) and labels[histograms_paths.index(path_hist)] == 1:
+            continue
+        elif re.search(pattern_false, path_img) and labels[histograms_paths.index(path_hist)] == 0:
+            continue
+        else:
+            raise AssertionError(
+                f"Label of histogram path {path_hist} is not compatible with corresponding image path.")
     return images, histograms, labels
 
 
@@ -135,7 +142,7 @@ def read_data_and_labels(path, data_params):
         folder_list = get_paths_of_image_folders(path)
         images_list, histograms_list, labels_list = read_images_and_histograms(folder_list)
         data_img = preprocess_data(images_list, data_params)
-        data_hist_list = hists_to_arr(histograms_list)
+        data_hist_list = rearrange_hists(histograms_list)
         labels = np.array(labels_list)
 
         data_name = set_export_data_name(folder_name, data_params)
@@ -151,6 +158,7 @@ def concatenate_data(data_img, data_hist_list, read_image, read_hist):
     elif not read_hist:
         data = data_img
     else:
-        data_hist = np.concatenate((data_hist_list[0], data_hist_list[1], data_hist_list[2], data_hist_list[3]), axis=1)
+        data_hist = np.concatenate(
+            (data_hist_list[0].flatten(), data_hist_list[1], data_hist_list[2], data_hist_list[3]), axis=1)
         data = np.append(data_img, data_hist, axis=1)
     return data

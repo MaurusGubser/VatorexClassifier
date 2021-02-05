@@ -140,7 +140,7 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, data_pa
     return None
 
 
-def train_and_test_model_selection(model_selection, pca_params, folder_path, data_params, test_size):
+def train_and_test_model_selection(model_selection, folder_path, data_params, test_size):
     data, labels = read_data_and_labels(folder_path, data_params)
     models = define_models(model_selection)
 
