@@ -105,11 +105,13 @@ def preprocess_data(images_list, data_params):
 
 
 def hists_to_arr(histograms_list):
-    hist_arr = []
+    hist_0 = []
+    hist_1 = []
+    hist_2 = []
+    hist_3 = []
     for hists in histograms_list:
-        hist_0 = hists[0].flatten()
-        hist_1 = hists[1].flatten()
-        hist_2 = hists[2].flatten()
-        hist_3 = hists[3].flatten()
-        hist_arr.append(np.concatenate((hist_0, hist_1, hist_2, hist_3)))
-    return np.array(hist_arr)
+        hist_0.append(hists[0])
+        hist_1.append(hists[1])
+        hist_2.append(hists[2])
+        hist_3.append(hists[3])
+    return [np.array(hist_0), np.array(hist_1), np.array(hist_2), np.array(hist_3)]
