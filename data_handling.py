@@ -82,16 +82,16 @@ def dimension_reduction(data, threshold_low_var, nb_components_pca, batch_size_p
     return data
 
 
-def preprocess_data(images_list, preprocessing_params):
-    with_image = preprocessing_params['with_image']
-    with_binary_patterns = preprocessing_params['with_binary_patterns']
-    histogram_params = preprocessing_params['histogram_params']
-    nb_segments = preprocessing_params['nb_segments']
-    threshold_low_var = preprocessing_params['threshold_low_var']
-    nb_components_pca = preprocessing_params['nb_components_pca']
-    batch_size_pca = preprocessing_params['batch_size_pca']
-    with_mean = preprocessing_params['with_mean']
-    with_std = preprocessing_params['with_std']
+def preprocess_data(images_list, data_params):
+    with_image = data_params['with_image']
+    with_binary_patterns = data_params['with_binary_patterns']
+    histogram_params = data_params['histogram_params']
+    nb_segments = data_params['nb_segments']
+    threshold_low_var = data_params['threshold_low_var']
+    nb_components_pca = data_params['nb_components_pca']
+    batch_size_pca = data_params['batch_size_pca']
+    with_mean = data_params['with_mean']
+    with_std = data_params['with_std']
 
     if not (with_image or with_binary_patterns or histogram_params or nb_segments):
         raise ValueError(
@@ -102,3 +102,14 @@ def preprocess_data(images_list, preprocessing_params):
     if with_mean or with_std:
         data = scale_data(data, with_mean, with_std)
     return data
+
+
+def hists_to_arr(histograms_list):
+    hist_arr = []
+    for hists in histograms_list:
+        hist_0 = hists[0].flatten()
+        hist_1 = hists[1].flatten()
+        hist_2 = hists[2].flatten()
+        hist_3 = hists[3].flatten()
+        hist_arr.append(np.concatenate((hist_0, hist_1, hist_2, hist_3)))
+    return np.array(hist_arr)

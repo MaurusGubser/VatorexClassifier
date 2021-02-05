@@ -114,7 +114,7 @@ def get_name_index(model_name):
     return idx
 
 
-def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, preprocessing_params, test_size):
+def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, data_params, test_size):
     index = get_name_index(modelgroup_name)
     X_train, X_test, y_train, y_test = train_test_split(data,
                                                         labels,
@@ -124,7 +124,7 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, preproc
 
     dict_data = {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
                  'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
-    dict_data.update(preprocessing_params)
+    dict_data.update(data_params)
 
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
@@ -140,12 +140,12 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, preproc
     return None
 
 
-def train_and_test_model_selection(model_selection, folder_path, preprocessing_params, test_size):
+def train_and_test_model_selection(model_selection, pca_params, folder_path, data_params, test_size):
+    data, labels = read_data_and_labels(folder_path, data_params)
     models = define_models(model_selection)
-    data, labels = read_data_and_labels(folder_path, preprocessing_params)
 
     for key, value in models.items():
-        train_and_test_modelgroup(value, key, data, labels, preprocessing_params, test_size)
+        train_and_test_modelgroup(value, key, data, labels, data_params, test_size)
     return None
 
 

@@ -5,7 +5,7 @@ import numpy as np
 from skimage.io import imread
 from skimage.exposure import equalize_adapthist
 
-from data_handling import preprocess_data
+from data_handling import preprocess_data, hists_to_arr
 
 
 def hist_read(path):
@@ -38,16 +38,14 @@ def hist_read(path):
 
 
 def read_images_hist_from_folder(path_folder):
-    images_folder = Path(path_folder).rglob('*.jpg')
-    histograms_folder = Path(path_folder).rglob('*.hist')
-    images_paths = [str(path) for path in images_folder]
-    histogram_paths = [str(path) for path in histograms_folder]
+    histograms_paths = [str(path) for path in Path(path_folder).rglob('*.hist')]
+    images_paths = [path.replace('.hist', '.jpg') for path in histograms_paths]
     images = []
     histograms = []
     labels = []
     pattern_true = r'true'
     pattern_false = r'false'
-    for path_img, path_hist in zip(images_paths, histogram_paths):
+    for path_img, path_hist in zip(images_paths, histograms_paths):
         image = imread(path_img, as_gray=False)
         image = equalize_adapthist(image)
         images.append(image)
@@ -70,7 +68,7 @@ def read_images_and_histograms(folder_list):
         images = images + imgs
         histograms = histograms + hists
         labels = labels + lbls
-    return images, labels
+    return images, histograms, labels
 
 
 def get_paths_of_image_folders(path_folder):
@@ -88,37 +86,48 @@ def get_folder_name(path_folder):
     return folder_name
 
 
-def set_export_data_name(folder_name, preprocessing_params):
+def set_export_data_name(folder_name, data_params):
     name = folder_name
-    for value in preprocessing_params.values():
+    for value in data_params.values():
         name = name + '_' + str(value)
     return name
 
 
-def export_data(data, labels, data_name):
-    path_data = 'Preprocessed_Data/' + data_name + '_data'
-    path_labels = 'Preprocessed_Data/' + data_name + '_labels'
-    if os.path.exists(path_data + '.npy'):
+def export_data(images_list, histograms_list, labels_list, data_name):
+    path_export = 'Preprocessed_Data/' + data_name
+    if os.path.exists(path_export + '.npz'):
         print('Preprocessed data with these parameters already exported.')
         return None
     if not os.path.exists('Preprocessed_Data'):
         os.mkdir('Preprocessed_Data')
-    np.save(path_data, data, allow_pickle=False)
-    np.save(path_labels, labels, allow_pickle=False)
-    print(f'Saved data and labels in files {path_data} and {path_labels}')
+    hist_0 = []
+    hist_1 = []
+    hist_2 = []
+    hist_3 = []
+    for hist_list in histograms_list:
+        hist_0.append(hist_list[0])
+        hist_1.append(hist_list[1])
+        hist_2.append(hist_list[2])
+        hist_3.append(hist_list[3])
+    np.savez(path_export,
+             img=np.array(images_list),
+             hist1=np.array(hist_0),
+             hist2=np.array(hist_0),
+             hist3=np.array(hist_0),
+             hist4=np.array(hist_0),
+             labels=np.array(labels_list))
+    print(f'Saved data and labels in files {path_export}')
     return None
 
 
 def load_data_and_labels(path_data):
-    data = np.load(path_data)
-    path_labels = path_data.replace('data', 'labels')
-    labels = np.load(path_labels)
+    data = np.load(path_data, )
     return data, labels
 
 
-def read_data_and_labels(path, preprocessing_params):
+def read_data_and_labels(path, data_params):
     folder_name = get_folder_name(path)
-    path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, preprocessing_params) + '_data.npy'
+    path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, data_params) + '.npz'
     if os.path.exists(path_preprocessed):
         data, labels = load_data_and_labels(path_preprocessed)
         print(f'Re-loaded preprocessed data and labels from {path_preprocessed}')
@@ -127,7 +136,15 @@ def read_data_and_labels(path, preprocessing_params):
         folder_list = get_paths_of_image_folders(path)
         images_list, histograms_list, labels_list = read_images_and_histograms(folder_list)
         labels = np.array(labels_list)
-        data = preprocess_data(images_list, preprocessing_params)
-        data_name = set_export_data_name(folder_name, preprocessing_params)
-        export_data(data, labels, data_name)
+        data_name = set_export_data_name(folder_name, data_params)
+        export_data(images_list, histograms_list, labels_list, data_name)
+
+        data_img = preprocess_data(images_list, data_params)
+        data_hist = hists_to_arr(histograms_list)
+        if not data_params['read_image']:
+            data = data_hist
+        elif not data_params['read_hist']:
+            data = data_img
+        else:
+            data = np.append(data_img, data_hist, axis=1)
         return data, labels
