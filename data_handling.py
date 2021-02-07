@@ -44,6 +44,8 @@ def scale_data(data, with_mean, with_std):
 
 
 def feature_computation(images_list, with_image, with_binary_patterns, histogram_params, nb_segments):
+    if not (with_image or with_binary_patterns or histogram_params or nb_segments):
+        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
     start = time.time()
     data = []
     for img in images_list:
@@ -66,12 +68,9 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
     return data
 
 
-def dimension_reduction(data, threshold_low_var, nb_components_pca, batch_size_pca):
+def dimension_reduction(data, nb_components_pca, batch_size_pca):
     start = time.time()
     old_shape = data.shape
-    if threshold_low_var:
-        selector = VarianceThreshold(threshold=threshold_low_var)
-        data = selector.fit_transform(data)
     if nb_components_pca:
         pca = IncrementalPCA(n_components=nb_components_pca, batch_size=batch_size_pca)
         # data = normalize(data)
@@ -79,6 +78,13 @@ def dimension_reduction(data, threshold_low_var, nb_components_pca, batch_size_p
         data = pca.transform(data)
     end = time.time()
     print(f"Dimensionality reduction took {(end - start) / 60:.1f} minutes; reduction from {old_shape} to {data.shape}")
+    return data
+
+
+def remove_low_var_features(data, threshold_low_var):
+    if threshold_low_var:
+        selector = VarianceThreshold(threshold=threshold_low_var)
+        data = selector.fit_transform(data)
     return data
 
 
@@ -90,17 +96,11 @@ def preprocess_data(images_list, data_params):
     threshold_low_var = data_params['threshold_low_var']
     nb_components_pca = data_params['nb_components_pca']
     batch_size_pca = data_params['batch_size_pca']
-    with_mean = data_params['with_mean']
-    with_std = data_params['with_std']
 
-    if not (with_image or with_binary_patterns or histogram_params or nb_segments):
-        raise ValueError(
-            "At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
     data = feature_computation(images_list, with_image, with_binary_patterns, histogram_params, nb_segments)
-    if threshold_low_var or nb_components_pca or batch_size_pca:
-        data = dimension_reduction(data, threshold_low_var, nb_components_pca, batch_size_pca)
-    if with_mean or with_std:
-        data = scale_data(data, with_mean, with_std)
+    data = remove_low_var_features(data, threshold_low_var)
+    data = dimension_reduction(data, nb_components_pca, batch_size_pca)
+
     return data
 
 
@@ -109,9 +109,18 @@ def rearrange_hists(histograms_list):
     hist_1 = []
     hist_2 = []
     hist_3 = []
+    """
     for hists in histograms_list:
         hist_0.append(hists[0].flatten())
         hist_1.append(hists[1])
         hist_2.append(hists[2])
         hist_3.append(hists[3])
+    """
+    while histograms_list != []:
+        hists = histograms_list.pop(0)
+        hist_0.append(hists[0].flatten())
+        hist_1.append(hists[1])
+        hist_2.append(hists[2])
+        hist_3.append(hists[3])
+
     return [np.array(hist_0), np.array(hist_1), np.array(hist_2), np.array(hist_3)]

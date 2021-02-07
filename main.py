@@ -1,8 +1,8 @@
 from model_train_test import read_models, train_and_test_model_selection
 
 # ----- data parameters -----
-read_image = True
-read_hist = False
+read_image = False
+read_hist = True
 with_image = False  # use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
@@ -10,7 +10,7 @@ nb_segments = 10  # must be None or a integer; segment image using k-means in co
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
 nb_components_pca = 100  # must be None or a integer, which defines number of components
 batch_size_pca = 500  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
-with_mean = False  # data gets shifted such that mean is 0.0
+with_mean = True  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
 data_parameters = {'read_image': read_image, 'read_hist': read_hist, 'with_image': with_image,
@@ -42,5 +42,5 @@ trained_models = ['log_reg_2044', 'log_reg_2058', 'log_reg_2072', 'log_reg_2086'
 models = read_models(model_list=trained_models)
 
 if __name__ == '__main__':
-    folder_path = "Candidate_Images/Large_Dataset/"
+    folder_path = "Candidate_Images/Mite_4_Dataset/"
     train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)

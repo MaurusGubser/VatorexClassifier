@@ -90,7 +90,7 @@ def train_model(model, X_train, y_train):
     start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
-    print(f'Training time: {(end_time - start_time)/60:.1f} minutes')
+    print(f'Training time: {(end_time - start_time):.1f} seconds')
     return model
 
 
@@ -101,7 +101,7 @@ def evaluate_model(model, X, y):
                   'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
                   'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
     end_time = time.time()
-    print(f'Evaluating time: {(end_time - start_time) / 60:.1f} minutes')
+    print(f'Evaluating time: {(end_time - start_time):.1f} seconds')
     return stats_dict
 
 

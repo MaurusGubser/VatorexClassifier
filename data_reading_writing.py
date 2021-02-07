@@ -4,8 +4,9 @@ import re
 import numpy as np
 from skimage.io import imread
 from skimage.exposure import equalize_adapthist
+import time
 
-from data_handling import preprocess_data, rearrange_hists
+from data_handling import preprocess_data, rearrange_hists, scale_data
 
 
 def hist_read(path):
@@ -16,72 +17,73 @@ def hist_read(path):
                 size_h = int(line_tokens[1])
                 size_l = int(line_tokens[2])
                 size_s = int(line_tokens[3])
-                pdf_hls = np.zeros((size_h, size_l, size_s))
-                pdf_h = np.zeros(size_h)
-                pdf_l = np.zeros(size_l)
-                pdf_s = np.zeros(size_s)
+                pdf_hls = np.zeros((size_h, size_l, size_s), dtype='float32')
+                pdf_h = np.zeros(size_h, dtype='float32')
+                pdf_l = np.zeros(size_l, dtype='float32')
+                pdf_s = np.zeros(size_s, dtype='float32')
                 mode = 'hls'
             elif line_tokens[0] in ['h', 'l', 's']:
                 mode = line_tokens[0]
             elif mode == 'hls':
-                pdf_hls[int(line_tokens[0]), int(line_tokens[1]), int(line_tokens[2])] = float(line_tokens[3])
+                pdf_hls[int(line_tokens[0]), int(line_tokens[1]), int(line_tokens[2])] = np.float32(line_tokens[3])
             elif mode == 'h':
-                pdf_h[int(line_tokens[0])] = float(line_tokens[1])
+                pdf_h[int(line_tokens[0])] = np.float32(line_tokens[1])
             elif mode == 'l':
-                pdf_l[int(line_tokens[0])] = float(line_tokens[1])
+                pdf_l[int(line_tokens[0])] = np.float32(line_tokens[1])
             elif mode == 's':
-                pdf_s[int(line_tokens[0])] = float(line_tokens[1])
+                pdf_s[int(line_tokens[0])] = np.float32(line_tokens[1])
             else:
                 raise ValueError(f'Line {line} does not correspond to expected pattern.')
     histograms = [pdf_hls, pdf_h, pdf_l, pdf_s]
     return histograms
 
 
-def read_images_hist_from_folder(path_folder):
+def read_images_hist_from_folder(path_folder, read_image, read_hist):
     histograms_paths = [str(path) for path in Path(path_folder).rglob('*.hist')]
-    images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')]
+    images_paths = [path.replace('.hist', '.jpg') for path in histograms_paths]
+
     images = []
     histograms = []
     labels = []
     pattern_true = r'true'
     pattern_false = r'false'
-    for path_img in images_paths:
-        image = imread(path_img, as_gray=False)
-        image = equalize_adapthist(image)
-        images.append(image)
-        if re.search(pattern_true, path_img):
+
+    for path_img, path_hist in zip(images_paths, histograms_paths):
+        if read_image:
+            image = equalize_adapthist(imread(path_img, as_gray=False))
+            images.append(image)
+        if read_hist:
+            histograms.append(hist_read(path_hist))
+        if re.search(pattern_true, path_img) and re.search(pattern_true, path_hist):
             labels.append(1)
-        elif re.search(pattern_false, path_img):
+        elif re.search(pattern_false, path_img) and re.search(pattern_false, path_hist):
             labels.append(0)
         else:
-            raise AssertionError(f"Image path {path_img} does not contain true or false.")
-    for path_hist in histograms_paths:
-        histograms.append(hist_read(path_hist))
-        if re.search(pattern_true, path_img) and labels[histograms_paths.index(path_hist)] == 1:
-            continue
-        elif re.search(pattern_false, path_img) and labels[histograms_paths.index(path_hist)] == 0:
-            continue
-        else:
-            raise AssertionError(
-                f"Label of histogram path {path_hist} is not compatible with corresponding image path.")
+            raise AssertionError(f'Label of histogram path {path_hist} and image path {path_img} are not compatible')
+
     return images, histograms, labels
 
 
-def read_images_and_histograms(folder_list):
+def read_images_and_histograms(folder_list, read_image, read_hist):
+    start_time = time.time()
     images = []
     histograms = []
     labels = []
     for folder_path in folder_list:
-        imgs, hists, lbls = read_images_hist_from_folder(folder_path)
+        imgs, hists, lbls = read_images_hist_from_folder(folder_path, read_image, read_hist)
         images = images + imgs
         histograms = histograms + hists
         labels = labels + lbls
+    end_time = time.time()
+    print(f'Read images and histograms in {(end_time - start_time)/60:.1f} minutes')
     return images, histograms, labels
 
 
 def get_paths_of_image_folders(path_folder):
     folder_list = []
     for root, dirs, files in os.walk(path_folder):
+        if root != path_folder:
+            continue
         for name in dirs:
             folder_list.append(path_folder + name)
     return folder_list
@@ -133,22 +135,29 @@ def load_data_and_labels(path_data):
 def read_data_and_labels(path, data_params):
     folder_name = get_folder_name(path)
     path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, data_params) + '.npz'
+    read_image = data_params['read_image']
+    read_hist = data_params['read_hist']
     if os.path.exists(path_preprocessed):
         data_img, data_hist_list, labels = load_data_and_labels(path_preprocessed)
-        data = concatenate_data(data_img, data_hist_list, data_params['read_image'], data_params['read_hist'])
+        data = concatenate_data(data_img, data_hist_list, read_image, read_hist)
         print(f'Re-loaded preprocessed data and labels from {path_preprocessed}')
+        if data_params['with_mean'] or data_params['with_std']:
+            data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
         return data, labels
     else:
         folder_list = get_paths_of_image_folders(path)
-        images_list, histograms_list, labels_list = read_images_and_histograms(folder_list)
-        data_img = preprocess_data(images_list, data_params)
-        data_hist_list = rearrange_hists(histograms_list)
-        labels = np.array(labels_list)
+        data_images, data_histograms, labels = read_images_and_histograms(folder_list, read_image, read_hist)
+        if read_image:
+            data_images = preprocess_data(data_images, data_params)
+        if read_hist:
+            data_histograms = rearrange_hists(data_histograms)
+        labels = np.array(labels)
 
         data_name = set_export_data_name(folder_name, data_params)
-        export_data(data_img, data_hist_list, labels, data_name)
-        data = concatenate_data(data_img, data_hist_list, data_params['read_image'], data_params['read_hist'])
-
+        export_data(data_images, data_histograms, labels, data_name)
+        data = concatenate_data(data_images, data_histograms, read_image, read_hist)
+        if data_params['with_mean'] or data_params['with_std']:
+            data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
         return data, labels
 
 
