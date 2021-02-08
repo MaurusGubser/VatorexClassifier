@@ -77,6 +77,7 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
         if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
+        del img
     data = np.array(data)
     end = time.time()
     print(f"Computed features in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
@@ -119,23 +120,40 @@ def preprocess_images(images_list, data_params):
     return data
 
 
-def rearrange_hists(histograms_list):
+def rearrange_hists(histograms_list, data_params):
+    start_time = time.time()
+    hist_hsl = data_params['hist_hsl']
+    hist_h = data_params['hist_h']
+    hist_s = data_params['hist_s']
+    hist_l = data_params['hist_l']
+    """
     hist_0 = []
     hist_1 = []
     hist_2 = []
     hist_3 = []
-    """
+    
     for hists in histograms_list:
         hist_0.append(hists[0].flatten())
         hist_1.append(hists[1])
         hist_2.append(hists[2])
         hist_3.append(hists[3])
-    """
-    while histograms_list != []:
-        hists = histograms_list.pop(0)
-        hist_0.append(hists[0].flatten())
-        hist_1.append(hists[1])
-        hist_2.append(hists[2])
-        hist_3.append(hists[3])
-
     return [np.array(hist_0), np.array(hist_1), np.array(hist_2), np.array(hist_3)]
+    """
+    data = []
+    while histograms_list != []:
+        data_hist = np.empty(0)
+        hists = histograms_list.pop(0)
+        if hist_hsl:
+            data_hist = np.append(data_hist, hists[0].flatten())
+        if hist_h:
+            data_hist = np.append(data_hist, hists[1])
+        if hist_s:
+            data_hist = np.append(data_hist, hists[2])
+        if hist_l:
+            data_hist = np.append(data_hist, hists[3])
+        data.append(data_hist)
+        del hists
+    data = np.array(data)
+    end_time = time.time()
+    print(f"Rearranged histograms in {(end_time - start_time):.1f}s; histograms of shape {data.shape}")
+    return data

@@ -90,7 +90,7 @@ def train_model(model, X_train, y_train):
     start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
-    print(f'Training time: {(end_time - start_time):.1f} seconds')
+    print(f'Training time: {(end_time - start_time) / 60:.2f} minutes')
     return model
 
 
@@ -101,7 +101,7 @@ def evaluate_model(model, X, y):
                   'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
                   'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
     end_time = time.time()
-    print(f'Evaluating time: {(end_time - start_time):.1f} seconds')
+    print(f'Evaluating time: {(end_time - start_time) // 60}min {(end_time - start_time) % 60}s')
     return stats_dict
 
 
@@ -121,7 +121,7 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, data_pa
                                                         test_size=test_size,
                                                         random_state=42,
                                                         stratify=labels)
-
+    del data
     dict_data = {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
                  'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
     dict_data.update(data_params)
@@ -189,14 +189,15 @@ def define_models(model_selection):
                   LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced'),
                   LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced'),
                   LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced'),
-                  SVC(C=1.0, kernel='linear', class_weight='balanced'),
-                  SVC(C=0.1, class_weight='balanced'), SVC(class_weight='balanced')]
+                  SVC(C=0.1, class_weight='balanced'),
+                  SVC(class_weight='balanced')]
 
     naive_bayes_models = [GaussianNB()]
 
     ada_boost_models = [AdaBoostClassifier(n_estimators=50), AdaBoostClassifier(n_estimators=100)]
 
-    histogram_boost_models = [HistGradientBoostingClassifier(), HistGradientBoostingClassifier(l2_regularization=1.0),
+    histogram_boost_models = [HistGradientBoostingClassifier(),
+                              HistGradientBoostingClassifier(l2_regularization=1.0),
                               HistGradientBoostingClassifier(l2_regularization=5.0)]
 
     gradient_boost_models = [GradientBoostingClassifier(), GradientBoostingClassifier(max_features='sqrt'),

@@ -104,7 +104,7 @@ def set_export_data_name(folder_name, data_params):
     return name
 
 
-def export_data(data_img, data_hist_list, labels, data_name):
+def export_data(data_img, data_hist, labels, data_name):
     path_export = 'Preprocessed_Data/' + data_name
     if os.path.exists(path_export + '.npz'):
         print('Preprocessed data with these parameters already exported.')
@@ -113,10 +113,7 @@ def export_data(data_img, data_hist_list, labels, data_name):
         os.mkdir('Preprocessed_Data')
     np.savez(path_export,
              img=data_img,
-             hist_0=data_hist_list[0],
-             hist_1=data_hist_list[1],
-             hist_2=data_hist_list[2],
-             hist_3=data_hist_list[3],
+             hist=data_hist,
              labels=labels)
     print(f'Saved data and labels in files {path_export}')
     return None
@@ -153,7 +150,7 @@ def read_data_and_labels(path, data_params):
         if read_image:
             data_images = preprocess_images(data_images, data_params)
         if read_hist:
-            data_histograms = rearrange_hists(data_histograms)
+            data_histograms = rearrange_hists(data_histograms, data_params)
         labels = np.array(labels)
 
         data_name = set_export_data_name(folder_name, data_params)
@@ -168,11 +165,11 @@ def read_data_and_labels(path, data_params):
 
 def concatenate_data(data_img, data_hist, read_image, read_hist):
     if not read_image:
-        data = np.concatenate((data_hist[0], data_hist[1], data_hist[2], data_hist[3]), axis=1)
+        #data = np.concatenate((data_hist[0], data_hist[1], data_hist[2], data_hist[3]), axis=1)
+        data = data_hist
     elif not read_hist:
         data = data_img
     else:
-        data_hist = np.concatenate(
-            (data_hist[0].flatten(), data_hist[1], data_hist[2], data_hist[3]), axis=1)
+        #data_hist = np.concatenate((data_hist[0].flatten(), data_hist[1], data_hist[2], data_hist[3]), axis=1)
         data = np.append(data_img, data_hist, axis=1)
     return data

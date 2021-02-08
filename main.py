@@ -2,22 +2,26 @@ from model_train_test import read_models, train_and_test_model_selection
 
 # ----- data parameters -----
 read_image = True
-read_hist = True
+read_hist = False
 with_image = True  # use image
 with_binary_patterns = False  # use local binary patterns of image
-histogram_params = None #(1, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-nb_segments = None  # must be None or a integer; segment image using k-means in color space
+histogram_params = (1, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
+nb_segments = 5  # must be None or a integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
-nb_components_pca = 100  # must be None or a integer, which defines number of components
-batch_size_pca = 500  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
-with_mean = True  # data gets shifted such that mean is 0.0
+nb_components_pca = 500  # must be None or a integer, which defines number of components
+batch_size_pca = 10000  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
+hist_hsl = False
+hist_h = True
+hist_s = True
+hist_l = True
+with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
 data_parameters = {'read_image': read_image, 'read_hist': read_hist, 'with_image': with_image,
                    'with_binary_patterns': with_binary_patterns, 'histogram_params': histogram_params,
                    'nb_segments': nb_segments, 'threshold_low_var': threshold_low_var,
-                   'nb_components_pca': nb_components_pca, 'batch_size_pca': batch_size_pca, 'with_mean': with_mean,
-                   'with_std': with_std}
+                   'nb_components_pca': nb_components_pca, 'batch_size_pca': batch_size_pca, 'hist_hsl': hist_hsl,
+                   'hist_h': hist_h, 'hist_s': hist_s, 'hist_l': hist_l, 'with_mean': with_mean, 'with_std': with_std}
 test_size = 0.2  # fraction of test set
 
 # ----- training models -----
