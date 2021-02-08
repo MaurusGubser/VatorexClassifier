@@ -1,12 +1,12 @@
 from model_train_test import read_models, train_and_test_model_selection
 
 # ----- data parameters -----
-read_image = False
+read_image = True
 read_hist = True
-with_image = False  # use image
+with_image = True  # use image
 with_binary_patterns = False  # use local binary patterns of image
-histogram_params = (3, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-nb_segments = 10  # must be None or a integer; segment image using k-means in color space
+histogram_params = None #(1, 64)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
+nb_segments = None  # must be None or a integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
 nb_components_pca = 100  # must be None or a integer, which defines number of components
 batch_size_pca = 500  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images

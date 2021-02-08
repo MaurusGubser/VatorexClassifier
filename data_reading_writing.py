@@ -3,10 +3,11 @@ from pathlib import Path
 import re
 import numpy as np
 from skimage.io import imread
+from skimage.util import img_as_ubyte
 from skimage.exposure import equalize_adapthist
 import time
 
-from data_handling import preprocess_data, rearrange_hists, scale_data
+from data_handling import preprocess_images, rearrange_hists, scale_data
 
 
 def hist_read(path):
@@ -50,7 +51,7 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
 
     for path_img, path_hist in zip(images_paths, histograms_paths):
         if read_image:
-            image = equalize_adapthist(imread(path_img, as_gray=False))
+            image = img_as_ubyte(equalize_adapthist(imread(path_img, as_gray=False)))
             images.append(image)
         if read_hist:
             histograms.append(hist_read(path_hist))
@@ -138,8 +139,10 @@ def read_data_and_labels(path, data_params):
     read_image = data_params['read_image']
     read_hist = data_params['read_hist']
     if os.path.exists(path_preprocessed):
-        data_img, data_hist_list, labels = load_data_and_labels(path_preprocessed)
-        data = concatenate_data(data_img, data_hist_list, read_image, read_hist)
+        data_images, data_histograms, labels = load_data_and_labels(path_preprocessed)
+        data = concatenate_data(data_images, data_histograms, read_image, read_hist)
+        del data_images
+        del data_histograms
         print(f'Re-loaded preprocessed data and labels from {path_preprocessed}')
         if data_params['with_mean'] or data_params['with_std']:
             data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
@@ -148,7 +151,7 @@ def read_data_and_labels(path, data_params):
         folder_list = get_paths_of_image_folders(path)
         data_images, data_histograms, labels = read_images_and_histograms(folder_list, read_image, read_hist)
         if read_image:
-            data_images = preprocess_data(data_images, data_params)
+            data_images = preprocess_images(data_images, data_params)
         if read_hist:
             data_histograms = rearrange_hists(data_histograms)
         labels = np.array(labels)
@@ -156,18 +159,20 @@ def read_data_and_labels(path, data_params):
         data_name = set_export_data_name(folder_name, data_params)
         export_data(data_images, data_histograms, labels, data_name)
         data = concatenate_data(data_images, data_histograms, read_image, read_hist)
+        del data_images
+        del data_histograms
         if data_params['with_mean'] or data_params['with_std']:
             data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
         return data, labels
 
 
-def concatenate_data(data_img, data_hist_list, read_image, read_hist):
+def concatenate_data(data_img, data_hist, read_image, read_hist):
     if not read_image:
-        data = np.concatenate((data_hist_list[0], data_hist_list[1], data_hist_list[2], data_hist_list[3]), axis=1)
+        data = np.concatenate((data_hist[0], data_hist[1], data_hist[2], data_hist[3]), axis=1)
     elif not read_hist:
         data = data_img
     else:
         data_hist = np.concatenate(
-            (data_hist_list[0].flatten(), data_hist_list[1], data_hist_list[2], data_hist_list[3]), axis=1)
+            (data_hist[0].flatten(), data_hist[1], data_hist[2], data_hist[3]), axis=1)
         data = np.append(data_img, data_hist, axis=1)
     return data

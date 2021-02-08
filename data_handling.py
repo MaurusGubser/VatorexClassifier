@@ -48,6 +48,7 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
         raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
     start = time.time()
     data = []
+    """
     for img in images_list:
         data_img = np.empty(0)
         if with_image:
@@ -61,7 +62,21 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
         if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
-
+    """
+    while images_list:
+        img = images_list.pop(0)
+        data_img = np.empty(0)
+        if with_image:
+            data_img = np.append(data_img, img.flatten())
+        if with_binary_patterns:
+            data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
+        if histogram_params:
+            nb_divisions, nb_bins = histogram_params
+            data_img = np.append(data_img,
+                                 compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
+        if nb_segments:
+            data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
+        data.append(data_img)
     data = np.array(data)
     end = time.time()
     print(f"Computed features in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
@@ -88,7 +103,7 @@ def remove_low_var_features(data, threshold_low_var):
     return data
 
 
-def preprocess_data(images_list, data_params):
+def preprocess_images(images_list, data_params):
     with_image = data_params['with_image']
     with_binary_patterns = data_params['with_binary_patterns']
     histogram_params = data_params['histogram_params']
