@@ -180,11 +180,9 @@ def read_data_and_labels(path, data_params):
 
 def concatenate_data(data_img, data_hist, read_image, read_hist):
     if not read_image:
-        #data = np.concatenate((data_hist[0], data_hist[1], data_hist[2], data_hist[3]), axis=1)
         data = data_hist
     elif not read_hist:
         data = data_img
     else:
-        #data_hist = np.concatenate((data_hist[0].flatten(), data_hist[1], data_hist[2], data_hist[3]), axis=1)
         data = np.append(data_img, data_hist, axis=1)
     return data

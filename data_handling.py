@@ -52,22 +52,7 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
             "At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
     start = time.time()
     data = []
-    """
-    for img in images_list:
-        data_img = np.empty(0)
-        if with_image:
-            data_img = np.append(data_img, img.flatten())
-        if with_binary_patterns:
-            lbp = compute_local_binary_pattern(img)
-            data_img = np.append(data_img, lbp.flatten())
-        if histogram_params:
-            nb_divisions, nb_bins = histogram_params
-            hist = compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins)
-            data_img = np.append(data_img, hist.flatten())
-        if nb_segments:
-            data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
-        data.append(data_img)
-    """
+
     while images_list:
         img = images_list.pop(0)
         data_img = np.empty(0)
@@ -135,19 +120,7 @@ def rearrange_hists(histograms_list, data_params):
     hist_h = data_params['hist_h']
     hist_s = data_params['hist_s']
     hist_l = data_params['hist_l']
-    """
-    hist_0 = []
-    hist_1 = []
-    hist_2 = []
-    hist_3 = []
-    
-    for hists in histograms_list:
-        hist_0.append(hists[0].flatten())
-        hist_1.append(hists[1])
-        hist_2.append(hists[2])
-        hist_3.append(hists[3])
-    return [np.array(hist_0), np.array(hist_1), np.array(hist_2), np.array(hist_3)]
-    """
+
     data = []
     while histograms_list != []:
         data_hist = np.empty(0)
