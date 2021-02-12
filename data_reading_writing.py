@@ -40,8 +40,8 @@ def hist_read(path):
 
 
 def read_images_hist_from_folder(path_folder, read_image, read_hist):
-    histograms_paths = [str(path) for path in Path(path_folder).rglob('*.hist')]
-    images_paths = [path.replace('.hist', '.jpg') for path in histograms_paths]
+    images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')]
+    histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
 
     images = []
     histograms = []
@@ -49,18 +49,36 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
     pattern_true = r'true'
     pattern_false = r'false'
 
-    for path_img, path_hist in zip(images_paths, histograms_paths):
-        if read_image:
+    if not read_hist:
+        for path_img in images_paths:
             image = img_as_ubyte(equalize_adapthist(imread(path_img, as_gray=False)))
             images.append(image)
-        if read_hist:
+            if re.search(pattern_true, path_img):
+                labels.append(1)
+            elif re.search(pattern_false, path_img):
+                labels.append(0)
+            else:
+                raise AssertionError(f'Label image path {path_img} does not contain true or false.')
+    elif not read_image:
+        for path_hist in histograms_paths:
             histograms.append(hist_read(path_hist))
-        if re.search(pattern_true, path_img) and re.search(pattern_true, path_hist):
-            labels.append(1)
-        elif re.search(pattern_false, path_img) and re.search(pattern_false, path_hist):
-            labels.append(0)
-        else:
-            raise AssertionError(f'Label of histogram path {path_hist} and image path {path_img} are not compatible')
+            if re.search(pattern_true, path_hist):
+                labels.append(1)
+            elif re.search(pattern_false, path_hist):
+                labels.append(0)
+            else:
+                raise AssertionError(f'Label image path {path_hist} does not contain true or false.')
+    else:
+        for path_img, path_hist in zip(images_paths, histograms_paths):
+            image = img_as_ubyte(equalize_adapthist(imread(path_img, as_gray=False)))
+            images.append(image)
+            histograms.append(hist_read(path_hist))
+            if re.search(pattern_true, path_img) and re.search(pattern_true, path_hist):
+                labels.append(1)
+            elif re.search(pattern_false, path_img) and re.search(pattern_false, path_hist):
+                labels.append(0)
+            else:
+                raise AssertionError(f'Label of histogram path {path_hist} and image path {path_img} are not compatible')
 
     return images, histograms, labels
 
@@ -122,12 +140,9 @@ def export_data(data_img, data_hist, labels, data_name):
 def load_data_and_labels(path_data):
     data = np.load(path_data)
     images = data['img']
-    hist_0 = data['hist_0']
-    hist_1 = data['hist_1']
-    hist_2 = data['hist_2']
-    hist_3 = data['hist_3']
+    histograms = data['hist']
     labels = data['labels']
-    return images, [hist_0, hist_1, hist_2, hist_3], labels
+    return images, histograms, labels
 
 
 def read_data_and_labels(path, data_params):

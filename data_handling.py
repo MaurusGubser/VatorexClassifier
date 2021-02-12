@@ -4,6 +4,7 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import PCA, IncrementalPCA
 from skimage.feature import local_binary_pattern
 from skimage.segmentation import slic
+import random
 import time
 
 
@@ -45,7 +46,8 @@ def scale_data(data, with_mean, with_std):
 
 def feature_computation(images_list, with_image, with_binary_patterns, histogram_params, nb_segments):
     if not (with_image or with_binary_patterns or histogram_params or nb_segments):
-        raise ValueError("At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
+        raise ValueError(
+            "At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
     start = time.time()
     data = []
     """
@@ -92,15 +94,19 @@ def dimension_reduction(data, nb_components_pca, batch_size_pca):
         # data = normalize(data)
         pca.fit(data)
         data = pca.transform(data)
-    end = time.time()
-    print(f"Dimensionality reduction took {(end - start) / 60:.1f} minutes; reduction from {old_shape} to {data.shape}")
+        end = time.time()
+        print(
+            f"Dimensionality reduction took {(end - start) / 60:.1f} minutes; reduction from {old_shape} to {data.shape}")
     return data
 
 
 def remove_low_var_features(data, threshold_low_var):
+    start_time = time.time()
     if threshold_low_var:
         selector = VarianceThreshold(threshold=threshold_low_var)
         data = selector.fit_transform(data)
+        end_time = time.time()
+        print(f"Removed low var features in {(end_time - start_time) / 60:.1f} minutes; data of shape {data.shape}")
     return data
 
 
@@ -157,3 +163,20 @@ def rearrange_hists(histograms_list, data_params):
     end_time = time.time()
     print(f"Rearranged histograms in {(end_time - start_time):.1f}s; histograms of shape {data.shape}")
     return data
+
+
+def downsize_false_candidates(data, labels, percentage_true):
+    nb_candidates = labels.size
+    nb_true_cand = np.sum(labels)
+    if nb_true_cand / nb_candidates > percentage_true:
+        raise ValueError(
+            f'Ratio of true candidates {nb_true_cand} to total candidates {nb_candidates} is already greater than {percentage_true}')
+    nb_false_remove = nb_candidates - int(nb_true_cand / percentage_true)
+
+    idxs_false = list(np.arange(0, nb_candidates)[labels == 0])
+    random.seed(42)  # to assure, same sample is drawn; remove if selection should be random
+    idxs_false_remove = random.sample(idxs_false, k=nb_false_remove)
+
+    data = np.delete(data, idxs_false_remove, axis=0)
+    labels = np.delete(labels, idxs_false_remove)
+    return data, labels

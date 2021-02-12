@@ -18,6 +18,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 
 from data_reading_writing import read_data_and_labels
+from data_handling import downsize_false_candidates
 
 
 def export_model(model, model_name):
@@ -90,7 +91,7 @@ def train_model(model, X_train, y_train):
     start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
-    print(f'Training time: {(end_time - start_time) / 60:.2f} minutes')
+    print(f'Training time: {(end_time - start_time) / 60:.0f}min {(end_time - start_time) % 60:.0f}s')
     return model
 
 
@@ -101,7 +102,7 @@ def evaluate_model(model, X, y):
                   'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
                   'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
     end_time = time.time()
-    print(f'Evaluating time: {(end_time - start_time) // 60}min {(end_time - start_time) % 60}s')
+    print(f'Evaluating time: {(end_time - start_time) / 60:.0f}min {(end_time - start_time) % 60:.0f}s')
     return stats_dict
 
 
@@ -114,14 +115,9 @@ def get_name_index(model_name):
     return idx
 
 
-def train_and_test_modelgroup(modelgroup, modelgroup_name, data, labels, data_params, test_size):
+def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, data_params):
     index = get_name_index(modelgroup_name)
-    X_train, X_test, y_train, y_test = train_test_split(data,
-                                                        labels,
-                                                        test_size=test_size,
-                                                        random_state=42,
-                                                        stratify=labels)
-    del data
+
     dict_data = {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
                  'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
     dict_data.update(data_params)
@@ -144,8 +140,16 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
     data, labels = read_data_and_labels(folder_path, data_params)
     models = define_models(model_selection)
 
+    data, labels = downsize_false_candidates(data, labels, data_params['ratio_true_false'])
+    X_train, X_test, y_train, y_test = train_test_split(data,
+                                                        labels,
+                                                        test_size=test_size,
+                                                        random_state=42,
+                                                        stratify=labels)
+    del data
+
     for key, value in models.items():
-        train_and_test_modelgroup(value, key, data, labels, data_params, test_size)
+        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, data_params)
     return None
 
 
@@ -172,9 +176,10 @@ def define_models(model_selection):
                   SGDClassifier(penalty='l2', alpha=0.5, class_weight='balanced'),
                   SGDClassifier(penalty='l2', alpha=2.0, class_weight='balanced')]
 
-    ridge_class_models = [RidgeClassifier(alpha=10.0, normalize=True, class_weight='balanced'),
-                          RidgeClassifier(alpha=50.0, normalize=True, class_weight='balanced'),
-                          RidgeClassifier(alpha=100.0, normalize=True, class_weight='balanced')]
+    ridge_class_models = [RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced'),
+                          RidgeClassifier(alpha=10.0, normalize=True, max_iter=None, class_weight='balanced'),
+                          RidgeClassifier(alpha=50.0, normalize=True, max_iter=None, class_weight='balanced'),
+                          RidgeClassifier(alpha=100.0, normalize=True, max_iter=None, class_weight='balanced')]
 
     decision_tree_models = [DecisionTreeClassifier(max_depth=10, max_features='sqrt', class_weight='balanced'),
                             DecisionTreeClassifier(max_depth=100, max_features='sqrt', class_weight='balanced'),
@@ -183,25 +188,59 @@ def define_models(model_selection):
     random_forest_models = [
         RandomForestClassifier(n_estimators=20, max_depth=3, max_features='sqrt', class_weight='balanced'),
         RandomForestClassifier(n_estimators=20, max_depth=10, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=20, max_depth=100, max_features='sqrt', class_weight='balanced')]
+        RandomForestClassifier(n_estimators=20, max_depth=100, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=50, max_depth=3, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=50, max_depth=10, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=50, max_depth=100, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=100, max_depth=3, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=100, max_depth=10, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=100, max_depth=100, max_features='sqrt', class_weight='balanced')]
 
-    svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced'),
-                  LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced'),
-                  LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced'),
-                  LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced'),
-                  SVC(C=0.1, class_weight='balanced'),
-                  SVC(class_weight='balanced')]
-
+    svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced', max_iter=1000),
+                  LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced', max_iter=1000),
+                  LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced', max_iter=1000),
+                  LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced', max_iter=1000)]
+    """
+    SVC(C=0.1, class_weight='balanced'),
+    SVC(class_weight='balanced')]
+    """
     naive_bayes_models = [GaussianNB()]
 
-    ada_boost_models = [AdaBoostClassifier(n_estimators=50), AdaBoostClassifier(n_estimators=100)]
+    ada_boost_models = [AdaBoostClassifier(n_estimators=50),
+                        AdaBoostClassifier(n_estimators=100),
+                        AdaBoostClassifier(n_estimators=200),
+                        AdaBoostClassifier(n_estimators=500),
+                        AdaBoostClassifier(n_estimators=50, learning_rate=0.1),
+                        AdaBoostClassifier(n_estimators=100, learning_rate=0.1),
+                        AdaBoostClassifier(n_estimators=200, learning_rate=0.1),
+                        AdaBoostClassifier(n_estimators=500, learning_rate=0.1),
+                        AdaBoostClassifier(n_estimators=50, learning_rate=5.0),
+                        AdaBoostClassifier(n_estimators=100, learning_rate=5.0),
+                        AdaBoostClassifier(n_estimators=200, learning_rate=5.0),
+                        AdaBoostClassifier(n_estimators=500, learning_rate=5.0)]
 
-    histogram_boost_models = [HistGradientBoostingClassifier(),
-                              HistGradientBoostingClassifier(l2_regularization=1.0),
-                              HistGradientBoostingClassifier(l2_regularization=5.0)]
+    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=500),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=0.1),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=1.0),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=5.0),
+                              HistGradientBoostingClassifier(max_iter=1000),
+                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=0.1),
+                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=1.0),
+                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=5.0),
+                              HistGradientBoostingClassifier(max_iter=500, early_stopping=False),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=0.1, early_stopping=False),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=1.0, early_stopping=False),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=5.0, early_stopping=False)]
 
-    gradient_boost_models = [GradientBoostingClassifier(), GradientBoostingClassifier(max_features='sqrt'),
-                             GradientBoostingClassifier(max_features='log2')]
+    gradient_boost_models = [GradientBoostingClassifier(n_estimators=100),
+                             GradientBoostingClassifier(n_estimators=100, max_features='sqrt'),
+                             GradientBoostingClassifier(n_estimators=100, max_features='log2'),
+                             GradientBoostingClassifier(n_estimators=200),
+                             GradientBoostingClassifier(n_estimators=200, max_features='sqrt'),
+                             GradientBoostingClassifier(n_estimators=200, max_features='log2'),
+                             GradientBoostingClassifier(n_estimators=500),
+                             GradientBoostingClassifier(n_estimators=500, max_features='sqrt'),
+                             GradientBoostingClassifier(n_estimators=500, max_features='log2')]
 
     log_reg_cv_models = [
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
