@@ -102,7 +102,7 @@ def evaluate_model(model, X, y):
                   'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
                   'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
     end_time = time.time()
-    print(f'Evaluating time: {(end_time - start_time) / 60:.0f}min {(end_time - start_time) % 60:.0f}s')
+    print(f'Evaluating time: {(end_time - start_time):.0f}s')
     return stats_dict
 
 
@@ -140,7 +140,7 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
     data, labels = read_data_and_labels(folder_path, data_params)
     models = define_models(model_selection)
 
-    data, labels = downsize_false_candidates(data, labels, data_params['ratio_true_false'])
+    data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
     X_train, X_test, y_train, y_test = train_test_split(data,
                                                         labels,
                                                         test_size=test_size,
@@ -196,14 +196,18 @@ def define_models(model_selection):
         RandomForestClassifier(n_estimators=100, max_depth=10, max_features='sqrt', class_weight='balanced'),
         RandomForestClassifier(n_estimators=100, max_depth=100, max_features='sqrt', class_weight='balanced')]
 
-    svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced', max_iter=1000),
-                  LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced', max_iter=1000),
-                  LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced', max_iter=1000),
-                  LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced', max_iter=1000)]
-    """
-    SVC(C=0.1, class_weight='balanced'),
-    SVC(class_weight='balanced')]
-    """
+    l_svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced', max_iter=500),
+                    LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced', max_iter=500),
+                    LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced', max_iter=500),
+                    LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced', max_iter=500)]
+
+    nl_svm_models = [SVC(C=0.1, class_weight='balanced'),
+                     SVC(C=1.0, class_weight='balanced'),
+                     SVC(C=5.0, class_weight='balanced'),
+                     SVC(C=0.1, kernel='poly', class_weight='balanced'),
+                     SVC(C=0.1, kernel='poly', class_weight='balanced'),
+                     SVC(C=5.0, kernel='poly', class_weight='balanced')]
+
     naive_bayes_models = [GaussianNB()]
 
     ada_boost_models = [AdaBoostClassifier(n_estimators=50),
@@ -246,8 +250,8 @@ def define_models(model_selection):
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
     models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
-              'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'svm': svm_models,
-              'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
+              'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'l_svm': l_svm_models,
+              'nl_svm_models': nl_svm_models, 'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
               'histogram_boost': histogram_boost_models, 'gradient_boost': gradient_boost_models,
               'log_reg_cv': log_reg_cv_models}
 
