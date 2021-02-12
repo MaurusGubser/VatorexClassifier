@@ -7,7 +7,7 @@ import json
 import time
 
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
-    recall_score, plot_confusion_matrix, classification_report, precision_recall_curve, plot_precision_recall_curve
+    recall_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, LogisticRegressionCV
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, \
@@ -15,6 +15,10 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, Gradien
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+
+from data_reading_writing import read_data_and_labels
+from data_handling import downsize_false_candidates
 
 
 def export_model(model, model_name):
@@ -27,7 +31,6 @@ def export_model(model, model_name):
 
 
 def export_model_stats_json(model_dict, model_name, data_dict):
-    start_time = time.time()
     if not os.path.exists('Model_Statistics'):
         os.mkdir('Model_Statistics')
     rel_file_path = 'Model_Statistics/' + model_name + '.json'
@@ -36,13 +39,12 @@ def export_model_stats_json(model_dict, model_name, data_dict):
                                                       model_dict['model_stats_train']['conf_matrix'].flatten()]
     model_dict['model_stats_test']['conf_matrix'] = [int(k) for k in
                                                      model_dict['model_stats_test']['conf_matrix'].flatten()]
-    dict = {}
-    dict.update(model_dict)
-    dict.update(data_dict)
+    dict_params = {}
+    dict_params.update(model_dict)
+    dict_params.update(data_dict)
     with open(rel_file_path, 'w') as outfile:
-        json.dump(dict, outfile, indent=4)
-    end_time = time.time()
-    print("Model statistics saved in", rel_file_path, f"in  {(start_time - end_time) / 60:.1f} Minutes.")
+        json.dump(dict_params, outfile, indent=4)
+    print("Model statistics saved in", rel_file_path)
     return None
 
 
@@ -57,7 +59,6 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
         title_string = title_string + '\n'
         with open(filename, 'w') as initfile:
             initfile.write(title_string)
-        initfile.close()
 
     model_string = model_name + ',' + str(model_dict['model_params']).replace(',', '') + ','
     for key, model_value in model_dict['model_stats_train'].items():
@@ -73,7 +74,6 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
     model_string = model_string + '\n'
     with open(filename, 'a') as outfile:
         outfile.write(model_string)
-        outfile.close()
 
     print("Model statistics appended to", filename)
     return None
@@ -88,15 +88,21 @@ def read_model_stats_json(stats_path):
 
 
 def train_model(model, X_train, y_train):
+    start_time = time.time()
     model.fit(X_train, y_train)
+    end_time = time.time()
+    print(f'Training time: {(end_time - start_time) / 60:.0f}min {(end_time - start_time) % 60:.0f}s')
     return model
 
 
 def evaluate_model(model, X, y):
+    start_time = time.time()
     y_pred = model.predict(X)
     stats_dict = {'conf_matrix': confusion_matrix(y, y_pred), 'acc': accuracy_score(y, y_pred),
                   'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
                   'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
+    end_time = time.time()
+    print(f'Evaluating time: {(end_time - start_time):.0f}s')
     return stats_dict
 
 
@@ -109,41 +115,49 @@ def get_name_index(model_name):
     return idx
 
 
-def train_and_evaluate_modelgroup(modelgroup, modelgroup_name, data_params, preproc_params):
+def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, data_params):
     index = get_name_index(modelgroup_name)
-    X_train = data_params['X_train']
-    y_train = data_params['y_train']
-    X_test = data_params['X_test']
-    y_test = data_params['y_test']
 
     dict_data = {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
                  'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
-    dict_data.update(preproc_params)
+    dict_data.update(data_params)
 
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = {'model': modelgroup[i], 'model_params': modelgroup[i].get_params()}
 
-        start_time = time.time()
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
-        end_time = time.time()
-        print('Training time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
-        start_time = time.time()
         dict_model['model_stats_train'] = evaluate_model(dict_model['model'], X_train, y_train)
         dict_model['model_stats_test'] = evaluate_model(dict_model['model'], X_test, y_test)
-        end_time = time.time()
-        print('Evaluating time {}: {:.1f} minutes'.format(model_name, (end_time - start_time) / 60))
+
         export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
     return None
 
 
+def train_and_test_model_selection(model_selection, folder_path, data_params, test_size):
+    data, labels = read_data_and_labels(folder_path, data_params)
+    models = define_models(model_selection)
+
+    data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
+    X_train, X_test, y_train, y_test = train_test_split(data,
+                                                        labels,
+                                                        test_size=test_size,
+                                                        random_state=42,
+                                                        stratify=labels)
+    del data
+
+    for key, value in models.items():
+        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, data_params)
+    return None
+
+
 def define_models(model_selection):
     log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.5, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.5, max_iter=200, solver='saga', class_weight='balanced'),
-                      LogisticRegression(penalty='elasticnet', C=0.5, solver='saga', l1_ratio=0.1,
+                      LogisticRegression(penalty='l2', C=1.0, max_iter=200, class_weight='balanced'),
+                      LogisticRegression(penalty='l1', C=1.0, max_iter=200, solver='saga', class_weight='balanced'),
+                      LogisticRegression(penalty='elasticnet', C=1.0, solver='saga', l1_ratio=0.1,
                                          class_weight='balanced'),
                       LogisticRegression(penalty='l2', C=0.1, max_iter=200, class_weight='balanced'),
                       LogisticRegression(penalty='l1', C=0.1, max_iter=200, solver='saga', class_weight='balanced'),
@@ -159,12 +173,13 @@ def define_models(model_selection):
                                          class_weight='balanced')]
 
     sgd_models = [SGDClassifier(penalty='l2', alpha=0.01, class_weight='balanced'),
-                  SGDClassifier(penalty='l2', alpha=0.8, class_weight='balanced'),
+                  SGDClassifier(penalty='l2', alpha=0.5, class_weight='balanced'),
                   SGDClassifier(penalty='l2', alpha=2.0, class_weight='balanced')]
 
-    ridge_class_models = [RidgeClassifier(alpha=10.0, normalize=True, class_weight='balanced'),
-                          RidgeClassifier(alpha=50.0, normalize=True, class_weight='balanced'),
-                          RidgeClassifier(alpha=100.0, normalize=True, class_weight='balanced')]
+    ridge_class_models = [RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced'),
+                          RidgeClassifier(alpha=10.0, normalize=True, max_iter=None, class_weight='balanced'),
+                          RidgeClassifier(alpha=50.0, normalize=True, max_iter=None, class_weight='balanced'),
+                          RidgeClassifier(alpha=100.0, normalize=True, max_iter=None, class_weight='balanced')]
 
     decision_tree_models = [DecisionTreeClassifier(max_depth=10, max_features='sqrt', class_weight='balanced'),
                             DecisionTreeClassifier(max_depth=100, max_features='sqrt', class_weight='balanced'),
@@ -173,31 +188,70 @@ def define_models(model_selection):
     random_forest_models = [
         RandomForestClassifier(n_estimators=20, max_depth=3, max_features='sqrt', class_weight='balanced'),
         RandomForestClassifier(n_estimators=20, max_depth=10, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=20, max_depth=100, max_features='sqrt', class_weight='balanced')]
+        RandomForestClassifier(n_estimators=20, max_depth=100, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=50, max_depth=3, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=50, max_depth=10, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=50, max_depth=100, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=100, max_depth=3, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=100, max_depth=10, max_features='sqrt', class_weight='balanced'),
+        RandomForestClassifier(n_estimators=100, max_depth=100, max_features='sqrt', class_weight='balanced')]
 
-    svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced'),
-                  LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced'),
-                  LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced'),
-                  LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced'),
-                  SVC(C=1.0, kernel='linear', class_weight='balanced'),
-                  SVC(C=0.1, class_weight='balanced'), SVC(class_weight='balanced')]
+    l_svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced', max_iter=500),
+                    LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced', max_iter=500),
+                    LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced', max_iter=500),
+                    LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced', max_iter=500)]
+
+    nl_svm_models = [SVC(C=0.1, class_weight='balanced'),
+                     SVC(C=1.0, class_weight='balanced'),
+                     SVC(C=5.0, class_weight='balanced'),
+                     SVC(C=0.1, kernel='poly', class_weight='balanced'),
+                     SVC(C=0.1, kernel='poly', class_weight='balanced'),
+                     SVC(C=5.0, kernel='poly', class_weight='balanced')]
 
     naive_bayes_models = [GaussianNB()]
 
-    ada_boost_models = [AdaBoostClassifier(n_estimators=50), AdaBoostClassifier(n_estimators=100)]
+    ada_boost_models = [AdaBoostClassifier(n_estimators=50),
+                        AdaBoostClassifier(n_estimators=100),
+                        AdaBoostClassifier(n_estimators=200),
+                        AdaBoostClassifier(n_estimators=500),
+                        AdaBoostClassifier(n_estimators=50, learning_rate=0.1),
+                        AdaBoostClassifier(n_estimators=100, learning_rate=0.1),
+                        AdaBoostClassifier(n_estimators=200, learning_rate=0.1),
+                        AdaBoostClassifier(n_estimators=500, learning_rate=0.1),
+                        AdaBoostClassifier(n_estimators=50, learning_rate=5.0),
+                        AdaBoostClassifier(n_estimators=100, learning_rate=5.0),
+                        AdaBoostClassifier(n_estimators=200, learning_rate=5.0),
+                        AdaBoostClassifier(n_estimators=500, learning_rate=5.0)]
 
-    histogram_boost_models = [HistGradientBoostingClassifier(), HistGradientBoostingClassifier(l2_regularization=1.0),
-                              HistGradientBoostingClassifier(l2_regularization=5.0)]
+    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=500),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=0.1),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=1.0),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=5.0),
+                              HistGradientBoostingClassifier(max_iter=1000),
+                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=0.1),
+                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=1.0),
+                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=5.0),
+                              HistGradientBoostingClassifier(max_iter=500, early_stopping=False),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=0.1, early_stopping=False),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=1.0, early_stopping=False),
+                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=5.0, early_stopping=False)]
 
-    gradient_boost_models = [GradientBoostingClassifier(), GradientBoostingClassifier(max_features='sqrt'),
-                             GradientBoostingClassifier(max_features='log2')]
+    gradient_boost_models = [GradientBoostingClassifier(n_estimators=100),
+                             GradientBoostingClassifier(n_estimators=100, max_features='sqrt'),
+                             GradientBoostingClassifier(n_estimators=100, max_features='log2'),
+                             GradientBoostingClassifier(n_estimators=200),
+                             GradientBoostingClassifier(n_estimators=200, max_features='sqrt'),
+                             GradientBoostingClassifier(n_estimators=200, max_features='log2'),
+                             GradientBoostingClassifier(n_estimators=500),
+                             GradientBoostingClassifier(n_estimators=500, max_features='sqrt'),
+                             GradientBoostingClassifier(n_estimators=500, max_features='log2')]
 
     log_reg_cv_models = [
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
     models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
-              'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'svm': svm_models,
-              'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
+              'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'l_svm': l_svm_models,
+              'nl_svm_models': nl_svm_models, 'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
               'histogram_boost': histogram_boost_models, 'gradient_boost': gradient_boost_models,
               'log_reg_cv': log_reg_cv_models}
 
@@ -211,7 +265,7 @@ def define_models(model_selection):
 def read_models(model_list):
     model_dict = {}
     for name in model_list:
-        model = pickle.load(open('Models_Trained/'+name+'.sav', 'rb'))
+        model = pickle.load(open('Models_Trained/' + name + '.sav', 'rb'))
         model_dict[name] = model
     return model_dict
 
