@@ -40,7 +40,7 @@ def hist_read(path):
 
 
 def read_images_hist_from_folder(path_folder, read_image, read_hist):
-    images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')]
+    images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')].sort()
     histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
 
     images = []

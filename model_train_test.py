@@ -110,7 +110,7 @@ def get_name_index(model_name):
     idx = 0
     if os.path.exists('Model_Statistics'):
         model_paths = Path('Model_Statistics/').rglob(model_name + '*.json')
-        list_model_paths = [str(path) for path in model_paths]
+        list_model_paths = [str(path) for path in model_paths].sort()
         idx = len(list_model_paths)
     return idx
 
@@ -223,18 +223,14 @@ def define_models(model_selection):
                         AdaBoostClassifier(n_estimators=200, learning_rate=5.0),
                         AdaBoostClassifier(n_estimators=500, learning_rate=5.0)]
 
-    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=500),
-                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=0.1),
-                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=5.0),
-                              HistGradientBoostingClassifier(max_iter=1000),
-                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=0.1),
-                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=1000, l2_regularization=5.0),
-                              HistGradientBoostingClassifier(max_iter=500, early_stopping=False),
-                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=0.1, early_stopping=False),
-                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=1.0, early_stopping=False),
-                              HistGradientBoostingClassifier(max_iter=500, l2_regularization=5.0, early_stopping=False)]
+    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=100),
+                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=0.1),
+                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=1.0),
+                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=5.0),
+                              HistGradientBoostingClassifier(max_iter=300),
+                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1),
+                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0),
+                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0)]
 
     gradient_boost_models = [GradientBoostingClassifier(n_estimators=100),
                              GradientBoostingClassifier(n_estimators=100, max_features='sqrt'),
@@ -251,7 +247,7 @@ def define_models(model_selection):
 
     models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
               'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'l_svm': l_svm_models,
-              'nl_svm_models': nl_svm_models, 'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
+              'nl_svm': nl_svm_models, 'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
               'histogram_boost': histogram_boost_models, 'gradient_boost': gradient_boost_models,
               'log_reg_cv': log_reg_cv_models}
 

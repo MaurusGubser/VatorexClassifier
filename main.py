@@ -37,7 +37,7 @@ nl_svm = False
 naive_bayes = False
 ada_boost = False
 histogram_boost = True
-gradient_boost = True
+gradient_boost = False
 log_reg_cv = False
 model_selection = {'log_reg': log_reg, 'sgd': sgd, 'ridge_class': ridge_class, 'decision_tree': decision_tree,
                    'random_forest': random_forest, 'l_svm': l_svm, 'nl_svm': nl_svm, 'naive_bayes': naive_bayes,
