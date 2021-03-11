@@ -40,7 +40,7 @@ def hist_read(path):
 
 
 def read_images_hist_from_folder(path_folder, read_image, read_hist):
-    images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')].sort()
+    images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')]
     histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
 
     images = []
@@ -94,7 +94,7 @@ def read_images_and_histograms(folder_list, read_image, read_hist):
         histograms = histograms + hists
         labels = labels + lbls
     end_time = time.time()
-    print(f'Read images and histograms in {(end_time - start_time)/60:.1f} minutes')
+    print('Read images and histograms in {:.1f} minutes'.format((end_time - start_time)/60))
     return images, histograms, labels
 
 
@@ -133,7 +133,7 @@ def export_data(data_img, data_hist, labels, data_name):
              img=data_img,
              hist=data_hist,
              labels=labels)
-    print(f'Saved data and labels in files {path_export}')
+    print('Saved data and labels in files {}'.format(path_export))
     return None
 
 
@@ -155,7 +155,7 @@ def read_data_and_labels(path, data_params):
         data = concatenate_data(data_images, data_histograms, read_image, read_hist)
         del data_images
         del data_histograms
-        print(f'Re-loaded preprocessed data and labels from {path_preprocessed}')
+        print('Re-loaded preprocessed data and labels from {}'.format(path_preprocessed))
         if data_params['with_mean'] or data_params['with_std']:
             data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
         return data, labels

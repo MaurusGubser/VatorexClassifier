@@ -91,7 +91,7 @@ def train_model(model, X_train, y_train):
     start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
-    print(f'Training time: {(end_time - start_time) / 60:.0f}min {(end_time - start_time) % 60:.0f}s')
+    print('Training time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     return model
 
 
@@ -102,15 +102,14 @@ def evaluate_model(model, X, y):
                   'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
                   'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
     end_time = time.time()
-    print(f'Evaluating time: {(end_time - start_time):.0f}s')
+    print('Evaluating time: {:.0f}s'.format((end_time - start_time)))
     return stats_dict
 
 
 def get_name_index(model_name):
     idx = 0
     if os.path.exists('Model_Statistics'):
-        model_paths = Path('Model_Statistics/').rglob(model_name + '*.json')
-        list_model_paths = [str(path) for path in model_paths].sort()
+        list_model_paths = [str(path) for path in Path('Model_Statistics/').rglob(model_name + '*.json')]
         idx = len(list_model_paths)
     return idx
 

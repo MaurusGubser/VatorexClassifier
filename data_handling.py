@@ -70,7 +70,7 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
         del img
     data = np.array(data)
     end = time.time()
-    print(f"Computed features in {(end - start) / 60:.1f} minutes; data of shape {data.shape}")
+    print('Computed features in {:.1f} minutes; data of shape {data.shape}'.format((end - start) / 60, data.shape))
     return data
 
 
@@ -84,7 +84,7 @@ def dimension_reduction(data, nb_components_pca, batch_size_pca):
         data = pca.transform(data)
         end = time.time()
         print(
-            f"Dimensionality reduction took {(end - start) / 60:.1f} minutes; reduction from {old_shape} to {data.shape}")
+            'Dimensionality reduction took {:.1f} minutes; reduction from {} to {}'.format((end - start) / 60, old_shape, data.shape))
     return data
 
 
@@ -94,7 +94,7 @@ def remove_low_var_features(data, threshold_low_var):
         selector = VarianceThreshold(threshold=threshold_low_var)
         data = selector.fit_transform(data)
         end_time = time.time()
-        print(f"Removed low var features in {(end_time - start_time) / 60:.1f} minutes; data of shape {data.shape}")
+        print('Removed low var features in {:.1f} minutes; data of shape {data.shape}'.format((end_time - start_time) / 60, data.shape))
     return data
 
 
@@ -137,7 +137,7 @@ def rearrange_hists(histograms_list, data_params):
         del hists
     data = np.array(data)
     end_time = time.time()
-    print(f"Rearranged histograms in {(end_time - start_time):.1f}s; histograms of shape {data.shape}")
+    print('Rearranged histograms in {:.1f}s; histograms of shape {}'.format((end_time - start_time), data.shape))
     return data
 
 
@@ -146,7 +146,7 @@ def downsize_false_candidates(data, labels, percentage_true):
     nb_true_cand = np.sum(labels)
     if nb_true_cand / nb_candidates > percentage_true:
         raise ValueError(
-            f'Ratio of true candidates {nb_true_cand} to total candidates {nb_candidates} is already greater than {percentage_true}')
+            'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand, nb_candidates, percentage_true))
     nb_false_remove = nb_candidates - int(nb_true_cand / percentage_true)
 
     idxs_false = list(np.arange(0, nb_candidates)[labels == 0])
