@@ -80,8 +80,7 @@ def dimension_reduction(data, nb_components_pca, batch_size_pca):
     if nb_components_pca:
         pca = IncrementalPCA(n_components=nb_components_pca, batch_size=batch_size_pca)
         # data = normalize(data)
-        pca.fit(data)
-        data = pca.transform(data)
+        data = pca.fit_transform(data)
         end = time.time()
         print(
             'Dimensionality reduction took {:.1f} minutes; reduction from {} to {}'.format((end - start) / 60, old_shape, data.shape))
@@ -155,4 +154,5 @@ def downsize_false_candidates(data, labels, percentage_true):
 
     data = np.delete(data, idxs_false_remove, axis=0)
     labels = np.delete(labels, idxs_false_remove)
+    print('After downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
     return data, labels
