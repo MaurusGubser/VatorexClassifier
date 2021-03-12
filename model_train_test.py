@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import time
+from collections import OrderedDict
 
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
     recall_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
@@ -39,7 +40,7 @@ def export_model_stats_json(model_dict, model_name, data_dict):
                                                       model_dict['model_stats_train']['conf_matrix'].flatten()]
     model_dict['model_stats_test']['conf_matrix'] = [int(k) for k in
                                                      model_dict['model_stats_test']['conf_matrix'].flatten()]
-    dict_params = {}
+    dict_params = OrderedDict({})
     dict_params.update(model_dict)
     dict_params.update(data_dict)
     with open(rel_file_path, 'w') as outfile:
@@ -98,9 +99,9 @@ def train_model(model, X_train, y_train):
 def evaluate_model(model, X, y):
     start_time = time.time()
     y_pred = model.predict(X)
-    stats_dict = {'conf_matrix': confusion_matrix(y, y_pred), 'acc': accuracy_score(y, y_pred),
-                  'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
-                  'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)}
+    stats_dict = OrderedDict({'conf_matrix': confusion_matrix(y, y_pred), 'acc': accuracy_score(y, y_pred),
+                              'acc_balanced': balanced_accuracy_score(y, y_pred), 'prec': precision_score(y, y_pred),
+                              'rcll': recall_score(y, y_pred), 'f1_scr': f1_score(y, y_pred)})
     end_time = time.time()
     print('Evaluating time: {:.0f}s'.format((end_time - start_time)))
     return stats_dict
@@ -117,13 +118,14 @@ def get_name_index(model_name):
 def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, data_params):
     index = get_name_index(modelgroup_name)
 
-    dict_data = {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
-                 'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]}
+    dict_data = OrderedDict(
+        {'training_size': y_train.size, 'training_nb_mites': int(np.sum(y_train)), 'test_size': y_test.size,
+         'test_nb_mites': int(np.sum(y_test)), 'feature_size': X_train.shape[1]})
     dict_data.update(data_params)
 
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
-        dict_model = {'model': modelgroup[i], 'model_params': modelgroup[i].get_params()}
+        dict_model = OrderedDict({'model': modelgroup[i], 'model_params': modelgroup[i].get_params()})
 
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
         dict_model['model_stats_train'] = evaluate_model(dict_model['model'], X_train, y_train)
@@ -244,11 +246,11 @@ def define_models(model_selection):
     log_reg_cv_models = [
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
-    models = {'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
-              'decision_tree': decision_tree_models, 'random_forest': random_forest_models, 'l_svm': l_svm_models,
-              'nl_svm': nl_svm_models, 'naive_bayes': naive_bayes_models, 'ada_boost': ada_boost_models,
-              'histogram_boost': histogram_boost_models, 'gradient_boost': gradient_boost_models,
-              'log_reg_cv': log_reg_cv_models}
+    models = OrderedDict({'log_reg': log_reg_models, 'sgd': sgd_models, 'ridge_class': ridge_class_models,
+                          'decision_tree': decision_tree_models, 'random_forest': random_forest_models,
+                          'l_svm': l_svm_models, 'nl_svm': nl_svm_models, 'naive_bayes': naive_bayes_models,
+                          'ada_boost': ada_boost_models, 'histogram_boost': histogram_boost_models,
+                          'gradient_boost': gradient_boost_models, 'log_reg_cv': log_reg_cv_models})
 
     for key, value in model_selection.items():
         if not value:
@@ -258,7 +260,7 @@ def define_models(model_selection):
 
 
 def read_models(model_list):
-    model_dict = {}
+    model_dict = OrderedDict({})
     for name in model_list:
         model = pickle.load(open('Models_Trained/' + name + '.sav', 'rb'))
         model_dict[name] = model
@@ -275,7 +277,7 @@ def test_model(model, X_test, y_test):
 
 
 def get_feature_dims(model_dict):
-    feature_dims = {}
+    feature_dims = OrderedDict({})
     for key, value in model_dict.items():
         model_type = key[0:key.rfind('_')]
         if model_type in ['log_reg', 'sgd', 'ridge_class', 'log_reg_cv']:

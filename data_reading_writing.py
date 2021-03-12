@@ -34,7 +34,7 @@ def hist_read(path):
             elif mode == 's':
                 pdf_s[int(line_tokens[0])] = np.float32(line_tokens[1])
             else:
-                raise ValueError(f'Line {line} does not correspond to expected pattern.')
+                raise ValueError('Line {} does not correspond to expected pattern.'.format(line))
     histograms = [pdf_hls, pdf_h, pdf_l, pdf_s]
     return histograms
 
@@ -58,7 +58,7 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
             elif re.search(pattern_false, path_img):
                 labels.append(0)
             else:
-                raise AssertionError(f'Label image path {path_img} does not contain true or false.')
+                raise AssertionError('Label image path {} does not contain true or false.'.format(path_img))
     elif not read_image:
         for path_hist in histograms_paths:
             histograms.append(hist_read(path_hist))
@@ -67,7 +67,7 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
             elif re.search(pattern_false, path_hist):
                 labels.append(0)
             else:
-                raise AssertionError(f'Label image path {path_hist} does not contain true or false.')
+                raise AssertionError('Label image path {} does not contain true or false.'.format(path_hist))
     else:
         for path_img, path_hist in zip(images_paths, histograms_paths):
             image = img_as_ubyte(equalize_adapthist(imread(path_img, as_gray=False)))
@@ -78,7 +78,8 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
             elif re.search(pattern_false, path_img) and re.search(pattern_false, path_hist):
                 labels.append(0)
             else:
-                raise AssertionError(f'Label of histogram path {path_hist} and image path {path_img} are not compatible')
+                raise AssertionError(
+                    'Label of histogram path {} and image path {} are not compatible'.format(path_hist, path_img))
 
     return images, histograms, labels
 
@@ -94,7 +95,7 @@ def read_images_and_histograms(folder_list, read_image, read_hist):
         histograms = histograms + hists
         labels = labels + lbls
     end_time = time.time()
-    print('Read images and histograms in {:.1f} minutes'.format((end_time - start_time)/60))
+    print('Read images and histograms in {:.1f} minutes'.format((end_time - start_time) / 60))
     return images, histograms, labels
 
 
