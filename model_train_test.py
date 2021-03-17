@@ -104,7 +104,7 @@ def evaluate_model(model, X, y):
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
                               ('f1_scr', f1_score(y, y_pred))])
     end_time = time.time()
-    print('Evaluating time: {:.0f}s'.format((end_time - start_time)))
+    print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     return stats_dict
 
 
@@ -244,12 +244,14 @@ def define_models(model_selection):
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
     estimators = [[('svc', SVC(C=1.0, class_weight='balanced')), ('hist_boost',
-                   HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                                                                  HistGradientBoostingClassifier(max_iter=300,
+                                                                                                 l2_regularization=5.0))],
                   [('nb', GaussianNB()), ('hist_boost',
-                   HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                                          HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
                   [('ridge', RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced')),
                    ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
-                  [('log_reg', LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1, class_weight='balanced')),
+                  [('log_reg', LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1,
+                                                  class_weight='balanced')),
                    ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))]]
 
     stacked_models = [StackingClassifier(estimators=estimators[0]), StackingClassifier(estimators=estimators[1]),

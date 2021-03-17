@@ -56,6 +56,7 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('stacked', stacked)])
 
 # ----- sequential models -----
+sequential = True
 names_sequential = ['svc_hist', 'nb_hist', 'ridge_hist', 'logreg_hist']
 
 models_recall = [SVC(C=1.0, class_weight='balanced'), GaussianNB(),
@@ -70,6 +71,9 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
 
 if __name__ == '__main__':
     folder_path = "Candidate_Images/Mite4_Dataset_Cleaned/"
-    # train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
-    models_sequential = define_sequential_models(names_sequential, models_recall, models_precision)
-    train_and_test_sequential_models(models_sequential, folder_path, data_parameters, test_size)
+    if sequential:
+        models_sequential = define_sequential_models(names_sequential, models_recall, models_precision)
+        train_and_test_sequential_models(models_sequential, folder_path, data_parameters, test_size)
+    else:
+        train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
+

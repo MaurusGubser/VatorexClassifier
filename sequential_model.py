@@ -30,11 +30,14 @@ X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.1,
 
 
 def train_sequential_model(model_0, model_1, data, labels):
+    start_time = time.time()
     model_0.fit(data, labels)
     y_1 = model_0.predict(data)
     data_2 = data[y_1 == 1]
     labels_2 = labels[y_1 == 1]
     model_1.fit(data_2, labels_2)
+    end_time = time.time()
+    print('Training time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     return model_0, model_1
 
 
@@ -54,21 +57,19 @@ def predict_sequential_model(model_0, model_1, data):
 def evaluate_sequential_model(model_0, model_1, X, y):
     start_time = time.time()
     y_pred, y_0, y_1 = predict_sequential_model(model_0, model_1, X)
-
+    """
     stats_dict_1 = OrderedDict([('conf_matrix', confusion_matrix(y, y_0)), ('acc', accuracy_score(y, y_0)),
                                 ('acc_balanced', balanced_accuracy_score(y, y_0)),
                                 ('prec', precision_score(y, y_0)), ('rcll', recall_score(y, y_0)),
                                 ('f1_scr', f1_score(y, y_0))])
-    for key, value in stats_dict_1.items():
-        print('Model_1:', key, value)
+    """
     stats_dict_seq = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
                                   ('acc_balanced', balanced_accuracy_score(y, y_pred)),
                                   ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
                                   ('f1_scr', f1_score(y, y_pred))])
-    for key, value in stats_dict_seq.items():
-        print('Model_seq:', key, value)
+
     end_time = time.time()
-    print('Evaluating time: {:.0f}s'.format((end_time - start_time)))
+    print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     return stats_dict_seq
 
 
