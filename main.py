@@ -1,6 +1,12 @@
 from collections import OrderedDict
+from sklearn.experimental import enable_hist_gradient_boosting
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.linear_model import RidgeClassifier, LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
 
 from model_train_test import train_and_test_model_selection
+from sequential_model import train_and_test_sequential_models, define_sequential_models
 
 # ----- data parameters -----
 read_image = False
@@ -31,7 +37,7 @@ test_size = 0.2  # fraction of test set
 # ----- training models -----
 log_reg = False
 sgd = False
-ridge_class = True
+ridge_class = False
 decision_tree = False
 random_forest = False
 l_svm = False
@@ -41,12 +47,29 @@ ada_boost = False
 histogram_boost = False
 gradient_boost = False
 log_reg_cv = False
+stacked = True
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
                                ('decision_tree', decision_tree), ('random_forest', random_forest),
                                ('l_svm', l_svm), ('nl_svm', nl_svm), ('naive_bayes', naive_bayes),
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
-                               ('gradient_boost', gradient_boost), ('log_reg_cv', log_reg_cv)])
+                               ('gradient_boost', gradient_boost), ('log_reg_cv', log_reg_cv),
+                               ('stacked', stacked)])
+
+# ----- sequential models -----
+names_sequential = ['svc_hist', 'nb_hist', 'ridge_hist', 'logreg_hist']
+
+models_recall = [SVC(C=1.0, class_weight='balanced'), GaussianNB(),
+                 RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced'),
+                 LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1, class_weight='balanced')]
+
+models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0),
+                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0),
+                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0),
+                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0)]
+
 
 if __name__ == '__main__':
-    folder_path = "Candidate_Images/Mite4_Dataset_Cleaned_small/"
-    train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
+    folder_path = "Candidate_Images/Mite4_Dataset_Cleaned/"
+    # train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
+    models_sequential = define_sequential_models(names_sequential, models_recall, models_precision)
+    train_and_test_sequential_models(models_sequential, folder_path, data_parameters, test_size)

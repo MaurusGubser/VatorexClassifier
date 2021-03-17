@@ -12,7 +12,7 @@ from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, LogisticRegressionCV
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, \
-    HistGradientBoostingClassifier
+    HistGradientBoostingClassifier, StackingClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
@@ -76,7 +76,7 @@ def export_model_stats_csv(model_dict, model_name, data_dict):
     with open(filename, 'a') as outfile:
         outfile.write(model_string)
 
-    print("Model statistics appended to", filename)
+    print("Model statistics of {} appended to {}".format(model_name, filename))
     return None
 
 
@@ -132,8 +132,8 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         dict_model['model_stats_train'] = evaluate_model(dict_model['model'], X_train, y_train)
         dict_model['model_stats_test'] = evaluate_model(dict_model['model'], X_test, y_test)
 
-        export_model(dict_model['model'], model_name)
-        export_model_stats_json(dict_model, model_name, dict_data)
+        # export_model(dict_model['model'], model_name)
+        # export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
     return None
 
@@ -219,11 +219,7 @@ def define_models(model_selection):
                         AdaBoostClassifier(n_estimators=50, learning_rate=0.1),
                         AdaBoostClassifier(n_estimators=100, learning_rate=0.1),
                         AdaBoostClassifier(n_estimators=200, learning_rate=0.1),
-                        AdaBoostClassifier(n_estimators=500, learning_rate=0.1),
-                        AdaBoostClassifier(n_estimators=50, learning_rate=5.0),
-                        AdaBoostClassifier(n_estimators=100, learning_rate=5.0),
-                        AdaBoostClassifier(n_estimators=200, learning_rate=5.0),
-                        AdaBoostClassifier(n_estimators=500, learning_rate=5.0)]
+                        AdaBoostClassifier(n_estimators=500, learning_rate=0.1)]
 
     histogram_boost_models = [HistGradientBoostingClassifier(max_iter=100),
                               HistGradientBoostingClassifier(max_iter=100, l2_regularization=0.1),
@@ -247,11 +243,24 @@ def define_models(model_selection):
     log_reg_cv_models = [
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
+    estimators = [[('svc', SVC(C=1.0, class_weight='balanced')), ('hist_boost',
+                   HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                  [('nb', GaussianNB()), ('hist_boost',
+                   HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                  [('ridge', RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced')),
+                   ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                  [('log_reg', LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1, class_weight='balanced')),
+                   ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))]]
+
+    stacked_models = [StackingClassifier(estimators=estimators[0]), StackingClassifier(estimators=estimators[1]),
+                      StackingClassifier(estimators=estimators[2]), StackingClassifier(estimators=estimators[3])]
+
     models = OrderedDict([('log_reg', log_reg_models), ('sgd', sgd_models), ('ridge_class', ridge_class_models),
                           ('decision_tree', decision_tree_models), ('random_forest', random_forest_models),
                           ('l_svm', l_svm_models), ('nl_svm', nl_svm_models), ('naive_bayes', naive_bayes_models),
                           ('ada_boost', ada_boost_models), ('histogram_boost', histogram_boost_models),
-                          ('gradient_boost', gradient_boost_models), ('log_reg_cv', log_reg_cv_models)])
+                          ('gradient_boost', gradient_boost_models), ('log_reg_cv', log_reg_cv_models),
+                          ('stacked', stacked_models)])
 
     for key, value in model_selection.items():
         if not value:
