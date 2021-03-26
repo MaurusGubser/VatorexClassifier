@@ -1,6 +1,8 @@
+import json
 import os
 import time
 from collections import OrderedDict
+from pathlib import Path
 
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -15,18 +17,6 @@ from sklearn.naive_bayes import GaussianNB
 from data_reading_writing import read_data_and_labels
 from data_handling import downsize_false_candidates
 from model_train_test import get_name_index
-
-"""
-read_image = False
-read_hist = True
-path_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Preprocessed_Data/Mite4_Dataset_Cleaned_False_True_False_False_(3, 32)_10_None_100_1000_True_True_True_True_0.01_False_False.npz'
-path_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Preprocessed_Data/Mite4_Dataset_Cleaned_False_True_False_False_(3, 32)_10_None_100_1000_True_True_True_True_0.05_False_False.npz'
-# path_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Preprocessed_Data/Mite4_Dataset_Cleaned_small_False_True_False_False_(3, 32)_10_None_100_1000_True_True_True_True_0.05_False_False.npz'
-data_images, data_histograms, labels = load_data_and_labels(path_data)
-data = concatenate_data(data_images, data_histograms, read_image, read_hist)
-data, labels = downsize_false_candidates(data, labels, 0.05)
-X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.1, random_state=42)
-"""
 
 
 def train_sequential_model(model_0, model_1, data, labels):
@@ -45,13 +35,18 @@ def predict_sequential_model(model_0, model_1, data):
     y_0 = model_0.predict(data)
     data_1 = data[y_0 == 1]
     y_1 = model_1.predict(data_1)
-    y_pred = np.zeros(y_0.shape)
+    y_pred = np.zeros(y_0.shape, dtype=np.int8)
     j = 0
     for i in range(0, y_0.size):
         if y_0[i] == 1:
             y_pred[i] = y_1[j]
             j += 1
     return y_pred, y_0, y_1
+
+
+def compute_mites_model_1(y_true, y_0):
+    y_ones = (y_true + y_0 == 2)
+    return int(np.sum(y_ones))
 
 
 def evaluate_sequential_model(model_0, model_1, X, y):
@@ -66,19 +61,40 @@ def evaluate_sequential_model(model_0, model_1, X, y):
     stats_dict_seq = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
                                   ('acc_balanced', balanced_accuracy_score(y, y_pred)),
                                   ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
-                                  ('f1_scr', f1_score(y, y_pred))])
+                                  ('f1_scr', f1_score(y, y_pred)), ('Model_1 cand', y_1.size),
+                                  ('Model_1 true mites', compute_mites_model_1(y, y_0)),
+                                  ('Model_1 pred mites', int(np.sum(y_1)))])
 
     end_time = time.time()
     print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     return stats_dict_seq
 
 
+def export_sequential_model_stats_json(model_dict, model_name, data_dict):
+    if not os.path.exists('Sequential_Model_Statistics'):
+        os.mkdir('Sequential_Model_Statistics')
+    rel_file_path = 'Sequential_Model_Statistics/' + model_name + '.json'
+    del model_dict['model_0']
+    del model_dict['model_1']
+    model_dict['model_stats_train']['conf_matrix'] = [int(k) for k in
+                                                      model_dict['model_stats_train']['conf_matrix'].flatten()]
+    model_dict['model_stats_test']['conf_matrix'] = [int(k) for k in
+                                                     model_dict['model_stats_test']['conf_matrix'].flatten()]
+    dict_params = OrderedDict({})
+    dict_params.update(model_dict)
+    dict_params.update(data_dict)
+    with open(rel_file_path, 'w') as outfile:
+        json.dump(dict_params, outfile, indent=4)
+    print("Model statistics saved in", rel_file_path)
+    return None
+
+
 def export_sequential_model_stats_csv(model_dict, model_name, data_dict):
-    if not os.path.exists('Model_Statistics'):
-        os.mkdir('Model_Statistics')
-    filename = 'Model_Statistics/Sequential_Model_Statistics.csv'
+    if not os.path.exists('Sequential_Model_Statistics'):
+        os.mkdir('Sequential_Model_Statistics')
+    filename = 'Sequential_Model_Statistics/Sequential_Model_Statistics.csv'
     if not os.path.exists(filename):
-        title_string = 'Model name,Model_0_params,Model_1_params,TRAIN Accuracy,Acc. Balanced,Precision,Recall,F1 Score,TEST Accuracy,Acc. Balanced,Precision,Recall,F1 Score,'
+        title_string = 'Model name,Model_0_params,Model_1_params,TRAIN Accuracy,Acc. Balanced,Precision,Recall,F1 Score,Model_1 cand,Model_1 true mites,Model_1 pred mites,TEST Accuracy,Acc. Balanced,Precision,Recall,F1 Score,Model_1 cand,Model_1 true mites,Model_1 pred mites,'
         for i in data_dict.keys():
             title_string = title_string + str(i) + ','
         title_string = title_string + '\n'
@@ -105,6 +121,14 @@ def export_sequential_model_stats_csv(model_dict, model_name, data_dict):
     return None
 
 
+def get_name_sequential_index(model_name):
+    idx = 0
+    if os.path.exists('Sequential_Model_Statistics'):
+        list_model_paths = [str(path) for path in Path('Sequential_Model_Statistics/').rglob(model_name + '*.json')]
+        idx = len(list_model_paths)
+    return idx
+
+
 def train_and_test_sequential_models(sequential_models, folder_path, data_params, test_size):
     data, labels = read_data_and_labels(folder_path, data_params)
     data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
@@ -116,7 +140,7 @@ def train_and_test_sequential_models(sequential_models, folder_path, data_params
     del data
 
     for key, value in sequential_models.items():
-        index = get_name_index(key)
+        index = get_name_sequential_index(key)
         dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                                  ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),
                                  ('feature_size', X_train.shape[1])])
@@ -134,7 +158,7 @@ def train_and_test_sequential_models(sequential_models, folder_path, data_params
                                                                    y_test)
 
         # export_model(dict_model['model'], model_name)
-        # export_model_stats_json(dict_model, model_name, dict_data)
+        export_sequential_model_stats_json(dict_model, model_name, dict_data)
         export_sequential_model_stats_csv(dict_model, model_name, dict_data)
 
     return None
@@ -149,42 +173,3 @@ def define_sequential_models(model_names, models_rcll, models_prec):
     for i in range(0, len(model_names)):
         sequential_models[model_names[i]] = [models_rcll[i], models_prec[i]]
     return sequential_models
-
-
-names = ['svc_hist', 'nb_hist', 'ridge_hist', 'logreg_hist']
-
-models_recall = [SVC(C=1.0, class_weight='balanced'), GaussianNB(),
-                 RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced'),
-                 LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1, class_weight='balanced')]
-
-models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0),
-                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0),
-                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0),
-                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0)]
-
-"""
-for model_rcll, model_prec in zip(models_recall, models_precision):
-    model_1, model_2 = sequential_model_fit(model_rcll, model_prec, X_train, y_train)
-    y_pred, y_1, y_2 = sequential_model_pred(model_1, model_2, X_test)
-
-    stats_dict_model_1 = dict([('conf_matrix', confusion_matrix(y_test, y_1)), ('acc', accuracy_score(y_test, y_1)),
-                               ('acc_balanced', balanced_accuracy_score(y_test, y_1)),
-                               ('prec', precision_score(y_test, y_1)), ('rcll', recall_score(y_test, y_1)),
-                               ('f1_scr', f1_score(y_test, y_1))])
-    stats_dict_seq = dict([('conf_matrix', confusion_matrix(y_test, y_pred)), ('acc', accuracy_score(y_test, y_pred)),
-                           ('acc_balanced', balanced_accuracy_score(y_test, y_pred)),
-                           ('prec', precision_score(y_test, y_pred)), ('rcll', recall_score(y_test, y_pred)),
-                           ('f1_scr', f1_score(y_test, y_pred))])
-
-    print('Model 1 evaluation:')
-    for key, value in stats_dict_model_1.items():
-        print(key, value)
-
-    print('Model 2 evaluation: {} candidates, {} predicted mites, ratio {}'.format(y_2.size, np.sum(y_2),
-                                                                                   np.sum(y_2) / y_2.size))
-
-    print('Sequential model evaluation:')
-    for key, value in stats_dict_seq.items():
-        print(key, value)
-    input("Press Enter to continue...")
-"""

@@ -24,10 +24,7 @@ data, labels = data[indices], labels[indices]
 
 nl_svm_models = [SVC(C=0.1, class_weight='balanced'),
                  SVC(C=1.0, class_weight='balanced'),
-                 SVC(C=5.0, class_weight='balanced'),
-                 SVC(C=0.1, kernel='poly', class_weight='balanced'),
-                 SVC(C=0.1, kernel='poly', class_weight='balanced'),
-                 SVC(C=5.0, kernel='poly', class_weight='balanced')]
+                 SVC(C=5.0, class_weight='balanced')]
 
 histogram_boost_models = [HistGradientBoostingClassifier(max_iter=100),
                           HistGradientBoostingClassifier(max_iter=100, l2_regularization=0.1),

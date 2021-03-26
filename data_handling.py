@@ -156,6 +156,7 @@ def downsize_false_candidates(data, labels, percentage_true):
     random.seed(42)  # to assure, same sample is drawn; remove if selection should be random
     idxs_false_remove = random.sample(idxs_false, k=nb_false_remove)
 
+    print('Before downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
     data = np.delete(data, idxs_false_remove, axis=0)
     labels = np.delete(labels, idxs_false_remove)
     print('After downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))

@@ -257,12 +257,28 @@ def define_models(model_selection):
     stacked_models = [StackingClassifier(estimators=estimators[0]), StackingClassifier(estimators=estimators[1]),
                       StackingClassifier(estimators=estimators[2]), StackingClassifier(estimators=estimators[3])]
 
+    experimental_models = [HistGradientBoostingClassifier(max_iter=300),
+                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1),
+                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0),
+                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0),
+                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=10.0),
+                           HistGradientBoostingClassifier(max_iter=300),
+                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1, max_depth=3),
+                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0, max_depth=3),
+                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3),
+                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=10.0, max_depth=3),
+                           HistGradientBoostingClassifier(max_iter=300),
+                           HistGradientBoostingClassifier(max_iter=500, l2_regularization=0.1),
+                           HistGradientBoostingClassifier(max_iter=500, l2_regularization=1.0),
+                           HistGradientBoostingClassifier(max_iter=500, l2_regularization=5.0),
+                           HistGradientBoostingClassifier(max_iter=500, l2_regularization=10.0)]
+
     models = OrderedDict([('log_reg', log_reg_models), ('sgd', sgd_models), ('ridge_class', ridge_class_models),
                           ('decision_tree', decision_tree_models), ('random_forest', random_forest_models),
                           ('l_svm', l_svm_models), ('nl_svm', nl_svm_models), ('naive_bayes', naive_bayes_models),
                           ('ada_boost', ada_boost_models), ('histogram_boost', histogram_boost_models),
                           ('gradient_boost', gradient_boost_models), ('log_reg_cv', log_reg_cv_models),
-                          ('stacked', stacked_models)])
+                          ('stacked', stacked_models), ('experimental', experimental_models)])
 
     for key, value in model_selection.items():
         if not value:
