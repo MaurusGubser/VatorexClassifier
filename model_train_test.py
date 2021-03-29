@@ -243,11 +243,10 @@ def define_models(model_selection):
     log_reg_cv_models = [
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
 
-    estimators = [[('svc', SVC(C=1.0, class_weight='balanced')), ('hist_boost',
-                                                                  HistGradientBoostingClassifier(max_iter=300,
-                                                                                                 l2_regularization=5.0))],
-                  [('nb', GaussianNB()), ('hist_boost',
-                                          HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+    estimators = [[('svc', SVC(C=1.0, class_weight='balanced')),
+                   ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                  [('nb', GaussianNB()),
+                   ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
                   [('ridge', RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced')),
                    ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
                   [('log_reg', LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1,

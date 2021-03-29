@@ -1,3 +1,4 @@
+import numpy as np
 from collections import OrderedDict
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
@@ -5,6 +6,7 @@ from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
+from model_parameter_tuning import cross_validate_model
 from model_train_test import train_and_test_model_selection
 from sequential_model import train_and_test_sequential_models, define_sequential_models
 
@@ -35,6 +37,8 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.2  # fraction of test set
 
 # ----- training models -----
+evaluate_models = False
+
 log_reg = False
 sgd = False
 ridge_class = False
@@ -57,7 +61,8 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('stacked', stacked), ('experimental', experimental)])
 
 # ----- sequential models -----
-sequential = False
+evaluate_sequential = False
+
 names_sequential = ['svc_hist', 'nb_hist', 'ridge_hist', 'logreg_hist', 'rf_hist']
 
 models_recall = [SVC(C=1.0, class_weight='balanced'), GaussianNB(),
@@ -71,12 +76,27 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
                     HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3),
                     HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3)]
 
+# ----- cross-validation models -----
+cross_validation = True
+
+model = HistGradientBoostingClassifier(max_iter=100)
+model_parameter = 'l2_regularization'  # e.g. max_iter, max_bins, depending on model
+semilog = True  # if x axis should be logarithmic
+parameter_range = np.logspace(-4, 1, 10)    # l2_regularization
+# parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 75, 100, 200, 300])    # max_iter
+# parameter_range = np.array([2, 3, 7, 15, 31, 63, 127, 255])   # max_bins
+scoring_parameter = 'f1'    # f1, recall, precision
+nb_split_cv = 5   # number of split cvs
+cv_parameters = OrderedDict([('model_parameter', model_parameter), ('parameter_range', parameter_range),
+                             ('semilog', semilog), ('scoring_parameter', scoring_parameter),
+                             ('nb_split_cv', nb_split_cv)])
 
 if __name__ == '__main__':
     folder_path = "Candidate_Images/Mite4_Dataset_renderellipsis_test/"
-    if sequential:
+    if evaluate_models:
+        train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
+    elif evaluate_sequential:
         models_sequential = define_sequential_models(names_sequential, models_recall, models_precision)
         train_and_test_sequential_models(models_sequential, folder_path, data_parameters, test_size)
-    else:
-        train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
-
+    elif cross_validation:
+        cross_validate_model(model, folder_path, data_parameters, cv_parameters)

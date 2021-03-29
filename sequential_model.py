@@ -6,17 +6,11 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
-from sklearn.experimental import enable_hist_gradient_boosting
-from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, precision_score, recall_score, f1_score, \
     confusion_matrix
-from sklearn.linear_model import LogisticRegression, RidgeClassifier
-from sklearn.naive_bayes import GaussianNB
 
 from data_reading_writing import read_data_and_labels
 from data_handling import downsize_false_candidates
-from model_train_test import get_name_index
 
 
 def train_sequential_model(model_0, model_1, data, labels):
