@@ -6,7 +6,7 @@ from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
-from model_parameter_tuning import cross_validate_model
+from model_parameter_tuning import cross_validate_model, grid_search_model, plot_learning_curve_model
 from model_train_test import train_and_test_model_selection
 from sequential_model import train_and_test_sequential_models, define_sequential_models
 
@@ -24,7 +24,7 @@ hist_hsl = True
 hist_h = True
 hist_s = True
 hist_l = True
-percentage_true = 0.05  # desired percentage of trues in data set
+percentage_true = 0.02  # desired percentage of trues in data set
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
@@ -80,16 +80,25 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
 cross_validation = True
 
 model = HistGradientBoostingClassifier(max_iter=100)
-model_parameter = 'l2_regularization'  # e.g. max_iter, max_bins, depending on model
+model_name = 'Histogram_boost_maxiter100'
+model_parameter = 'l2_regularization'  # e.g. l2_regularization, max_iter, max_bins, depending on model
 semilog = True  # if x axis should be logarithmic
-parameter_range = np.logspace(-4, 1, 10)    # l2_regularization
+parameter_range = np.logspace(-4, 2, 10)    # l2_regularization
 # parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 75, 100, 200, 300])    # max_iter
 # parameter_range = np.array([2, 3, 7, 15, 31, 63, 127, 255])   # max_bins
 scoring_parameter = 'f1'    # f1, recall, precision
 nb_split_cv = 5   # number of split cvs
-cv_parameters = OrderedDict([('model_parameter', model_parameter), ('parameter_range', parameter_range),
+"""
+cv_parameters = OrderedDict([('model_name', model_name),
+                             ('model_params', {'l2_regularization': [0.001, 0.01, 0.1, 1.0, 10.0], 'max_iter': [20, 50, 100, 300, 500]}),
                              ('semilog', semilog), ('scoring_parameter', scoring_parameter),
                              ('nb_split_cv', nb_split_cv)])
+"""
+
+cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
+                             ('parameter_range', parameter_range), ('semilog', semilog),
+                             ('scoring_parameter', scoring_parameter), ('nb_split_cv', nb_split_cv)])
+
 
 if __name__ == '__main__':
     folder_path = "Candidate_Images/Mite4_Dataset_renderellipsis_test/"
@@ -100,3 +109,6 @@ if __name__ == '__main__':
         train_and_test_sequential_models(models_sequential, folder_path, data_parameters, test_size)
     elif cross_validation:
         cross_validate_model(model, folder_path, data_parameters, cv_parameters)
+        grid_search_model(model, folder_path, data_parameters, cv_parameters)
+    else:
+        plot_learning_curve_model(folder_path, data_parameters, model, model_name)
