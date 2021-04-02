@@ -1,4 +1,7 @@
+import json
 import os
+from collections import OrderedDict
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import validation_curve, learning_curve, train_test_split, GridSearchCV, ShuffleSplit
@@ -6,47 +9,51 @@ from sklearn.metrics import confusion_matrix, plot_confusion_matrix
 
 from data_handling import downsize_false_candidates
 from data_reading_writing import read_data_and_labels
+from model_train_test import get_name_index
 
 
-def compute_cv_scores(model_type, data, labels, cv_params):
+def compute_cv_scores(model_type, data, labels, cv_params, score_param):
     model_parameter = cv_params['model_parameter']
     parameter_range = cv_params['parameter_range']
     k = cv_params['nb_split_cv']
-    scoring_parameter = cv_params['scoring_parameter']
     train_scores, test_scores = validation_curve(estimator=model_type, X=data, y=labels, param_name=model_parameter,
-                                                 param_range=parameter_range, cv=k, scoring=scoring_parameter,
+                                                 param_range=parameter_range, cv=k, scoring=score_param,
                                                  n_jobs=-1, verbose=2)
-    print('Train scores: {}'.format(train_scores))
-    print('Test scores: {}'.format(test_scores))
+    print('Train scores {}: {}'.format(score_param, train_scores))
+    print('Test scores {}: {}'.format(score_param, test_scores))
     return train_scores, test_scores
 
 
 def plot_validation_curve(train_scores, test_scores, cv_params):
     if not os.path.exists('CV_Plots'):
         os.mkdir('CV_Plots')
-    train_scores_mean = np.mean(train_scores, axis=1)
-    train_scores_std = np.std(train_scores, axis=1)
-    test_scores_mean = np.mean(test_scores, axis=1)
-    test_scores_std = np.std(test_scores, axis=1)
     parameter_range = cv_params['parameter_range']
-    export_name = cv_params['model_name'] + '_' + cv_params['model_parameter'] + '_' + cv_params['scoring_parameter']
-    fig = plt.figure()
-    ax = fig.gca()
-    if cv_params['semilog']:
-        ax.semilogx(parameter_range, train_scores_mean, color='blue', label='Training')
-        ax.semilogx(parameter_range, test_scores_mean, color='red', label='Test')
-    else:
-        ax.plot(parameter_range, train_scores_mean, color='blue', label='Training')
-        ax.plot(parameter_range, test_scores_mean, color='red', label='Test')
-    ax.fill_between(parameter_range, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std,
-                    color='blue', alpha=0.2)
-    ax.fill_between(parameter_range, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std,
-                    color='red', alpha=0.2)
-    ax.set_ylim(0.0, 1.1)
-    ax.set_xlabel(cv_params['model_parameter'])
-    ax.set_ylabel(cv_params['scoring_parameter'])
-    ax.set_title('{}-fold cross validation'.format(cv_params['nb_split_cv']))
-    ax.legend()
+    export_name = cv_params['model_name'] + '_' + cv_params['model_parameter']
+    fig, axs = plt.subplots(ncols=1, nrows=3, figsize=(18, 10))
+    i = 0
+    for key in train_scores.keys():
+        train_scores_mean = np.mean(train_scores[key], axis=1)
+        train_scores_std = np.std(train_scores[key], axis=1)
+        test_scores_mean = np.mean(test_scores[key], axis=1)
+        test_scores_std = np.std(test_scores[key], axis=1)
+        axs[i].grid()
+        if cv_params['semilog']:
+            axs[i].semilogx(parameter_range, train_scores_mean, color='blue', label='Training')
+            axs[i].semilogx(parameter_range, test_scores_mean, color='red', label='Test')
+        else:
+            axs[i].plot(parameter_range, train_scores_mean, color='blue', label='Training')
+            axs[i].plot(parameter_range, test_scores_mean, color='red', label='Test')
+        axs[i].fill_between(parameter_range, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std,
+                            color='blue', alpha=0.2)
+        axs[i].fill_between(parameter_range, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std,
+                            color='red', alpha=0.2)
+        axs[i].set_ylim(0.0, 1.1)
+        axs[i].set_xlabel(cv_params['model_parameter'])
+        axs[i].set_ylabel(key)
+        axs[i].set_title('{}-fold cross validation'.format(cv_params['nb_split_cv']))
+        axs[i].legend()
+        i += 1
+    plt.tight_layout()
     plt.savefig('CV_Plots/' + export_name)
     plt.show()
 
@@ -59,27 +66,44 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     indices = np.arange(labels.shape[0])
     np.random.shuffle(indices)
     data, labels = data[indices], labels[indices]
-
-    train_scores, test_scores = compute_cv_scores(model, data, labels, cv_params)
+    train_scores = OrderedDict({})
+    test_scores = OrderedDict({})
+    for score_param in ['recall', 'precision', 'f1']:
+        train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, data, labels, cv_params,
+                                                                                score_param)
     plot_validation_curve(train_scores, test_scores, cv_params)
 
+    return None
+
+
+def export_stats_gs(model_name, confusion_matrix, estimator_parameters):
+    if not os.path.exists('GridSearch_Statistics'):
+        os.mkdir('GridSearch_Statistics')
+    model_nb = get_name_index(model_name, 'GridSearch_Statistics/')
+    rel_file_path = 'GridSearch_Statistics/' + model_name + '_' + str(model_nb) + '.json'
+    export_dict = OrderedDict([('Confusion_Matrix', confusion_matrix.astype(int).tolist())])
+    export_dict['Estimator_params'] = [str(key)+':'+str(value) for key, value in estimator_parameters.items()]
+    with open(rel_file_path, 'w') as outfile:
+        json.dump(export_dict, outfile, indent=4)
+    print("GridSearch statistics saved in", rel_file_path)
     return None
 
 
 def grid_search_model(model, folder_path, data_params, grid_search_params):
     data, labels = read_data_and_labels(folder_path, data_params)
     data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
-    # indices = np.arange(labels.shape[0])
-    # np.random.shuffle(indices)
-    # data, labels = data[indices], labels[indices]
     X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.05, shuffle=True, random_state=42)
 
-    clf = GridSearchCV(model, grid_search_params['model_params'], grid_search_params['scoring_parameter'], n_jobs=-1,
-                       verbose=2)
+    clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
+                       n_jobs=-1, refit='recall', cv=grid_search_params['nb_split_cv'], verbose=2)
     clf.fit(X_train, y_train)
     print('Classifier stats:', clf.cv_results_)
     y_pred = clf.predict(X_test)
-    print('Conf matrix predict:', confusion_matrix(y_test, y_pred))
+    conf_mat = confusion_matrix(y_test, y_pred)
+    print('Conf matrix predict:', conf_mat)
+    print('Best parameters:', clf.best_params_)
+    print('Best estimator:', clf.best_estimator_)
+    export_stats_gs(grid_search_params['model_name'], conf_mat, clf.best_params_)
 
     return None
 
