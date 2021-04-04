@@ -108,16 +108,16 @@ def evaluate_model(model, X, y):
     return stats_dict
 
 
-def get_name_index(model_name, folder_name):
+def get_name_index(model_name, folder_name, file_format):
     idx = 0
-    if os.path.exists('Model_Statistics'):
-        list_model_paths = [str(path) for path in Path(folder_name).rglob(model_name + '*.json')]
+    if os.path.exists(folder_name):
+        list_model_paths = [str(path) for path in Path(folder_name).rglob(model_name + '*.' + file_format)]
         idx = len(list_model_paths)
     return idx
 
 
 def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, data_params):
-    index = get_name_index(modelgroup_name, 'Model_Statistics/')
+    index = get_name_index(modelgroup_name, 'Model_Statistics/', 'json')
 
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                              ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),

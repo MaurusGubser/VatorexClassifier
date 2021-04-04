@@ -107,13 +107,13 @@ grid_search = True
 model_gs = HistGradientBoostingClassifier()
 model_name = 'Histogram_boost_test'
 scoring_parameters = ['recall', 'precision', 'f1']
-learning_rate = ('learning_rate', np.array([0.0001, 0.001, 0.01, 0.1]))#, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0]))
-max_iter = ('max_iter', np.array([5, 10, 15, 20]))#, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500]))
-max_depth = ('max_depth', np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200]))
-l2_regularization = ('l2_regularization', np.insert(np.logspace(-4, 3, 20), 0, 0.0))
-max_bins = ('max_bins', np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255]))
-parameters_grid = OrderedDict([learning_rate, max_iter])#, max_depth, l2_regularization, max_bins])
-nb_split_cv = 3#10  # number of split cvs
+learning_rate = ('learning_rate', np.array([0.1, 0.5, 1.0]))
+max_iter = ('max_iter', np.array([20, 100, 300]))
+max_depth = ('max_depth', np.array([3, 30, 100]))
+l2_regularization = ('l2_regularization', np.insert(np.logspace(-2, 3, 5), 0, 0.0))
+max_bins = ('max_bins', np.array([7, 63, 255]))
+parameters_grid = OrderedDict([learning_rate, max_iter, max_depth, l2_regularization, max_bins])
+nb_split_cv = 5  # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
 

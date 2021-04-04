@@ -1,7 +1,7 @@
 import json
 import os
-from collections import OrderedDict
 import pandas as pd
+from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import validation_curve, learning_curve, train_test_split, GridSearchCV, ShuffleSplit
@@ -76,15 +76,12 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     return None
 
 
-def export_stats_gs(model_name, confusion_matrix, estimator_parameters):
+def export_stats_gs(model_name, gs_dataframe):
     if not os.path.exists('GridSearch_Statistics'):
         os.mkdir('GridSearch_Statistics')
-    model_nb = get_name_index(model_name, 'GridSearch_Statistics/')
-    rel_file_path = 'GridSearch_Statistics/' + model_name + '_' + str(model_nb) + '.json'
-    export_dict = OrderedDict([('Confusion_Matrix', confusion_matrix.astype(int).tolist())])
-    export_dict['Estimator_params'] = [str(key)+':'+str(value) for key, value in estimator_parameters.items()]
-    with open(rel_file_path, 'w') as outfile:
-        json.dump(export_dict, outfile, indent=4)
+    model_nb = get_name_index(model_name, 'GridSearch_Statistics/', 'csv')
+    rel_file_path = 'GridSearch_Statistics/' + model_name + '_' + str(model_nb) + '.csv'
+    gs_dataframe.to_csv(rel_file_path)
     print("GridSearch statistics saved in", rel_file_path)
     return None
 
@@ -97,13 +94,10 @@ def grid_search_model(model, folder_path, data_params, grid_search_params):
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
                        n_jobs=-1, refit='recall', cv=grid_search_params['nb_split_cv'], verbose=2)
     clf.fit(X_train, y_train)
-    print('Classifier stats:', clf.cv_results_)
-    y_pred = clf.predict(X_test)
-    conf_mat = confusion_matrix(y_test, y_pred)
-    print('Conf matrix predict:', conf_mat)
-    print('Best parameters:', clf.best_params_)
     print('Best estimator:', clf.best_estimator_)
-    export_stats_gs(grid_search_params['model_name'], conf_mat, clf.best_params_)
+    gs_df = pd.DataFrame.from_dict(clf.cv_results_)
+    gs_df = gs_df[gs_df['rank_test_recall'] <= 10]
+    export_stats_gs(grid_search_params['model_name'], gs_df)
 
     return None
 
