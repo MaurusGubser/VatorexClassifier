@@ -96,16 +96,31 @@ def train_model(model, X_train, y_train):
     return model
 
 
-def evaluate_model(model, X, y):
+def evaluate_model(model, X, y, paths):
     start_time = time.time()
     y_pred = model.predict(X)
+    end_time = time.time()
+    print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
                               ('acc_balanced', balanced_accuracy_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
                               ('f1_scr', f1_score(y, y_pred))])
-    end_time = time.time()
-    print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
-    return stats_dict
+    missclassified_imgs = list_misclassified_images(y, y_pred, paths)
+    return stats_dict, missclassified_imgs
+
+
+def list_misclassified_images(y_true, y_pred, paths_images):
+    y_mask = (y_true + y_pred) == 1
+    missclassified_imgs = paths_images[y_mask]
+    return missclassified_imgs
+
+
+def export_missclassified_images(missclassified_images, file_name):
+    if not os.path.exists('Missclassified_Images'):
+        os.mkdir('Missclassified_Images')
+    missclassified_images.savetxt(file_name+'.txt')
+    print('List of missclassified images saved in {}'.format(file_name))
+    return None
 
 
 def get_name_index(model_name, folder_name, file_format):
@@ -116,7 +131,7 @@ def get_name_index(model_name, folder_name, file_format):
     return idx
 
 
-def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, data_params):
+def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test, data_params):
     index = get_name_index(modelgroup_name, 'Model_Statistics/', 'json')
 
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
@@ -129,29 +144,32 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
 
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
-        dict_model['model_stats_train'] = evaluate_model(dict_model['model'], X_train, y_train)
-        dict_model['model_stats_test'] = evaluate_model(dict_model['model'], X_test, y_test)
+        dict_model['model_stats_train'], missclassified_train = evaluate_model(dict_model['model'], X_train, y_train, paths_train)
+        dict_model['model_stats_test'], missclassified_test = evaluate_model(dict_model['model'], X_test, y_test, paths_test)
 
         # export_model(dict_model['model'], model_name)
         # export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
+        export_missclassified_images(missclassified_train, 'Missclassification_Training')
+        export_missclassified_images(missclassified_test, 'Missclassification_Test')
     return None
 
 
 def train_and_test_model_selection(model_selection, folder_path, data_params, test_size):
-    data, labels = read_data_and_labels(folder_path, data_params)
+    data, labels, paths_images = read_data_and_labels(folder_path, data_params)
     models = define_models(model_selection)
 
-    data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
-    X_train, X_test, y_train, y_test = train_test_split(data,
-                                                        labels,
-                                                        test_size=test_size,
-                                                        random_state=42,
-                                                        stratify=labels)
+    data, labels, paths_images = downsize_false_candidates(data, labels, paths_images, data_params['percentage_true'])
+    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
+                                                                                 labels,
+                                                                                 paths_images,
+                                                                                 test_size=test_size,
+                                                                                 random_state=42,
+                                                                                 stratify=labels)
     del data
 
     for key, value in models.items():
-        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, data_params)
+        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, paths_train, paths_test, data_params)
     return None
 
 

@@ -37,7 +37,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.2  # fraction of test set
 
 # ----- training models -----
-evaluate_models = False
+evaluate_models = True
 
 log_reg = False
 sgd = False
@@ -48,8 +48,8 @@ l_svm = False
 nl_svm = False
 naive_bayes = False
 ada_boost = True
-histogram_boost = True
-gradient_boost = True
+histogram_boost = False
+gradient_boost = False
 log_reg_cv = False
 stacked = False
 experimental = False
