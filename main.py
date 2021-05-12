@@ -4,7 +4,7 @@ from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier, AdaBoostClassifier
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 
 from model_parameter_tuning import cross_validate_model, grid_search_model, plot_learning_curve_model
 from model_train_test import train_and_test_model_selection
@@ -79,17 +79,18 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
 # ----- cross-validation models -----
 cross_validation = False
 
-model_cv = AdaBoostClassifier()
-model_name = 'Adaboost_test'
+model_cv = RandomForestClassifier()
+model_name = 'RandomForest_test'
 model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
-semilog = False  # if x axis should be logarithmic
-# parameter_range = np.array([0.0001, 0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0]) # learning_rate
-# parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter
+semilog = True  # if x axis should be logarithmic
+# parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
+# parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
-# parameter_range = np.insert(np.logspace(-4, 3, 20), 0, 0.0)    # l2_regularization
+# parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)    # l2_regularization
 # parameter_range = np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255])   # max_bins
 parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
-# parameter_range = np.array([0.0001, 0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
+# parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
+# parameter_range = np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
 nb_split_cv = 10  # number of split cvs
 """
 cv_parameters = OrderedDict([('model_name', model_name),
@@ -103,17 +104,17 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search -----
-grid_search = True
+grid_search = False
 model_gs = HistGradientBoostingClassifier()
 model_name = 'Histogram_boost_test'
 scoring_parameters = ['recall', 'precision', 'f1']
-learning_rate = ('learning_rate', np.array([0.1, 0.5, 1.0]))
-max_iter = ('max_iter', np.array([20, 100, 300]))
-max_depth = ('max_depth', np.array([3, 30, 100]))
-l2_regularization = ('l2_regularization', np.insert(np.logspace(-2, 3, 5), 0, 0.0))
-max_bins = ('max_bins', np.array([7, 63, 255]))
+learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
+max_iter = ('max_iter', np.array([300]))
+max_depth = ('max_depth', np.array([20]))
+l2_regularization = ('l2_regularization', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+max_bins = ('max_bins', np.array([32]))
 parameters_grid = OrderedDict([learning_rate, max_iter, max_depth, l2_regularization, max_bins])
-nb_split_cv = 5  # number of split cvs
+nb_split_cv = 10# number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
 

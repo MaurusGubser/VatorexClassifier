@@ -160,9 +160,6 @@ def plot_learning_curve_model(folder_path, data_params, model, model_name):
     data, labels = read_data_and_labels(folder_path, data_params)
     data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
 
-    # Cross validation with 100 iterations to get smoother mean test and train
-    # score curves, each time with 20% data randomly selected as a validation set.
-    # cv = ShuffleSplit(n_splits=10, test_size=0.2, random_state=0)
     cv = 5
     plot_learning_curve(model, model_name, data, labels, ylim=None, cv=cv)
     return None
