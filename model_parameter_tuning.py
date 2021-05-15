@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix, plot_confusion_matrix
 
 from data_handling import downsize_false_candidates
 from data_reading_writing import read_data_and_labels
-from model_train_test import get_name_index
+from model_train_test import get_name_index, evaluate_model, export_missclassified_images
 
 
 def compute_cv_scores(model_type, data, labels, cv_params, score_param):
@@ -61,11 +61,11 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
 
 
 def cross_validate_model(model, folder_path, data_params, cv_params):
-    data, labels = read_data_and_labels(folder_path, data_params)
-    data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
+    data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
+    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
     indices = np.arange(labels.shape[0])
     np.random.shuffle(indices)
-    data, labels = data[indices], labels[indices]
+    data, labels, paths_imgs = data[indices], labels[indices], paths_imgs[indices]
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
     for score_param in ['recall', 'precision', 'f1']:
@@ -87,18 +87,26 @@ def export_stats_gs(model_name, gs_dataframe):
 
 
 def grid_search_model(model, folder_path, data_params, grid_search_params):
-    data, labels = read_data_and_labels(folder_path, data_params)
-    data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
-    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.05, shuffle=True, random_state=42)
-
+    data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
+    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
+    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
+                                                                                 test_size=0.05, shuffle=True,
+                                                                                 random_state=42)
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
                        n_jobs=-1, refit='recall', cv=grid_search_params['nb_split_cv'], verbose=2)
     clf.fit(X_train, y_train)
-    print('Best estimator:', clf.best_estimator_)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
     gs_df = gs_df[gs_df['rank_test_recall'] <= 10]
     export_stats_gs(grid_search_params['model_name'], gs_df)
-
+    _, missclassified_train = evaluate_model(clf, X_train, y_train, paths_train)
+    _, missclassified_test = evaluate_model(clf, X_test, y_test, paths_test)
+    model_name = grid_search_params['model_name']
+    export_missclassified_images(missclassified_train, model_name + '_training')
+    export_missclassified_images(missclassified_test, model_name + '_testing')
+    print('Best estimator:', clf.best_estimator_)
+    print('Testing score:', clf.score(X_test, y_test))
+    plot_confusion_matrix(clf, X_test, y_test)
+    plt.show()
     return None
 
 

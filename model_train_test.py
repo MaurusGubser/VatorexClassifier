@@ -118,8 +118,9 @@ def list_misclassified_images(y_true, y_pred, paths_images):
 def export_missclassified_images(missclassified_images, file_name):
     if not os.path.exists('Missclassified_Images'):
         os.mkdir('Missclassified_Images')
-    missclassified_images.savetxt(file_name+'.txt')
-    print('List of missclassified images saved in {}'.format(file_name))
+    export_name = 'Missclassified_Images/' + file_name + '.txt'
+    np.savetxt(export_name, np.sort(missclassified_images), delimiter=' ', fmt="%s")
+    print('List of missclassified images saved in {}'.format(export_name))
     return None
 
 
@@ -150,8 +151,8 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         # export_model(dict_model['model'], model_name)
         # export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
-        export_missclassified_images(missclassified_train, 'Missclassification_Training')
-        export_missclassified_images(missclassified_test, 'Missclassification_Test')
+        export_missclassified_images(missclassified_train, model_name + '_training')
+        export_missclassified_images(missclassified_test, model_name + '_testing')
     return None
 
 
@@ -239,14 +240,10 @@ def define_models(model_selection):
                         AdaBoostClassifier(n_estimators=200, learning_rate=0.1),
                         AdaBoostClassifier(n_estimators=500, learning_rate=0.1)]
 
-    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=100),
+    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=10),
                               HistGradientBoostingClassifier(max_iter=100, l2_regularization=0.1),
                               HistGradientBoostingClassifier(max_iter=100, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=5.0),
-                              HistGradientBoostingClassifier(max_iter=300),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0)]
+                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=5.0)]
 
     gradient_boost_models = [GradientBoostingClassifier(n_estimators=100),
                              GradientBoostingClassifier(n_estimators=100, max_features='sqrt'),

@@ -37,7 +37,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.2  # fraction of test set
 
 # ----- training models -----
-evaluate_models = True
+evaluate_models = False
 
 log_reg = False
 sgd = False
@@ -47,8 +47,8 @@ random_forest = False
 l_svm = False
 nl_svm = False
 naive_bayes = False
-ada_boost = True
-histogram_boost = False
+ada_boost = False
+histogram_boost = True
 gradient_boost = False
 log_reg_cv = False
 stacked = False
@@ -104,17 +104,18 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search -----
-grid_search = False
-model_gs = HistGradientBoostingClassifier()
-model_name = 'Histogram_boost_test'
+grid_search = True
+model_gs = HistGradientBoostingClassifier() #LinearSVC()
+model_name = 'Histogram_boost_test' #'LinearSVC_test'
 scoring_parameters = ['recall', 'precision', 'f1']
+# Cs = ('C', [0.1, 1.0, 10.0])
 learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
 max_iter = ('max_iter', np.array([300]))
 max_depth = ('max_depth', np.array([20]))
 l2_regularization = ('l2_regularization', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
 max_bins = ('max_bins', np.array([32]))
-parameters_grid = OrderedDict([learning_rate, max_iter, max_depth, l2_regularization, max_bins])
-nb_split_cv = 10# number of split cvs
+parameters_grid = OrderedDict([learning_rate, max_iter, max_depth, l2_regularization, max_bins])    #OrderedDict([Cs])
+nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
 
