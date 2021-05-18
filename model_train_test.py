@@ -115,20 +115,24 @@ def list_misclassified_images(y_true, y_pred, paths_images):
     return missclassified_imgs
 
 
-def export_missclassified_images_to_txt(missclassified_images, file_name):
-    if not os.path.exists('Missclassified_Images'):
-        os.mkdir('Missclassified_Images')
-    export_name = 'Missclassified_Images/' + file_name + '.txt'
+def export_missclassified_images_to_txt(missclassified_images, model_name, train_test):
+    folder_path = 'Missclassified_Images/'+model_name+train_test
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
+    export_name = folder_path + '/missclassified.txt'
     np.savetxt(export_name, np.sort(missclassified_images), delimiter=' ', fmt="%s")
     print('List of missclassified images saved in {}'.format(export_name))
     return None
 
 
 def copy_missclassified_images_to_folder(missclassified_images, model_name, train_test):
-    if not os.path.exists('Missclassified_Images/' + model_name + train_test):
-        os.mkdir('Missclassified_Images/' + model_name + train_test)
+    folder_path = 'Missclassified_Images/' + model_name + train_test
+    if not os.path.exists(folder_path):
+        os.mkdir(folder_path)
     for path in missclassified_images:
-        os.system('cp ' + path + ' ./Missclassified_Images/' + model_name + train_test)
+        path = path.replace('(', '\(')
+        path = path.replace(')', '\)')
+        os.system('cp {} ./{}'.format(path, folder_path))
     return None
 
 
@@ -162,8 +166,10 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         # export_model(dict_model['model'], model_name)
         # export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
-        export_missclassified_images_to_txt(missclassified_train, model_name + '_training')
-        export_missclassified_images_to_txt(missclassified_test, model_name + '_testing')
+        export_missclassified_images_to_txt(missclassified_train, model_name, '_training')
+        copy_missclassified_images_to_folder(missclassified_train, model_name, '_training')
+        export_missclassified_images_to_txt(missclassified_test, model_name, '_testing')
+        copy_missclassified_images_to_folder(missclassified_test, model_name, '_testing')
     return None
 
 

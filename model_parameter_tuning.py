@@ -9,7 +9,8 @@ from sklearn.metrics import confusion_matrix, plot_confusion_matrix
 
 from data_handling import downsize_false_candidates
 from data_reading_writing import read_data_and_labels
-from model_train_test import get_name_index, evaluate_model, export_missclassified_images_to_txt
+from model_train_test import get_name_index, evaluate_model, export_missclassified_images_to_txt, \
+    copy_missclassified_images_to_folder
 
 
 def compute_cv_scores(model_type, data, labels, cv_params, score_param):
@@ -101,8 +102,10 @@ def grid_search_model(model, folder_path, data_params, grid_search_params):
     _, missclassified_train = evaluate_model(clf, X_train, y_train, paths_train)
     _, missclassified_test = evaluate_model(clf, X_test, y_test, paths_test)
     model_name = grid_search_params['model_name']
-    export_missclassified_images_to_txt(missclassified_train, model_name + '_training')
-    export_missclassified_images_to_txt(missclassified_test, model_name + '_testing')
+    export_missclassified_images_to_txt(missclassified_train, model_name, '_training')
+    copy_missclassified_images_to_folder(missclassified_train, model_name, '_training')
+    export_missclassified_images_to_txt(missclassified_test, model_name, '_testing')
+    copy_missclassified_images_to_folder(missclassified_test, model_name, '_testing')
     print('Best estimator:', clf.best_estimator_)
     print('Testing score:', clf.score(X_test, y_test))
     plot_confusion_matrix(clf, X_test, y_test)
