@@ -25,9 +25,9 @@ from data_handling import downsize_false_candidates
 def export_model(model, model_name):
     if not os.path.exists('Models_Trained'):
         os.mkdir('Models_Trained')
-    filename = 'Models_Trained/' + model_name + '.sav'
-    pickle.dump(model, open(filename, 'wb'))
-    print("Model saved in", filename)
+    rel_file_path = 'Models_Trained/' + model_name + '.sav'
+    pickle.dump(model, open(rel_file_path, 'wb'))
+    print("Model saved in", rel_file_path)
     return None
 
 
@@ -96,28 +96,68 @@ def train_model(model, X_train, y_train):
     return model
 
 
-def evaluate_model(model, X, y):
+def evaluate_model(model, X, y, paths):
     start_time = time.time()
     y_pred = model.predict(X)
+    end_time = time.time()
+    print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
                               ('acc_balanced', balanced_accuracy_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
                               ('f1_scr', f1_score(y, y_pred))])
-    end_time = time.time()
-    print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
-    return stats_dict
+    missclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
+    return stats_dict, missclassified_imgs, true_pos_imgs
 
 
-def get_name_index(model_name):
+def list_fp_fn_tp_images(y_true, y_pred, paths_images):
+    missclassified_imgs = paths_images[y_true + y_pred == 1]
+    correct_imgs = paths_images[y_true + y_pred == 2]
+    return missclassified_imgs, correct_imgs
+
+
+def export_missclassified_images(missclassified_images, model_name, train_test):
+    folder_path = 'Missclassified_Images/' + model_name + train_test
+    if not os.path.exists(folder_path):
+        if not os.path.exists('Missclassified_Images'):
+            os.mkdir('Missclassified_Images')
+        os.mkdir(folder_path)
+    export_name = folder_path + '/missclassified.txt'
+    np.savetxt(export_name, np.sort(missclassified_images), delimiter=' ', fmt="%s")
+    print('List of missclassified images saved in {}'.format(export_name))
+    for path in missclassified_images:
+        path = path.replace('(', '\(')
+        path = path.replace(')', '\)')
+        os.system('cp {} ./{}'.format(path, folder_path))
+    return None
+
+
+def export_true_pos_images(true_pos_images, model_name, train_test):
+    folder_path = 'True_Positive_Images/' + model_name + train_test
+    if not os.path.exists(folder_path):
+        if not os.path.exists('True_Positive_Images'):
+            os.mkdir('True_Positive_Images')
+        os.mkdir(folder_path)
+    export_name = folder_path + '/true_positive.txt'
+    np.savetxt(export_name, np.sort(true_pos_images), delimiter=' ', fmt="%s")
+    print('List of true positive images saved in {}'.format(export_name))
+    for path in true_pos_images:
+        path = path.replace('(', '\(')
+        path = path.replace(')', '\)')
+        os.system('cp {} ./{}'.format(path, folder_path))
+    return None
+
+
+def get_name_index(model_name, folder_name, file_format):
     idx = 0
-    if os.path.exists('Model_Statistics'):
-        list_model_paths = [str(path) for path in Path('Model_Statistics/').rglob(model_name + '*.json')]
+    if os.path.exists(folder_name):
+        list_model_paths = [str(path) for path in Path(folder_name).rglob(model_name + '*.' + file_format)]
         idx = len(list_model_paths)
     return idx
 
 
-def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, data_params):
-    index = get_name_index(modelgroup_name)
+def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test,
+                              data_params):
+    index = get_name_index(modelgroup_name, 'Model_Statistics/', 'json')
 
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                              ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),
@@ -129,29 +169,37 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
 
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
-        dict_model['model_stats_train'] = evaluate_model(dict_model['model'], X_train, y_train)
-        dict_model['model_stats_test'] = evaluate_model(dict_model['model'], X_test, y_test)
+        dict_model['model_stats_train'], missclassified_train, true_pos_train = evaluate_model(dict_model['model'],
+                                                                                               X_train, y_train,
+                                                                                               paths_train)
+        dict_model['model_stats_test'], missclassified_test, true_pos_test = evaluate_model(dict_model['model'], X_test,
+                                                                                            y_test, paths_test)
 
         # export_model(dict_model['model'], model_name)
         # export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
+        export_missclassified_images(missclassified_train, model_name, '_training')
+        export_missclassified_images(missclassified_test, model_name, '_testing')
+        export_true_pos_images(true_pos_train, model_name, '_training')
+        export_true_pos_images(true_pos_test, model_name, '_testing')
     return None
 
 
 def train_and_test_model_selection(model_selection, folder_path, data_params, test_size):
-    data, labels = read_data_and_labels(folder_path, data_params)
+    data, labels, paths_images = read_data_and_labels(folder_path, data_params)
     models = define_models(model_selection)
 
-    data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
-    X_train, X_test, y_train, y_test = train_test_split(data,
-                                                        labels,
-                                                        test_size=test_size,
-                                                        random_state=42,
-                                                        stratify=labels)
+    data, labels, paths_images = downsize_false_candidates(data, labels, paths_images, data_params['percentage_true'])
+    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
+                                                                                 labels,
+                                                                                 paths_images,
+                                                                                 test_size=test_size,
+                                                                                 random_state=42,
+                                                                                 stratify=labels)
     del data
 
     for key, value in models.items():
-        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, data_params)
+        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, paths_train, paths_test, data_params)
     return None
 
 
@@ -221,14 +269,10 @@ def define_models(model_selection):
                         AdaBoostClassifier(n_estimators=200, learning_rate=0.1),
                         AdaBoostClassifier(n_estimators=500, learning_rate=0.1)]
 
-    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=100),
+    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=10),
                               HistGradientBoostingClassifier(max_iter=100, l2_regularization=0.1),
                               HistGradientBoostingClassifier(max_iter=100, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=5.0),
-                              HistGradientBoostingClassifier(max_iter=300),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0)]
+                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=5.0)]
 
     gradient_boost_models = [GradientBoostingClassifier(n_estimators=100),
                              GradientBoostingClassifier(n_estimators=100, max_features='sqrt'),

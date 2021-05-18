@@ -81,7 +81,7 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
                 raise AssertionError(
                     'Label of histogram path {} and image path {} are not compatible'.format(path_hist, path_img))
 
-    return images, histograms, labels
+    return images, histograms, labels, images_paths
 
 
 def read_images_and_histograms(folder_list, read_image, read_hist):
@@ -89,14 +89,16 @@ def read_images_and_histograms(folder_list, read_image, read_hist):
     images = []
     histograms = []
     labels = []
+    images_paths = []
     for folder_path in folder_list:
-        imgs, hists, lbls = read_images_hist_from_folder(folder_path, read_image, read_hist)
+        imgs, hists, lbls, imgs_paths = read_images_hist_from_folder(folder_path, read_image, read_hist)
         images = images + imgs
         histograms = histograms + hists
         labels = labels + lbls
+        images_paths = images_paths + imgs_paths
     end_time = time.time()
     print('Read images and histograms in {:.1f} minutes'.format((end_time - start_time) / 60))
-    return images, histograms, labels
+    return images, histograms, labels, images_paths
 
 
 def get_paths_of_image_folders(path_folder):
@@ -123,7 +125,7 @@ def set_export_data_name(folder_name, data_params):
     return name
 
 
-def export_data(data_img, data_hist, labels, data_name):
+def export_data(data_img, data_hist, labels, paths_images, data_name):
     path_export = 'Preprocessed_Data/' + data_name
     if os.path.exists(path_export + '.npz'):
         print('Preprocessed data with these parameters already exported.')
@@ -133,7 +135,8 @@ def export_data(data_img, data_hist, labels, data_name):
     np.savez(path_export,
              img=data_img,
              hist=data_hist,
-             labels=labels)
+             labels=labels,
+             paths_images=paths_images)
     print('Saved data and labels in files {}'.format(path_export))
     return None
 
@@ -143,7 +146,8 @@ def load_data_and_labels(path_data):
     images = data['img']
     histograms = data['hist']
     labels = data['labels']
-    return images, histograms, labels
+    paths_images = data['paths_images']
+    return images, histograms, labels, paths_images
 
 
 def read_data_and_labels(path, data_params):
@@ -152,31 +156,26 @@ def read_data_and_labels(path, data_params):
     read_image = data_params['read_image']
     read_hist = data_params['read_hist']
     if os.path.exists(path_preprocessed):
-        data_images, data_histograms, labels = load_data_and_labels(path_preprocessed)
-        data = concatenate_data(data_images, data_histograms, read_image, read_hist)
-        del data_images
-        del data_histograms
+        data_images, data_histograms, labels, paths_images = load_data_and_labels(path_preprocessed)
         print('Re-loaded preprocessed data and labels from {}'.format(path_preprocessed))
-        if data_params['with_mean'] or data_params['with_std']:
-            data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
-        return data, labels
     else:
         folder_list = get_paths_of_image_folders(path)
-        data_images, data_histograms, labels = read_images_and_histograms(folder_list, read_image, read_hist)
+        data_images, data_histograms, labels, paths_images = read_images_and_histograms(folder_list, read_image, read_hist)
         if read_image:
             data_images = preprocess_images(data_images, data_params)
         if read_hist:
             data_histograms = rearrange_hists(data_histograms, data_params)
         labels = np.array(labels)
-
+        paths_images = np.array(paths_images)
         data_name = set_export_data_name(folder_name, data_params)
-        export_data(data_images, data_histograms, labels, data_name)
-        data = concatenate_data(data_images, data_histograms, read_image, read_hist)
-        del data_images
-        del data_histograms
-        if data_params['with_mean'] or data_params['with_std']:
-            data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
-        return data, labels
+        export_data(data_images, data_histograms, labels, paths_images, data_name)
+
+    data = concatenate_data(data_images, data_histograms, read_image, read_hist)
+    del data_images
+    del data_histograms
+    if data_params['with_mean'] or data_params['with_std']:
+        data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
+    return data, labels, paths_images
 
 
 def concatenate_data(data_img, data_hist, read_image, read_hist):

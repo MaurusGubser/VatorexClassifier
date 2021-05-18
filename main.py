@@ -1,12 +1,12 @@
 import numpy as np
 from collections import OrderedDict
 from sklearn.experimental import enable_hist_gradient_boosting
-from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier, AdaBoostClassifier
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 
-from model_parameter_tuning import cross_validate_model
+from model_parameter_tuning import cross_validate_model, grid_search_model, plot_learning_curve_model
 from model_train_test import train_and_test_model_selection
 from sequential_model import train_and_test_sequential_models, define_sequential_models
 
@@ -44,12 +44,12 @@ sgd = False
 ridge_class = False
 decision_tree = False
 random_forest = False
-l_svm = False
+l_svm = True
 nl_svm = False
 naive_bayes = False
-ada_boost = True
-histogram_boost = True
-gradient_boost = True
+ada_boost = False
+histogram_boost = False
+gradient_boost = False
 log_reg_cv = False
 stacked = False
 experimental = False
@@ -77,26 +77,58 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
                     HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3)]
 
 # ----- cross-validation models -----
-cross_validation = True
+cross_validation = False
 
-model = HistGradientBoostingClassifier(max_iter=100)
-model_parameter = 'l2_regularization'  # e.g. max_iter, max_bins, depending on model
+model_cv = RandomForestClassifier()
+model_name = 'RandomForest_test'
+model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = True  # if x axis should be logarithmic
-parameter_range = np.logspace(-4, 1, 10)    # l2_regularization
-# parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 75, 100, 200, 300])    # max_iter
-# parameter_range = np.array([2, 3, 7, 15, 31, 63, 127, 255])   # max_bins
-scoring_parameter = 'f1'    # f1, recall, precision
-nb_split_cv = 5   # number of split cvs
-cv_parameters = OrderedDict([('model_parameter', model_parameter), ('parameter_range', parameter_range),
+# parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
+# parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter
+# parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
+# parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)    # l2_regularization
+# parameter_range = np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255])   # max_bins
+parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
+# parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
+# parameter_range = np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
+nb_split_cv = 10  # number of split cvs
+"""
+cv_parameters = OrderedDict([('model_name', model_name),
+                             ('model_params', {'l2_regularization': [0.001, 0.01, 0.1, 1.0, 10.0], 'max_iter': [20, 50, 100, 300, 500]}),
                              ('semilog', semilog), ('scoring_parameter', scoring_parameter),
                              ('nb_split_cv', nb_split_cv)])
+"""
+
+cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
+                             ('parameter_range', parameter_range), ('semilog', semilog),
+                             ('nb_split_cv', nb_split_cv)])
+
+# ----- grid search -----
+grid_search = True
+model_gs = LinearSVC() #HistGradientBoostingClassifier()
+model_name = 'LinearSVC'    #'Histogram_boost'
+scoring_parameters = ['recall', 'precision', 'f1']
+Cs = ('C', [0.1, 1.0, 10.0])
+#learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
+#max_iter = ('max_iter', np.array([300]))
+#max_depth = ('max_depth', np.array([20]))
+#l2_regularization = ('l2_regularization', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+#max_bins = ('max_bins', np.array([32]))
+parameters_grid = OrderedDict([Cs])    #OrderedDict([learning_rate, max_iter, max_depth, l2_regularization, max_bins])
+nb_split_cv = 5    # number of split cvs
+gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
+                             ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
 
 if __name__ == '__main__':
-    folder_path = "Candidate_Images/Mite4_Dataset_renderellipsis_test/"
+    folder_path = "Candidate_Images/Mite4_Dataset_renderellipsis/"
     if evaluate_models:
         train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
     elif evaluate_sequential:
         models_sequential = define_sequential_models(names_sequential, models_recall, models_precision)
         train_and_test_sequential_models(models_sequential, folder_path, data_parameters, test_size)
     elif cross_validation:
-        cross_validate_model(model, folder_path, data_parameters, cv_parameters)
+        cross_validate_model(model_cv, folder_path, data_parameters, cv_parameters)
+    elif grid_search:
+        grid_search_model(model_gs, folder_path, data_parameters, gs_parameters)
+    else:
+        plot_learning_curve_model(folder_path, data_parameters, model_cv, model_name)
