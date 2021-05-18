@@ -1,16 +1,14 @@
-import json
 import os
 import pandas as pd
 from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import validation_curve, learning_curve, train_test_split, GridSearchCV, ShuffleSplit
-from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from sklearn.metrics import plot_confusion_matrix
 
 from data_handling import downsize_false_candidates
 from data_reading_writing import read_data_and_labels
-from model_train_test import get_name_index, evaluate_model, export_missclassified_images_to_txt, \
-    copy_missclassified_images_to_folder
+from model_train_test import get_name_index, evaluate_model, export_missclassified_images, export_true_pos_images
 
 
 def compute_cv_scores(model_type, data, labels, cv_params, score_param):
@@ -57,7 +55,6 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
     plt.tight_layout()
     plt.savefig('CV_Plots/' + export_name)
     plt.show()
-
     return None
 
 
@@ -73,7 +70,6 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, data, labels, cv_params,
                                                                                 score_param)
     plot_validation_curve(train_scores, test_scores, cv_params)
-
     return None
 
 
@@ -99,13 +95,13 @@ def grid_search_model(model, folder_path, data_params, grid_search_params):
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
     gs_df = gs_df[gs_df['rank_test_recall'] <= 10]
     export_stats_gs(grid_search_params['model_name'], gs_df)
-    _, missclassified_train = evaluate_model(clf, X_train, y_train, paths_train)
-    _, missclassified_test = evaluate_model(clf, X_test, y_test, paths_test)
+    _, missclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train)
+    _, missclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test)
     model_name = grid_search_params['model_name']
-    export_missclassified_images_to_txt(missclassified_train, model_name, '_training')
-    copy_missclassified_images_to_folder(missclassified_train, model_name, '_training')
-    export_missclassified_images_to_txt(missclassified_test, model_name, '_testing')
-    copy_missclassified_images_to_folder(missclassified_test, model_name, '_testing')
+    export_missclassified_images(missclassified_train, model_name, '_training')
+    export_missclassified_images(missclassified_test, model_name, '_testing')
+    export_true_pos_images(true_pos_train, model_name, '_training')
+    export_true_pos_images(true_pos_test, model_name, '_testing')
     print('Best estimator:', clf.best_estimator_)
     print('Testing score:', clf.score(X_test, y_test))
     plot_confusion_matrix(clf, X_test, y_test)
