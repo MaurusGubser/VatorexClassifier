@@ -115,12 +115,20 @@ def list_misclassified_images(y_true, y_pred, paths_images):
     return missclassified_imgs
 
 
-def export_missclassified_images(missclassified_images, file_name):
+def export_missclassified_images_to_txt(missclassified_images, file_name):
     if not os.path.exists('Missclassified_Images'):
         os.mkdir('Missclassified_Images')
     export_name = 'Missclassified_Images/' + file_name + '.txt'
     np.savetxt(export_name, np.sort(missclassified_images), delimiter=' ', fmt="%s")
     print('List of missclassified images saved in {}'.format(export_name))
+    return None
+
+
+def copy_missclassified_images_to_folder(missclassified_images, model_name, train_test):
+    if not os.path.exists('Missclassified_Images/' + model_name + train_test):
+        os.mkdir('Missclassified_Images/' + model_name + train_test)
+    for path in missclassified_images:
+        os.system('cp ' + path + ' ./Missclassified_Images/' + model_name + train_test)
     return None
 
 
@@ -132,7 +140,8 @@ def get_name_index(model_name, folder_name, file_format):
     return idx
 
 
-def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test, data_params):
+def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test,
+                              data_params):
     index = get_name_index(modelgroup_name, 'Model_Statistics/', 'json')
 
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
@@ -145,14 +154,16 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
 
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
-        dict_model['model_stats_train'], missclassified_train = evaluate_model(dict_model['model'], X_train, y_train, paths_train)
-        dict_model['model_stats_test'], missclassified_test = evaluate_model(dict_model['model'], X_test, y_test, paths_test)
+        dict_model['model_stats_train'], missclassified_train = evaluate_model(dict_model['model'], X_train, y_train,
+                                                                               paths_train)
+        dict_model['model_stats_test'], missclassified_test = evaluate_model(dict_model['model'], X_test, y_test,
+                                                                             paths_test)
 
         # export_model(dict_model['model'], model_name)
         # export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
-        export_missclassified_images(missclassified_train, model_name + '_training')
-        export_missclassified_images(missclassified_test, model_name + '_testing')
+        export_missclassified_images_to_txt(missclassified_train, model_name + '_training')
+        export_missclassified_images_to_txt(missclassified_test, model_name + '_testing')
     return None
 
 

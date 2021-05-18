@@ -120,7 +120,7 @@ gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', par
                              ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
 
 if __name__ == '__main__':
-    folder_path = "Candidate_Images/Mite4_Dataset_renderellipsis_test/"
+    folder_path = "Candidate_Images/Mite4_Dataset_renderellipsis/"
     if evaluate_models:
         train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
     elif evaluate_sequential:
