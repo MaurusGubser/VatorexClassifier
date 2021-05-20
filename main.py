@@ -7,7 +7,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, LinearSVC
 
 from model_parameter_tuning import cross_validate_model, grid_search_model, plot_learning_curve_model
-from model_train_test import train_and_test_model_selection
+from model_train_test import train_and_test_model_selection, evaluate_trained_model
 from sequential_model import train_and_test_sequential_models, define_sequential_models
 
 
@@ -38,7 +38,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.2  # fraction of test set
 
 # ----- train and evaluate models -----
-evaluate_models = True
+train_models = True
 
 log_reg = False
 sgd = False
@@ -81,7 +81,7 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
 cross_validation = False
 
 model_cv = RandomForestClassifier()
-model_name = 'RandomForest_test'
+model_name = 'RandomForest'
 model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = True  # if x axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
@@ -100,6 +100,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 
 # ----- grid search for several parameters -----
 grid_search = False
+
 model_gs = HistGradientBoostingClassifier()     # SVC()
 model_name = 'Histogram_boost'  # 'SVC'
 scoring_parameters = ['recall', 'precision', 'f1']
@@ -114,16 +115,27 @@ nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
 
+
+# ----- evaluate trained model ------
+evaluate_model = False
+path_trained_model = 'path/to/trained/model'
+path_test_data = 'path/to/test/data/folders'
+model_name = 'model_name_for_export'
+
 if __name__ == '__main__':
-    folder_path = "Candidate_Images/Mite4_Dataset_renderellipsis/"
-    if evaluate_models + evaluate_sequential + cross_validation + grid_search > 1:
+    path_image_folders = "Candidate_Images/Mite4_Dataset_renderellipsis/"
+    if train_models + evaluate_sequential + cross_validation + grid_search > 1:
         print('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
-    elif evaluate_models:
-        train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
+    elif train_models:
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size)
     elif evaluate_sequential:
         models_sequential = define_sequential_models(names_sequential, models_recall, models_precision)
-        train_and_test_sequential_models(models_sequential, folder_path, data_parameters, test_size)
+        train_and_test_sequential_models(models_sequential, path_image_folders, data_parameters, test_size)
     elif cross_validation:
-        cross_validate_model(model_cv, folder_path, data_parameters, cv_parameters)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
-        grid_search_model(model_gs, folder_path, data_parameters, gs_parameters)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters)
+    elif evaluate_model:
+        evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
+    else:
+        print('No option chosen.')

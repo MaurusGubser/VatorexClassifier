@@ -108,6 +108,20 @@ def evaluate_model(model, X, y, paths):
     return stats_dict, misclassified_imgs, true_pos_imgs
 
 
+def evaluate_trained_model(path_test_data, data_params, path_trained_model, model_name):
+    model = pickle.load(open(path_trained_model, 'rb'))
+    X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
+    y_pred = model.predict(X_test)
+    misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y_test, y_pred, paths_images)
+    export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Test')
+    f1 = f1_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred)
+    rcll = recall_score(y_test, y_pred)
+    print('F1 score: {}, Precision: {}, Recall: {}'.format(f1, prec, rcll))
+    plot_confusion_matrix(model, X_test, y_test)
+    return None
+
+
 def list_fp_fn_tp_images(y_true, y_pred, paths_images):
     misclassified_imgs = paths_images[y_true + y_pred == 1]
     correct_imgs = paths_images[y_true + y_pred == 2]
