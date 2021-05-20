@@ -36,7 +36,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('percentage_true', percentage_true), ('with_mean', with_mean), ('with_std', with_std)])
 test_size = 0.2  # fraction of test set
 
-# ----- training models -----
+# ----- train and evaluate models -----
 evaluate_models = True
 
 log_reg = False
@@ -60,7 +60,7 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('gradient_boost', gradient_boost), ('log_reg_cv', log_reg_cv),
                                ('stacked', stacked), ('experimental', experimental)])
 
-# ----- sequential models -----
+# ----- train and evaluate sequential models -----
 evaluate_sequential = False
 
 names_sequential = ['svc_hist', 'nb_hist', 'ridge_hist', 'logreg_hist', 'rf_hist']
@@ -76,7 +76,7 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
                     HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3),
                     HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3)]
 
-# ----- cross-validation models -----
+# ----- cross-validation for one parameter -----
 cross_validation = False
 
 model_cv = RandomForestClassifier()
@@ -92,18 +92,12 @@ parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 20
 # parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
 # parameter_range = np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
 nb_split_cv = 10  # number of split cvs
-"""
-cv_parameters = OrderedDict([('model_name', model_name),
-                             ('model_params', {'l2_regularization': [0.001, 0.01, 0.1, 1.0, 10.0], 'max_iter': [20, 50, 100, 300, 500]}),
-                             ('semilog', semilog), ('scoring_parameter', scoring_parameter),
-                             ('nb_split_cv', nb_split_cv)])
-"""
 
 cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
                              ('parameter_range', parameter_range), ('semilog', semilog),
                              ('nb_split_cv', nb_split_cv)])
 
-# ----- grid search -----
+# ----- grid search for several parameters -----
 grid_search = False
 model_gs = HistGradientBoostingClassifier()     # SVC()
 model_name = 'Histogram_boost'  # 'SVC'
