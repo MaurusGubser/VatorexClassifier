@@ -10,6 +10,7 @@ from model_parameter_tuning import cross_validate_model, grid_search_model, plot
 from model_train_test import train_and_test_model_selection
 from sequential_model import train_and_test_sequential_models, define_sequential_models
 
+
 # ----- data parameters -----
 read_image = False
 read_hist = True
