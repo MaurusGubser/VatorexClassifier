@@ -5,10 +5,10 @@ The training data (images and histograms) should be stored in a subfolder "Train
 
 To use the main.py file, one should choose settings for the data and choose between model evaluating, sequential model evaluating, cross-validations mode or grid search mode using the corresponding boolean variables. If the data was already used with given parameters, it is load from "Preprocessed_Data"; if not, it is stored in a folder "Preprocessed_Data" after reading and preprocessing.
 
-*Model evaluating*
+*Train models*
 If a model is trained and evaluated, its statistics are stored in one json file (one model) and appended to one csv file "Model_Statistics.csv" (all models) in the folder "Model_Statistics". The model itself is stored in the folder "Models_Trained". The true positive and misclassified images (false positive, false negative) are stored in a subfolder of "Evaluation_Images".
 
-*Sequential model evaluating*
+*Train sequential models*
 One has to define a sequence of models: one for recall, one for precision. Its statistics are then stored in one json file (one model) and appended to one csv file "Sequential_Model_Statistics.csv" (all models) in the folder "Sequential_Model_Statistics".
 
 *Cross validation*
@@ -16,3 +16,6 @@ One has to define a model, a model parameter to be tune, the range of correspond
 
 *Grid search*
 One has to define a model, a list of parameters and a range for each parameter. Then, a grid search over those parameter ranges is performed. The statistics of the 10 best performing models are stored in "GridSearch_Statistics". The true positive and misclassified images (false positive, false negative) are stored in a subfolder of "Evaluation_Images".
+
+*Evaluate model"
+One has to define the path to the test data, the path to a pre-trained model and a model name, which is used for the export. The F1, precision and recall score are computed and the true positive and misclassified images (false positive, false negative) are stored in a subfolder "Evaluation_Images".
