@@ -126,5 +126,3 @@ if __name__ == '__main__':
         cross_validate_model(model_cv, folder_path, data_parameters, cv_parameters)
     elif grid_search:
         grid_search_model(model_gs, folder_path, data_parameters, gs_parameters)
-    else:
-        plot_learning_curve_model(folder_path, data_parameters, model_cv, model_name)
