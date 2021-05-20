@@ -164,18 +164,17 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
 
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
         dict_model['model_stats_train'], misclassified_train, true_pos_train = evaluate_model(dict_model['model'],
-                                                                                               X_train, y_train,
-                                                                                               paths_train)
+                                                                                              X_train, y_train,
+                                                                                              paths_train)
         dict_model['model_stats_test'], misclassified_test, true_pos_test = evaluate_model(dict_model['model'], X_test,
-                                                                                            y_test, paths_test)
+                                                                                           y_test, paths_test)
 
         # export_model(dict_model['model'], model_name)
         # export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
-        export_misclassified_images(misclassified_train, model_name, '_training')
-        export_misclassified_images(misclassified_test, model_name, '_testing')
-        export_true_pos_images(true_pos_train, model_name, '_training')
-        export_true_pos_images(true_pos_test, model_name, '_testing')
+        export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
+        export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
+
     return None
 
 

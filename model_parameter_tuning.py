@@ -3,13 +3,12 @@ import pandas as pd
 from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.model_selection import validation_curve, learning_curve, train_test_split, GridSearchCV, ShuffleSplit
+from sklearn.model_selection import validation_curve, learning_curve, train_test_split, GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
 
 from data_handling import downsize_false_candidates
 from data_reading_writing import read_data_and_labels
-from model_train_test import get_name_index, evaluate_model, export_misclassified_images, export_true_pos_images, \
-    export_evaluation_images_model
+from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model
 
 
 def compute_cv_scores(model_type, data, labels, cv_params, score_param):
@@ -171,7 +170,6 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None, train_sizes=
 def plot_learning_curve_model(folder_path, data_params, model, model_name):
     data, labels = read_data_and_labels(folder_path, data_params)
     data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
-
-    cv = 5
+    cv = 10
     plot_learning_curve(model, model_name, data, labels, ylim=None, cv=cv)
     return None
