@@ -98,12 +98,6 @@ def grid_search_model(model, folder_path, data_params, grid_search_params):
     _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train)
     _, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test)
     model_name = grid_search_params['model_name']
-    """
-    export_misclassified_images(misclassified_train, model_name, '_training')
-    export_misclassified_images(misclassified_test, model_name, '_testing')
-    export_true_pos_images(true_pos_train, model_name, '_training')
-    export_true_pos_images(true_pos_test, model_name, '_testing')
-    """
     export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
     export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
     print('Best estimator:', clf.best_estimator_)
