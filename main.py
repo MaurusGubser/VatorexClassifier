@@ -105,8 +105,8 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 
 # ----- grid search -----
 grid_search = True
-model_gs = LinearSVC() #HistGradientBoostingClassifier()
-model_name = 'LinearSVC'    #'Histogram_boost'
+model_gs = SVC() #HistGradientBoostingClassifier()
+model_name = 'SVC'    #'Histogram_boost'
 scoring_parameters = ['recall', 'precision', 'f1']
 Cs = ('C', [0.1, 1.0, 10.0])
 #learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
