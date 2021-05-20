@@ -105,45 +105,39 @@ def evaluate_model(model, X, y, paths):
                               ('acc_balanced', balanced_accuracy_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
                               ('f1_scr', f1_score(y, y_pred))])
-    missclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
-    return stats_dict, missclassified_imgs, true_pos_imgs
+    misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
+    return stats_dict, misclassified_imgs, true_pos_imgs
 
 
 def list_fp_fn_tp_images(y_true, y_pred, paths_images):
-    missclassified_imgs = paths_images[y_true + y_pred == 1]
+    misclassified_imgs = paths_images[y_true + y_pred == 1]
     correct_imgs = paths_images[y_true + y_pred == 2]
-    return missclassified_imgs, correct_imgs
+    return misclassified_imgs, correct_imgs
 
 
-def export_missclassified_images(missclassified_images, model_name, train_test):
-    folder_path = 'Missclassified_Images/' + model_name + train_test
-    if not os.path.exists(folder_path):
-        if not os.path.exists('Missclassified_Images'):
-            os.mkdir('Missclassified_Images')
-        os.mkdir(folder_path)
-    export_name = folder_path + '/missclassified.txt'
-    np.savetxt(export_name, np.sort(missclassified_images), delimiter=' ', fmt="%s")
-    print('List of missclassified images saved in {}'.format(export_name))
-    for path in missclassified_images:
-        path = path.replace('(', '\(')
-        path = path.replace(')', '\)')
-        os.system('cp {} ./{}'.format(path, folder_path))
+def export_evaluation_images_model(misclassified_images, true_pos_images, model_name, train_test):
+    model_dir = 'Evaluation_Images/' + model_name
+    if not os.path.exists('Evaluation_Images'):
+        os.mkdir('Evaluation_Images')
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
+    dir_misclassified = model_dir + '/' + train_test + '_Misclassified/'
+    export_images(misclassified_images, dir_misclassified)
+    dir_true_pos = model_dir + '/' + train_test + '_TruePos/'
+    export_images(true_pos_images, dir_true_pos)
+    print('Exported evaluation images to {}'.format(model_dir))
     return None
 
 
-def export_true_pos_images(true_pos_images, model_name, train_test):
-    folder_path = 'True_Positive_Images/' + model_name + train_test
-    if not os.path.exists(folder_path):
-        if not os.path.exists('True_Positive_Images'):
-            os.mkdir('True_Positive_Images')
-        os.mkdir(folder_path)
-    export_name = folder_path + '/true_positive.txt'
-    np.savetxt(export_name, np.sort(true_pos_images), delimiter=' ', fmt="%s")
-    print('List of true positive images saved in {}'.format(export_name))
-    for path in true_pos_images:
+def export_images(images_list, export_directory):
+    if not os.path.exists(export_directory):
+        os.mkdir(export_directory)
+    filename_list = export_directory + 'image_list.txt'
+    np.savetxt(filename_list, np.sort(images_list), delimiter=' ', fmt='%s')
+    for path in images_list:
         path = path.replace('(', '\(')
         path = path.replace(')', '\)')
-        os.system('cp {} ./{}'.format(path, folder_path))
+        os.system('cp {} ./{}'.format(path, export_directory))
     return None
 
 
@@ -169,19 +163,18 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
 
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
-        dict_model['model_stats_train'], missclassified_train, true_pos_train = evaluate_model(dict_model['model'],
-                                                                                               X_train, y_train,
-                                                                                               paths_train)
-        dict_model['model_stats_test'], missclassified_test, true_pos_test = evaluate_model(dict_model['model'], X_test,
-                                                                                            y_test, paths_test)
+        dict_model['model_stats_train'], misclassified_train, true_pos_train = evaluate_model(dict_model['model'],
+                                                                                              X_train, y_train,
+                                                                                              paths_train)
+        dict_model['model_stats_test'], misclassified_test, true_pos_test = evaluate_model(dict_model['model'], X_test,
+                                                                                           y_test, paths_test)
 
         # export_model(dict_model['model'], model_name)
         # export_model_stats_json(dict_model, model_name, dict_data)
         export_model_stats_csv(dict_model, model_name, dict_data)
-        export_missclassified_images(missclassified_train, model_name, '_training')
-        export_missclassified_images(missclassified_test, model_name, '_testing')
-        export_true_pos_images(true_pos_train, model_name, '_training')
-        export_true_pos_images(true_pos_test, model_name, '_testing')
+        export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
+        export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
+
     return None
 
 

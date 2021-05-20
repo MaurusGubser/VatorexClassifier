@@ -3,12 +3,12 @@ import pandas as pd
 from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.model_selection import validation_curve, learning_curve, train_test_split, GridSearchCV, ShuffleSplit
+from sklearn.model_selection import validation_curve, learning_curve, train_test_split, GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
 
 from data_handling import downsize_false_candidates
 from data_reading_writing import read_data_and_labels
-from model_train_test import get_name_index, evaluate_model, export_missclassified_images, export_true_pos_images
+from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model
 
 
 def compute_cv_scores(model_type, data, labels, cv_params, score_param):
@@ -95,13 +95,17 @@ def grid_search_model(model, folder_path, data_params, grid_search_params):
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
     gs_df = gs_df[gs_df['rank_test_recall'] <= 10]
     export_stats_gs(grid_search_params['model_name'], gs_df)
-    _, missclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train)
-    _, missclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test)
+    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train)
+    _, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test)
     model_name = grid_search_params['model_name']
-    export_missclassified_images(missclassified_train, model_name, '_training')
-    export_missclassified_images(missclassified_test, model_name, '_testing')
+    """
+    export_misclassified_images(misclassified_train, model_name, '_training')
+    export_misclassified_images(misclassified_test, model_name, '_testing')
     export_true_pos_images(true_pos_train, model_name, '_training')
     export_true_pos_images(true_pos_test, model_name, '_testing')
+    """
+    export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
+    export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
     print('Best estimator:', clf.best_estimator_)
     print('Testing score:', clf.score(X_test, y_test))
     plot_confusion_matrix(clf, X_test, y_test)
@@ -166,7 +170,6 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None, train_sizes=
 def plot_learning_curve_model(folder_path, data_params, model, model_name):
     data, labels = read_data_and_labels(folder_path, data_params)
     data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
-
-    cv = 5
+    cv = 10
     plot_learning_curve(model, model_name, data, labels, ylim=None, cv=cv)
     return None
