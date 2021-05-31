@@ -35,7 +35,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
                                ('percentage_true', percentage_true), ('with_mean', with_mean), ('with_std', with_std)])
-test_size = 0.2  # fraction of test set
+test_size = 0.15  # fraction of test set
 
 # ----- train and evaluate models -----
 train_models = False
