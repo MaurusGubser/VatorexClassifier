@@ -41,8 +41,10 @@ def hist_read(path):
 
 def read_images_hist_from_folder(path_folder, read_image, read_hist):
     images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')]
-    histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
-
+    if read_hist == 'candidate':
+        histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
+    else:
+        histograms_paths = [path.replace('.jpg', '_context.hist') for path in images_paths]
     images = []
     histograms = []
     labels = []
@@ -67,7 +69,7 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
             elif re.search(pattern_false, path_hist):
                 labels.append(0)
             else:
-                raise AssertionError('Label image path {} does not contain true or false.'.format(path_hist))
+                raise AssertionError('Label histogram paths {} are not compatible.'.format(path_hist))
     else:
         for path_img, path_hist in zip(images_paths, histograms_paths):
             image = img_as_ubyte(equalize_adapthist(imread(path_img, as_gray=False)))
@@ -78,8 +80,7 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
             elif re.search(pattern_false, path_img) and re.search(pattern_false, path_hist):
                 labels.append(0)
             else:
-                raise AssertionError(
-                    'Label of histogram path {} and image path {} are not compatible'.format(path_hist, path_img))
+                raise AssertionError('Label of image path {} and histogram paths {} are not compatible'.format(path_img, path_hist))
 
     return images, histograms, labels, images_paths
 
@@ -160,7 +161,8 @@ def read_data_and_labels(path, data_params):
         print('Re-loaded preprocessed data and labels from {}'.format(path_preprocessed))
     else:
         folder_list = get_paths_of_image_folders(path)
-        data_images, data_histograms, labels, paths_images = read_images_and_histograms(folder_list, read_image, read_hist)
+        data_images, data_histograms, labels, paths_images = read_images_and_histograms(folder_list, read_image,
+                                                                                        read_hist)
         if read_image:
             data_images = preprocess_images(data_images, data_params)
         if read_hist:

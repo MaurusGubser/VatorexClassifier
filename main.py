@@ -12,8 +12,8 @@ from sequential_model import train_and_test_sequential_models, define_sequential
 
 
 # ----- data parameters -----
-read_image = False
-read_hist = True
+read_image = False  # True or False
+read_hist = 'context'    # 'candidate', 'context' or False
 with_image = False  # use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
@@ -123,7 +123,7 @@ path_test_data = 'path/to/test/data/folders'
 model_name = 'model_name_for_export'
 
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/Mite4_Dataset_renderellipsis/"
+    path_image_folders = "Candidate_Images/Mite4_Dataset_contextellipsis/"
     if train_models + evaluate_sequential + cross_validation + grid_search > 1:
         print('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
     elif train_models:
