@@ -134,7 +134,7 @@ if __name__ == '__main__':
     elif cross_validation:
         cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     else:
