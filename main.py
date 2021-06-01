@@ -101,17 +101,19 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 # ----- grid search for several parameters -----
 grid_search = True
 
-model_gs = SVC()
-model_name = 'SVC'
+model_gs = HistGradientBoostingClassifier()
+model_name = 'Histogram_boost'
 scoring_parameters = ['recall', 'precision', 'f1']
 
-Cs = ('C', [0.1, 1.0, 10.0])
-class_weight = ('class_weight', [None, 'balanced'])
+learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
+max_iter = ('max_iter', np.array([100]))
+max_depth = ('max_depth', np.array([20]))
+l2_regularization = ('l2_regularization', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+max_bins = ('max_bins', np.array([31]))
 
-parameters_grid = OrderedDict([Cs, class_weight])
+parameters_grid = OrderedDict([learning_rate, max_iter, max_depth, l2_regularization, max_bins])
 nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid), ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
-
 
 # ----- evaluate trained model ------
 evaluate_model = False

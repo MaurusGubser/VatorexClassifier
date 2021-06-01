@@ -40,47 +40,32 @@ def hist_read(path):
 
 
 def read_images_hist_from_folder(path_folder, read_image, read_hist):
+    if not read_image and read_hist not in ['candidate', 'context']:
+        raise AssertionError('Got invalid values for read_image and read_hist; {} and {}'.format(read_image, read_hist))
+
     images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')]
-    if read_hist == 'candidate':
-        histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
-    else:
-        histograms_paths = [path.replace('.jpg', '_context.hist') for path in images_paths]
+    histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
+    histograms_context_paths = [path.replace('.jpg', '_context.hist') for path in images_paths]
     images = []
     histograms = []
     labels = []
     pattern_true = r'true'
     pattern_false = r'false'
 
-    if not read_hist:
-        for path_img in images_paths:
+    for path_img, path_hist, path_hist_context in zip(images_paths, histograms_paths, histograms_context_paths):
+        if read_image:
             image = img_as_ubyte(equalize_adapthist(imread(path_img, as_gray=False)))
             images.append(image)
-            if re.search(pattern_true, path_img):
-                labels.append(1)
-            elif re.search(pattern_false, path_img):
-                labels.append(0)
-            else:
-                raise AssertionError('Label image path {} does not contain true or false.'.format(path_img))
-    elif not read_image:
-        for path_hist in histograms_paths:
+        if read_hist == 'candidate':
             histograms.append(hist_read(path_hist))
-            if re.search(pattern_true, path_hist):
-                labels.append(1)
-            elif re.search(pattern_false, path_hist):
-                labels.append(0)
-            else:
-                raise AssertionError('Label histogram paths {} are not compatible.'.format(path_hist))
-    else:
-        for path_img, path_hist in zip(images_paths, histograms_paths):
-            image = img_as_ubyte(equalize_adapthist(imread(path_img, as_gray=False)))
-            images.append(image)
-            histograms.append(hist_read(path_hist))
-            if re.search(pattern_true, path_img) and re.search(pattern_true, path_hist):
-                labels.append(1)
-            elif re.search(pattern_false, path_img) and re.search(pattern_false, path_hist):
-                labels.append(0)
-            else:
-                raise AssertionError('Label of image path {} and histogram paths {} are not compatible'.format(path_img, path_hist))
+        if read_hist == 'context':
+            histograms.append(hist_read(path_hist)+hist_read(path_hist_context))
+        if re.search(pattern_true, path_img):
+            labels.append(1)
+        elif re.search(pattern_false, path_img):
+            labels.append(0)
+        else:
+            raise AssertionError('Image path {} does not contain true or false.'.format(path_img))
 
     return images, histograms, labels, images_paths
 
@@ -165,8 +150,8 @@ def read_data_and_labels(path, data_params):
                                                                                         read_hist)
         if read_image:
             data_images = preprocess_images(data_images, data_params)
-        if read_hist:
-            data_histograms = rearrange_hists(data_histograms, data_params)
+        if read_hist in ['candidate', 'context']:
+            data_histograms = rearrange_hists(data_histograms, data_params, read_hist)
         labels = np.array(labels)
         paths_images = np.array(paths_images)
         data_name = set_export_data_name(folder_name, data_params)
