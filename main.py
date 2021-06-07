@@ -12,8 +12,8 @@ from sequential_model import train_and_test_sequential_models, define_sequential
 
 
 # ----- data parameters -----
-read_image = False
-read_hist = True
+read_image = False  # True or False
+read_hist = 'context'    # 'candidate', 'context' or False
 with_image = False  # use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
@@ -38,7 +38,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.2  # fraction of test set
 
 # ----- train and evaluate models -----
-evaluate_models = True
+train_models = False
 
 log_reg = False
 sgd = False
@@ -81,7 +81,7 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
 cross_validation = False
 
 model_cv = RandomForestClassifier()
-model_name = 'RandomForest_test'
+model_name = 'RandomForest'
 model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = True  # if x axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
@@ -99,30 +99,42 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
+
 model_gs = HistGradientBoostingClassifier()
 model_name = 'Histogram_boost'
 scoring_parameters = ['recall', 'precision', 'f1']
+
 learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
-max_iter = ('max_iter', np.array([300]))
+max_iter = ('max_iter', np.array([100]))
 max_depth = ('max_depth', np.array([20]))
 l2_regularization = ('l2_regularization', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
-max_bins = ('max_bins', np.array([32]))
+max_bins = ('max_bins', np.array([31]))
+
 parameters_grid = OrderedDict([learning_rate, max_iter, max_depth, l2_regularization, max_bins])
 nb_split_cv = 10    # number of split cvs
-gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
-                             ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
+gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid), ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
+
+# ----- evaluate trained model ------
+evaluate_model = False
+path_trained_model = 'path/to/trained/model'
+path_test_data = 'path/to/test/data/folders'
+model_name = 'model_name_for_export'
 
 if __name__ == '__main__':
-    folder_path = "Candidate_Images/Mite4_Dataset_renderellipsis/"
-    if evaluate_models + evaluate_sequential + cross_validation + grid_search > 1:
+    path_image_folders = "Candidate_Images/Mite4_Dataset_contextellipsis/"
+    if train_models + evaluate_sequential + cross_validation + grid_search > 1:
         print('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
-    elif evaluate_models:
-        train_and_test_model_selection(model_selection, folder_path, data_parameters, test_size)
+    elif train_models:
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size)
     elif evaluate_sequential:
         models_sequential = define_sequential_models(names_sequential, models_recall, models_precision)
-        train_and_test_sequential_models(models_sequential, folder_path, data_parameters, test_size)
+        train_and_test_sequential_models(models_sequential, path_image_folders, data_parameters, test_size)
     elif cross_validation:
-        cross_validate_model(model_cv, folder_path, data_parameters, cv_parameters)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
-        grid_search_model(model_gs, folder_path, data_parameters, gs_parameters)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size)
+    elif evaluate_model:
+        evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
+    else:
+        print('No option chosen.')

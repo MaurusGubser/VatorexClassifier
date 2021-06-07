@@ -115,7 +115,7 @@ def preprocess_images(images_list, data_params):
     return data
 
 
-def rearrange_hists(histograms_list, data_params):
+def rearrange_hists(histograms_list, data_params, read_hist):
     start_time = time.time()
     hist_hsl = data_params['hist_hsl']
     hist_h = data_params['hist_h']
@@ -134,6 +134,15 @@ def rearrange_hists(histograms_list, data_params):
             data_hist = np.append(data_hist, hists[2])
         if hist_l:
             data_hist = np.append(data_hist, hists[3])
+        if read_hist == 'context':
+            if hist_hsl:
+                data_hist = np.append(data_hist, hists[4].flatten())
+            if hist_h:
+                data_hist = np.append(data_hist, hists[5])
+            if hist_s:
+                data_hist = np.append(data_hist, hists[6])
+            if hist_l:
+                data_hist = np.append(data_hist, hists[7])
         data.append(data_hist)
         del hists
     data = np.array(data)

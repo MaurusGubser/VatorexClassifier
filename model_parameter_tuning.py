@@ -73,33 +73,33 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     return None
 
 
-def export_stats_gs(model_name, gs_dataframe):
+def export_stats_gs(export_name, gs_dataframe):
     if not os.path.exists('GridSearch_Statistics'):
         os.mkdir('GridSearch_Statistics')
-    model_nb = get_name_index(model_name, 'GridSearch_Statistics/', 'csv')
-    rel_file_path = 'GridSearch_Statistics/' + model_name + '_' + str(model_nb) + '.csv'
+    rel_file_path = 'GridSearch_Statistics/' + export_name + '.csv'
     gs_dataframe.to_csv(rel_file_path)
     print("GridSearch statistics saved in", rel_file_path)
     return None
 
 
-def grid_search_model(model, folder_path, data_params, grid_search_params):
+def grid_search_model(model, folder_path, data_params, grid_search_params, test_size):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
-                                                                                 test_size=0.05, shuffle=True,
+                                                                                 test_size=test_size, shuffle=True,
                                                                                  random_state=42)
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
                        n_jobs=-1, refit='recall', cv=grid_search_params['nb_split_cv'], verbose=2)
     clf.fit(X_train, y_train)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
     gs_df = gs_df[gs_df['rank_test_recall'] <= 10]
-    export_stats_gs(grid_search_params['model_name'], gs_df)
+    model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
+    export_name = grid_search_params['model_name'] + '_' + str(model_nb)
+    export_stats_gs(export_name, gs_df)
     _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train)
     _, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test)
-    model_name = grid_search_params['model_name']
-    export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
-    export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
+    export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
+    export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')
     print('Best estimator:', clf.best_estimator_)
     print('Testing score:', clf.score(X_test, y_test))
     plot_confusion_matrix(clf, X_test, y_test)
