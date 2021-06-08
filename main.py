@@ -6,7 +6,7 @@ from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, LinearSVC
 
-from model_parameter_tuning import cross_validate_model, grid_search_model, plot_learning_curve_model
+from model_parameter_tuning import cross_validate_model, grid_search_model
 from model_train_test import train_and_test_model_selection, evaluate_trained_model
 from sequential_model import train_and_test_sequential_models, define_sequential_models
 
@@ -35,7 +35,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
                                ('percentage_true', percentage_true), ('with_mean', with_mean), ('with_std', with_std)])
-test_size = 0.15  # fraction of test set
+test_size = 0.25  # fraction of test set
 
 # ----- train and evaluate models -----
 train_models = False
