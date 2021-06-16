@@ -114,9 +114,9 @@ gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', par
 
 # ----- evaluate trained model ------
 evaluate_model = True
-path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Trained/Histogram_boost_warp.sav'
-path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_Dataset_contextellipsis/200909Uesslingen(labeled)/'
-model_name = 'Histogram_boost_0'
+path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Trained/LinearSVC_1.sav'
+path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_Dataset_contextellipsis/200812R09AS(labeled)/'
+model_name = 'LinearSVC_1_200812R09AS'
 
 if __name__ == '__main__':
     path_image_folders = "Candidate_Images/Mite4_Dataset_contextellipsis/"
