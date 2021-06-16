@@ -132,15 +132,6 @@ def evaluate_trained_model(path_test_data, data_params, path_trained_model, mode
     stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
-    """
-    y_pred = model.predict(X_test)
-    misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y_test, y_pred, paths_images)
-    export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
-    f1 = f1_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred)
-    rcll = recall_score(y_test, y_pred)
-    print('F1 score: {}, Precision: {}, Recall: {}'.format(f1, prec, rcll))
-    """
     plot_confusion_matrix(model, X_test, y_test)
     plt.show()
     return None
