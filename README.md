@@ -18,4 +18,4 @@ One has to define a model, a model parameter to be tune, the range of correspond
 One has to define a model, a list of parameters and a range for each parameter. Then, a grid search over those parameter ranges is performed. The statistics of the 10 best performing models are stored in "GridSearch_Statistics". The true positive and misclassified images (false positive, false negative) are stored in a subfolder of "Evaluation_Images".
 
 *Evaluate model*
-One has to define the path to the test data, the path to a pre-trained model and a model name, which is used for the export. The F1, precision and recall score are computed and the true positive and misclassified images (false positive, false negative) are stored in a subfolder "Evaluation_Images".
+One has to define the path to the test data, the path to a pre-trained model and a model name, which is used for the export. The F1, precision and recall scores are computed and saved in a json-file, and the true positive and misclassified images (false positive, false negative) are stored in a subfolder "Evaluation_Images".
