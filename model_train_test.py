@@ -48,7 +48,7 @@ def export_model_stats_json(model_dict, model_name, data_dict):
     return None
 
 
-def export_model_stats_csv(model_dict, model_name, data_dict):
+def export_model_training_stats_csv(model_dict, model_name, data_dict):
     if not os.path.exists('Model_Statistics'):
         os.mkdir('Model_Statistics')
     filename = 'Model_Statistics/Model_Statistics.csv'
@@ -108,17 +108,32 @@ def evaluate_model(model, X, y, paths):
     return stats_dict, misclassified_imgs, true_pos_imgs
 
 
+def export_model_evaluation_stats_json(stats_dict, model_name):
+    rel_file_path = 'Evaluation_Images/' + model_name + '/Statistics.json'
+    stats_dict.pop('acc')
+    stats_dict.pop('acc_balanced')
+    stats_dict.pop('f1_scr')
+    conf_matrix = stats_dict['conf_matrix']
+    stats_dict.pop('conf_matrix')
+    stats_dict['Candidates'] = int(np.sum(conf_matrix))
+    stats_dict['Mites'] = int(conf_matrix[1, 0] + conf_matrix[1, 1])
+    stats_dict['true_pos'] = int(conf_matrix[1, 1])
+    stats_dict['false_neg'] = int(conf_matrix[1, 0])
+    stats_dict['false_pos'] = int(conf_matrix[0, 1])
+    with open(rel_file_path, 'w') as outfile:
+        json.dump(stats_dict, outfile, indent=4)
+    print("Model statistics saved in", rel_file_path)
+    return None
+
+
 def evaluate_trained_model(path_test_data, data_params, path_trained_model, model_name):
     model = pickle.load(open(path_trained_model, 'rb'))
     X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
-    y_pred = model.predict(X_test)
-    misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y_test, y_pred, paths_images)
-    export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Test')
-    f1 = f1_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred)
-    rcll = recall_score(y_test, y_pred)
-    print('F1 score: {}, Precision: {}, Recall: {}'.format(f1, prec, rcll))
+    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images)
+    export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
+    export_model_evaluation_stats_json(stats_dict, model_name)
     plot_confusion_matrix(model, X_test, y_test)
+    plt.show()
     return None
 
 
@@ -182,9 +197,9 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         dict_model['model_stats_test'], misclassified_test, true_pos_test = evaluate_model(dict_model['model'], X_test,
                                                                                            y_test, paths_test)
 
-        export_model(dict_model['model'], model_name)
-        export_model_stats_json(dict_model, model_name, dict_data)
-        export_model_stats_csv(dict_model, model_name, dict_data)
+        # export_model(dict_model['model'], model_name)
+        # export_model_stats_json(dict_model, model_name, dict_data)
+        export_model_training_stats_csv(dict_model, model_name, dict_data)
         export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
         export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
 

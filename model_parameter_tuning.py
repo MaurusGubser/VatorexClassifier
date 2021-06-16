@@ -8,7 +8,7 @@ from sklearn.metrics import plot_confusion_matrix
 
 from data_handling import downsize_false_candidates
 from data_reading_writing import read_data_and_labels
-from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model
+from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model, export_model
 
 
 def compute_cv_scores(model_type, data, labels, cv_params, score_param):
@@ -101,6 +101,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
     export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')
     print('Best estimator:', clf.best_estimator_)
+    export_model(clf.best_estimator_, export_name)
     print('Testing score:', clf.score(X_test, y_test))
     plot_confusion_matrix(clf, X_test, y_test)
     plt.show()

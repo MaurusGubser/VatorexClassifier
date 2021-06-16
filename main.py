@@ -6,8 +6,8 @@ from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, LinearSVC
 
-from model_parameter_tuning import cross_validate_model, grid_search_model, plot_learning_curve_model
-from model_train_test import train_and_test_model_selection
+from model_parameter_tuning import cross_validate_model, grid_search_model
+from model_train_test import train_and_test_model_selection, evaluate_trained_model
 from sequential_model import train_and_test_sequential_models, define_sequential_models
 
 
@@ -99,7 +99,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = HistGradientBoostingClassifier()
 model_name = 'Histogram_boost'
@@ -116,15 +116,15 @@ nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid), ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
 
 # ----- evaluate trained model ------
-evaluate_model = False
-path_trained_model = 'path/to/trained/model'
-path_test_data = 'path/to/test/data/folders'
-model_name = 'model_name_for_export'
+evaluate_model = True
+path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Trained/LinearSVC_1.sav'
+path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_Dataset_contextellipsis/200812R09AS(labeled)/'
+model_name = 'LinearSVC_1_200812R09AS'
 
 if __name__ == '__main__':
     path_image_folders = "Candidate_Images/Mite4_Dataset_contextellipsis/"
-    if train_models + evaluate_sequential + cross_validation + grid_search > 1:
-        print('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
+    if train_models + evaluate_sequential + cross_validation + grid_search + evaluate_model > 1:
+        raise AssertionError('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
     elif train_models:
         train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size)
     elif evaluate_sequential:
