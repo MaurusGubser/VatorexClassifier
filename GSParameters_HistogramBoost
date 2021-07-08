@@ -14,7 +14,6 @@ max_bins = ('max_bins', np.array([31]))
 
 parameters_grid = OrderedDict([learning_rate, max_iter, max_depth, l2_regularization, max_bins])
 nb_split_cv = 10
-nb_models = 20
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
-                             ('nb_split_cv', nb_split_cv), ('nb_models', nb_models)])
+                             ('nb_split_cv', nb_split_cv)])

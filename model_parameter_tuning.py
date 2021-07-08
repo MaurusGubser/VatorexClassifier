@@ -85,13 +85,12 @@ def export_stats_gs(export_name, gs_dataframe):
     return None
 
 
-def clean_and_sort(df, refit_param, nb_models):
+def clean_df(df):
     pattern = r'split[0-9][_]test'
     column_names = df.columns
     for name in column_names:
         if re.search(pattern, name):
             df = df.drop(name, axis=1)
-    df = df[df['rank_test_'+refit_param] <= nb_models]
     return df
 
 
@@ -106,7 +105,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
                        verbose=2)
     clf.fit(X_train, y_train)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
-    gs_df = clean_and_sort(gs_df, grid_search_params['refit_param'], grid_search_params['nb_models'])
+    gs_df = clean_df(gs_df, grid_search_params['refit_param'])
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
     export_name = grid_search_params['model_name'] + '_' + str(model_nb)
     export_stats_gs(export_name, gs_df)

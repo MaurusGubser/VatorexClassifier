@@ -11,7 +11,6 @@ class_weight = ('class_weight', [None, 'balanced'])
 
 parameters_grid = OrderedDict([Cs, class_weight])
 nb_split_cv = 10    # number of split cvs
-nb_models = 20
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
-                             ('nb_split_cv', nb_split_cv), ('nb_models', nb_models)])
+                             ('nb_split_cv', nb_split_cv)])

@@ -113,10 +113,9 @@ max_iter = ('max_iter', np.array([10, 50, 100, 500, 1000]))
 
 parameters_grid = OrderedDict([Cs, class_weight, max_iter])
 nb_split_cv = 10    # number of split cvs
-nb_models = 20
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
-                             ('nb_split_cv', nb_split_cv), ('nb_models', nb_models)])
+                             ('nb_split_cv', nb_split_cv)])
 
 # ----- evaluate trained model ------
 evaluate_model = False
