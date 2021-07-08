@@ -31,9 +31,9 @@ def export_model(model, model_name):
 
 
 def export_model_stats_json(model_dict, model_name, data_dict):
-    if not os.path.exists('Model_Statistics'):
-        os.mkdir('Model_Statistics')
-    rel_file_path = 'Model_Statistics/' + model_name + '.json'
+    if not os.path.exists('Training_Statistics'):
+        os.mkdir('Training_Statistics')
+    rel_file_path = 'Training_Statistics/' + model_name + '.json'
     del model_dict['model']
     model_dict['model_stats_train']['conf_matrix'] = [int(k) for k in
                                                       model_dict['model_stats_train']['conf_matrix'].flatten()]
@@ -49,9 +49,9 @@ def export_model_stats_json(model_dict, model_name, data_dict):
 
 
 def export_model_training_stats_csv(model_dict, model_name, data_dict):
-    if not os.path.exists('Model_Statistics'):
-        os.mkdir('Model_Statistics')
-    filename = 'Model_Statistics/Model_Statistics.csv'
+    if not os.path.exists('Training_Statistics'):
+        os.mkdir('Training_Statistics')
+    filename = 'Training_Statistics/Model_Statistics.csv'
     if not os.path.exists(filename):
         title_string = 'Model name,Model_params,TRAIN Accuracy,Acc. Balanced,Precision,Recall,F1 Score,TEST Accuracy,Acc. Balanced,Precision,Recall,F1 Score,'
         for i in data_dict.keys():
@@ -109,6 +109,10 @@ def evaluate_model(model, X, y, paths):
 
 
 def export_model_evaluation_stats_json(stats_dict, model_name):
+    if not os.path.exists('Evaluation_Images'):
+        os.mkdir('Evaluation_Images')
+    if not os.path.exists('Evaluation_Images/'+model_name):
+        os.mkdir('Evaluation_Images/'+model_name)
     rel_file_path = 'Evaluation_Images/' + model_name + '/Statistics.json'
     stats_dict.pop('acc')
     stats_dict.pop('acc_balanced')
@@ -179,7 +183,7 @@ def get_name_index(model_name, folder_name, file_format):
 
 def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test,
                               data_params):
-    index = get_name_index(modelgroup_name, 'Model_Statistics/', 'json')
+    index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
 
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                              ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),

@@ -35,7 +35,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
                                ('percentage_true', percentage_true), ('with_mean', with_mean), ('with_std', with_std)])
-test_size = 0.25  # fraction of test set
+test_size = 0.20  # fraction of test set
 
 # ----- train and evaluate models -----
 train_models = False
@@ -80,16 +80,17 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
 # ----- cross-validation for one parameter -----
 cross_validation = False
 
-model_cv = RandomForestClassifier()
-model_name = 'RandomForest'
-model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
-semilog = True  # if x axis should be logarithmic
+model_cv = HistGradientBoostingClassifier(learning_rate=0.2, max_iter=10, l2_regularization=10.0, max_leaf_nodes=10)
+model_name = 'HistBoost'
+model_parameter = 'max_iter'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
+semilog = False  # if x axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
-# parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter
+parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
+# parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes
 # parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)    # l2_regularization
 # parameter_range = np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255])   # max_bins
-parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
+# parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
 # parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
 # parameter_range = np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
 nb_split_cv = 10  # number of split cvs
@@ -99,27 +100,32 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
 
-model_gs = LinearSVC()
-model_name = 'LinearSVC'
+model_gs = LogisticRegression(penalty='l2', dual=False, solver='lbfgs', l1_ratio=None)
+model_name = 'LogReg'
 scoring_parameters = ['recall', 'precision', 'f1']
+refit_param = 'f1'
 
-Cs = ('C', [0.1, 1.0, 10.0])
+Cs = ('C', np.insert(np.logspace(-2, 3, 15), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
+max_iter = ('max_iter', np.array([10, 50, 100, 500, 1000]))
 
-parameters_grid = OrderedDict([Cs, class_weight])
+parameters_grid = OrderedDict([Cs, class_weight, max_iter])
 nb_split_cv = 10    # number of split cvs
-gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid), ('scoring_parameters', scoring_parameters), ('nb_split_cv', nb_split_cv)])
+nb_models = 20
+gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
+                             ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
+                             ('nb_split_cv', nb_split_cv), ('nb_models', nb_models)])
 
 # ----- evaluate trained model ------
-evaluate_model = True
+evaluate_model = False
 path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Trained/LinearSVC_1.sav'
 path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_Dataset_contextellipsis/200812R09AS(labeled)/'
 model_name = 'LinearSVC_1_200812R09AS'
 
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/Mite4_Dataset_contextellipsis/"
+    path_image_folders = "Candidate_Images/Mite4_Dataset_relabelledsmall/"
     if train_models + evaluate_sequential + cross_validation + grid_search + evaluate_model > 1:
         raise AssertionError('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
     elif train_models:
