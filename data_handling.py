@@ -32,9 +32,9 @@ def compute_histograms(image, nb_divisions, nb_bins):
         for i in range(0, nb_divisions):
             for j in range(0, nb_divisions):
                 sub_img = image[i * width_subregion:(i + 1) * width_subregion,
-                                j * length_subregion:(j + 1) * length_subregion, ch]
+                          j * length_subregion:(j + 1) * length_subregion, ch]
                 histograms[ch, i * nb_divisions + j, :] = np.histogram(sub_img, bins=nb_bins, density=True)[0]
-    histograms = histograms / np.amax(histograms)
+        histograms[ch, :, :] = histograms[ch, :, :] / np.sum(histograms[ch, :, :])
     return histograms
 
 

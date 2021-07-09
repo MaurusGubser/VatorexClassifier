@@ -105,7 +105,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
                        verbose=2)
     clf.fit(X_train, y_train)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
-    gs_df = clean_df(gs_df, grid_search_params['refit_param'])
+    gs_df = clean_df(gs_df)
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
     export_name = grid_search_params['model_name'] + '_' + str(model_nb)
     export_stats_gs(export_name, gs_df)

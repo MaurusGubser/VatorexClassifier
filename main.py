@@ -12,14 +12,14 @@ from sequential_model import train_and_test_sequential_models, define_sequential
 
 
 # ----- data parameters -----
-read_image = False  # True or False
-read_hist = 'context'    # 'candidate', 'context' or False
+read_image = True  # True or False
+read_hist = False   # 'context'    # 'candidate', 'context' or False
 with_image = False  # use image
 with_binary_patterns = False  # use local binary patterns of image
-histogram_params = (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-nb_segments = 6  # must be None or a integer; segment image using k-means in color space
+histogram_params = (1, 64)    # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
+nb_segments = None  # must be None or a integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
-nb_components_pca = 100  # must be None or a integer, which defines number of components
+nb_components_pca = None  # must be None or a integer, which defines number of components
 batch_size_pca = 1000  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
 hist_hsl = True
 hist_h = True
@@ -102,14 +102,14 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 # ----- grid search for several parameters -----
 grid_search = True
 
-model_gs = LogisticRegression(penalty='l2', dual=False, solver='lbfgs', l1_ratio=None)
-model_name = 'LogReg'
+model_gs = SVC()
+model_name = 'SVC'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-Cs = ('C', np.insert(np.logspace(-2, 3, 15), 0, 0.0))
+Cs = ('C', np.insert(np.logspace(-2, 3, 12), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
-max_iter = ('max_iter', np.array([10, 50, 100, 500, 1000]))
+max_iter = ('max_iter', np.array([-1, 10, 50, 100, 500]))
 
 parameters_grid = OrderedDict([Cs, class_weight, max_iter])
 nb_split_cv = 10    # number of split cvs
@@ -124,7 +124,7 @@ path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Ima
 model_name = 'LinearSVC_1_200812R09AS'
 
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/Mite4_Dataset_relabelledsmall/"
+    path_image_folders = "Candidate_Images/Mite4_Dataset_relabelledsmall/200328-S14(labeled)/"
     if train_models + evaluate_sequential + cross_validation + grid_search + evaluate_model > 1:
         raise AssertionError('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
     elif train_models:
