@@ -278,26 +278,32 @@ def define_models(model_selection):
 
     nl_svm_models = [SVC(C=0.1, class_weight='balanced'),
                      SVC(C=1.0, class_weight='balanced'),
-                     SVC(C=5.0, class_weight='balanced'),
+                     SVC(C=10.0, class_weight='balanced'),
                      SVC(C=0.1, kernel='poly', class_weight='balanced'),
                      SVC(C=0.1, kernel='poly', class_weight='balanced'),
-                     SVC(C=5.0, kernel='poly', class_weight='balanced')]
+                     SVC(C=10.0, kernel='poly', class_weight='balanced')]
 
     naive_bayes_models = [GaussianNB()]
 
     ada_boost_models = [AdaBoostClassifier(n_estimators=50),
                         AdaBoostClassifier(n_estimators=100),
                         AdaBoostClassifier(n_estimators=200),
-                        AdaBoostClassifier(n_estimators=500),
                         AdaBoostClassifier(n_estimators=50, learning_rate=0.1),
                         AdaBoostClassifier(n_estimators=100, learning_rate=0.1),
-                        AdaBoostClassifier(n_estimators=200, learning_rate=0.1),
-                        AdaBoostClassifier(n_estimators=500, learning_rate=0.1)]
+                        AdaBoostClassifier(n_estimators=200, learning_rate=0.1)]
 
     histogram_boost_models = [HistGradientBoostingClassifier(max_iter=10),
+                              HistGradientBoostingClassifier(max_iter=10, l2_regularization=0.1),
+                              HistGradientBoostingClassifier(max_iter=10, l2_regularization=1.0),
+                              HistGradientBoostingClassifier(max_iter=10, l2_regularization=10.0),
+                              HistGradientBoostingClassifier(max_iter=100),
                               HistGradientBoostingClassifier(max_iter=100, l2_regularization=0.1),
                               HistGradientBoostingClassifier(max_iter=100, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=5.0)]
+                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=10.0),
+                              HistGradientBoostingClassifier(max_iter=300),
+                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1),
+                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0),
+                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=10.0)]
 
     gradient_boost_models = [GradientBoostingClassifier(n_estimators=100),
                              GradientBoostingClassifier(n_estimators=100, max_features='sqrt'),
@@ -305,7 +311,6 @@ def define_models(model_selection):
                              GradientBoostingClassifier(n_estimators=200),
                              GradientBoostingClassifier(n_estimators=200, max_features='sqrt'),
                              GradientBoostingClassifier(n_estimators=200, max_features='log2'),
-                             GradientBoostingClassifier(n_estimators=500),
                              GradientBoostingClassifier(n_estimators=500, max_features='sqrt'),
                              GradientBoostingClassifier(n_estimators=500, max_features='log2')]
 

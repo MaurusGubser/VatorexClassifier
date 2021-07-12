@@ -14,9 +14,9 @@ from sequential_model import train_and_test_sequential_models, define_sequential
 # ----- data parameters -----
 read_image = True  # True or False
 read_hist = False   # 'context'    # 'candidate', 'context' or False
-with_image = False  # use image
+with_image = False  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
-histogram_params = (1, 64)    # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
+histogram_params = (3, 64)    # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
 nb_segments = None  # must be None or a integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
 nb_components_pca = None  # must be None or a integer, which defines number of components

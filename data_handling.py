@@ -3,6 +3,7 @@ from sklearn.preprocessing import scale
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import IncrementalPCA
 from skimage.feature import local_binary_pattern
+from skimage.transform import rescale
 from skimage.segmentation import slic
 import random
 import time
@@ -53,10 +54,11 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
     start = time.time()
     data = []
 
-    while images_list:
-        img = images_list.pop(0)
+    # while images_list:
+    for img in images_list:
         data_img = np.empty(0)
         if with_image:
+            img = rescale(img, with_image)
             data_img = np.append(data_img, img.flatten())
         if with_binary_patterns:
             data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
@@ -67,7 +69,6 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
         if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
-        del img
     data = np.array(data)
     end = time.time()
     print('Computed features in {:.1f} minutes; data of shape {}'.format((end - start) / 60, data.shape))
