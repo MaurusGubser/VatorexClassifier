@@ -30,7 +30,7 @@ quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
-use_weights = [0.1, 0.9]  # weights for model fitting; must be None or [weight_nonmite, weight_mite]
+use_weights = {0: 0.9, 1: 0.1}  # weights for model fitting; must be None or dict
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -50,8 +50,8 @@ ridge_class = False
 decision_tree = False
 random_forest = False
 l_svm = True
-nl_svm = False
-naive_bayes = False
+nl_svm = True
+naive_bayes = True
 ada_boost = False
 histogram_boost = False
 gradient_boost = False

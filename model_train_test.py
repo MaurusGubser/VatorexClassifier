@@ -88,11 +88,12 @@ def read_model_stats_json(stats_path):
 
 
 def train_model(model, X_train, y_train, use_weights):
+    nb_samples = y_train.size
     if use_weights:
-        weights = np.zeros(y_train.shape)
+        weights = np.zeros(nb_samples)
         weight_0, weight_1 = use_weights
-        weights[y_train == 0] = weight_0
-        weights[y_train == 1] = weight_1
+        weights[y_train == 0] = weight_0/nb_samples
+        weights[y_train == 1] = weight_1/nb_samples
     else:
         weights = None
     start_time = time.time()
