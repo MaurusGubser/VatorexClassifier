@@ -13,8 +13,8 @@ from sequential_model import train_and_test_sequential_models, define_sequential
 
 # ----- data parameters -----
 read_image = False  # True or False
-read_hist = 'candidate'    # 'context'    # 'candidate', 'context' or False
-with_image = 1.0  # must be None or a scalar, which defines downsize factor; use image
+read_hist = 'context'    # 'context'    # 'candidate', 'context' or False
+with_image = None  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = None    # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
 nb_segments = None  # must be None or a integer; segment image using k-means in color space
@@ -26,9 +26,11 @@ hist_h = True
 hist_s = True
 hist_l = True
 percentage_true = 0.05  # desired percentage of trues in data set
-quadratic_features = True  # use basis 1, x_i, x_i**2, no mixed terms
+quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
+
+use_weights = [0.1, 0.9]  # weights for model fitting; must be None or [weight_nonmite, weight_mite]
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -36,11 +38,11 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
                                ('percentage_true', percentage_true), ('quadratic_features', quadratic_features),
-                               ('with_mean', with_mean), ('with_std', with_std)])
+                               ('with_mean', with_mean), ('with_std', with_std), ('use_weights', use_weights)])
 test_size = 0.20  # fraction of test set
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = False
 sgd = False
@@ -56,6 +58,7 @@ gradient_boost = False
 log_reg_cv = False
 stacked = False
 experimental = False
+
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
                                ('decision_tree', decision_tree), ('random_forest', random_forest),
                                ('l_svm', l_svm), ('nl_svm', nl_svm), ('naive_bayes', naive_bayes),
@@ -102,7 +105,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = SVC()
 model_name = 'SVC'

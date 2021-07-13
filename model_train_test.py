@@ -87,9 +87,16 @@ def read_model_stats_json(stats_path):
     return stats_dict
 
 
-def train_model(model, X_train, y_train):
+def train_model(model, X_train, y_train, use_weights):
+    if use_weights:
+        weights = np.zeros(y_train.shape)
+        weight_0, weight_1 = use_weights
+        weights[y_train == 0] = weight_0
+        weights[y_train == 1] = weight_1
+    else:
+        weights = None
     start_time = time.time()
-    model.fit(X_train, y_train)
+    model.fit(X_train, y_train, sample_weight=weights)
     end_time = time.time()
     print('Training time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     return model
@@ -111,8 +118,8 @@ def evaluate_model(model, X, y, paths):
 def export_model_evaluation_stats_json(stats_dict, model_name):
     if not os.path.exists('Evaluation_Images'):
         os.mkdir('Evaluation_Images')
-    if not os.path.exists('Evaluation_Images/'+model_name):
-        os.mkdir('Evaluation_Images/'+model_name)
+    if not os.path.exists('Evaluation_Images/' + model_name):
+        os.mkdir('Evaluation_Images/' + model_name)
     rel_file_path = 'Evaluation_Images/' + model_name + '/Statistics.json'
     stats_dict.pop('acc')
     stats_dict.pop('acc_balanced')
@@ -184,17 +191,15 @@ def get_name_index(model_name, folder_name, file_format):
 def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test,
                               data_params):
     index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
-
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                              ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),
                              ('feature_size', X_train.shape[1])])
     dict_data.update(data_params)
-
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
 
-        dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
+        dict_model['model'] = train_model(dict_model['model'], X_train, y_train, data_params['use_weights'])
         dict_model['model_stats_train'], misclassified_train, true_pos_train = evaluate_model(dict_model['model'],
                                                                                               X_train, y_train,
                                                                                               paths_train)
@@ -204,8 +209,8 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         # export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_training_stats_csv(dict_model, model_name, dict_data)
-        #export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
-        #export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
+        # export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
+        # export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
 
     return None
 
