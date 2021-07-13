@@ -54,7 +54,6 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
     start = time.time()
     data = []
 
-    # while images_list:
     for img in images_list:
         data_img = np.empty(0)
         if with_image:
@@ -71,7 +70,7 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
         data.append(data_img)
     data = np.array(data)
     end = time.time()
-    print('Computed features in {:.1f} minutes; data of shape {}'.format((end - start) / 60, data.shape))
+    print('Computed features in {:.1f} minutes.'.format((end - start) / 60))
     return data
 
 
@@ -95,8 +94,7 @@ def remove_low_var_features(data, threshold_low_var):
         selector = VarianceThreshold(threshold=threshold_low_var)
         data = selector.fit_transform(data)
         end_time = time.time()
-        print('Removed low var features in {:.1f} minutes; data of shape {}'.format((end_time - start_time) / 60,
-                                                                                    data.shape))
+        print('Removed low var features in {:.1f} minutes.'.format((end_time - start_time) / 60))
     return data
 
 

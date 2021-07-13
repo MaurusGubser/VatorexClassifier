@@ -12,20 +12,21 @@ from sequential_model import train_and_test_sequential_models, define_sequential
 
 
 # ----- data parameters -----
-read_image = True  # True or False
-read_hist = False   # 'context'    # 'candidate', 'context' or False
-with_image = False  # must be None or a scalar, which defines downsize factor; use image
+read_image = False  # True or False
+read_hist = 'candidate'    # 'context'    # 'candidate', 'context' or False
+with_image = 1.0  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
-histogram_params = (3, 64)    # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
+histogram_params = None    # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
 nb_segments = None  # must be None or a integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
 nb_components_pca = None  # must be None or a integer, which defines number of components
-batch_size_pca = 1000  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
+batch_size_pca = None  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
 hist_hsl = True
 hist_h = True
 hist_s = True
 hist_l = True
 percentage_true = 0.05  # desired percentage of trues in data set
+quadratic_features = True  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
@@ -34,7 +35,8 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('nb_segments', nb_segments), ('threshold_low_var', threshold_low_var),
                                ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
-                               ('percentage_true', percentage_true), ('with_mean', with_mean), ('with_std', with_std)])
+                               ('percentage_true', percentage_true), ('quadratic_features', quadratic_features),
+                               ('with_mean', with_mean), ('with_std', with_std)])
 test_size = 0.20  # fraction of test set
 
 # ----- train and evaluate models -----
