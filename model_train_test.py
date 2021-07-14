@@ -92,8 +92,8 @@ def train_model(model, X_train, y_train, use_weights):
     if use_weights:
         weights = np.zeros(nb_samples)
         weight_0, weight_1 = use_weights
-        weights[y_train == 0] = weight_0/nb_samples
-        weights[y_train == 1] = weight_1/nb_samples
+        weights[y_train == 0] = weight_0 / nb_samples
+        weights[y_train == 1] = weight_1 / nb_samples
     else:
         weights = None
     start_time = time.time()
@@ -235,59 +235,59 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
 
 
 def define_models(model_selection):
-    log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=1.0, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=1.0, max_iter=200, solver='saga', class_weight='balanced'),
+    log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight=None),
+                      LogisticRegression(penalty='l2', C=1.0, max_iter=200, class_weight=None),
+                      LogisticRegression(penalty='l1', C=1.0, max_iter=200, solver='saga', class_weight=None),
                       LogisticRegression(penalty='elasticnet', C=1.0, solver='saga', l1_ratio=0.1,
-                                         class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.1, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.1, max_iter=200, solver='saga', class_weight='balanced'),
+                                         class_weight=None),
+                      LogisticRegression(penalty='l2', C=0.1, max_iter=200, class_weight=None),
+                      LogisticRegression(penalty='l1', C=0.1, max_iter=200, solver='saga', class_weight=None),
                       LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1,
-                                         class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.01, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.01, max_iter=200, solver='saga', class_weight='balanced'),
+                                         class_weight=None),
+                      LogisticRegression(penalty='l2', C=0.01, max_iter=200, class_weight=None),
+                      LogisticRegression(penalty='l1', C=0.01, max_iter=200, solver='saga', class_weight=None),
                       LogisticRegression(penalty='elasticnet', C=0.01, solver='saga', l1_ratio=0.1,
-                                         class_weight='balanced'),
-                      LogisticRegression(penalty='l2', C=0.001, max_iter=200, class_weight='balanced'),
-                      LogisticRegression(penalty='l1', C=0.001, max_iter=200, solver='saga', class_weight='balanced'),
+                                         class_weight=None),
+                      LogisticRegression(penalty='l2', C=0.001, max_iter=200, class_weight=None),
+                      LogisticRegression(penalty='l1', C=0.001, max_iter=200, solver='saga', class_weight=None),
                       LogisticRegression(penalty='elasticnet', C=0.001, solver='saga', l1_ratio=0.1,
-                                         class_weight='balanced')]
+                                         class_weight=None)]
 
-    sgd_models = [SGDClassifier(penalty='l2', alpha=0.01, class_weight='balanced'),
-                  SGDClassifier(penalty='l2', alpha=0.5, class_weight='balanced'),
-                  SGDClassifier(penalty='l2', alpha=2.0, class_weight='balanced')]
+    sgd_models = [SGDClassifier(penalty='l2', alpha=0.01, class_weight=None),
+                  SGDClassifier(penalty='l2', alpha=0.5, class_weight=None),
+                  SGDClassifier(penalty='l2', alpha=2.0, class_weight=None)]
 
-    ridge_class_models = [RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced'),
-                          RidgeClassifier(alpha=10.0, normalize=True, max_iter=None, class_weight='balanced'),
-                          RidgeClassifier(alpha=50.0, normalize=True, max_iter=None, class_weight='balanced'),
-                          RidgeClassifier(alpha=100.0, normalize=True, max_iter=None, class_weight='balanced')]
+    ridge_class_models = [RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight=None),
+                          RidgeClassifier(alpha=10.0, normalize=True, max_iter=None, class_weight=None),
+                          RidgeClassifier(alpha=50.0, normalize=True, max_iter=None, class_weight=None),
+                          RidgeClassifier(alpha=100.0, normalize=True, max_iter=None, class_weight=None)]
 
-    decision_tree_models = [DecisionTreeClassifier(max_depth=10, max_features='sqrt', class_weight='balanced'),
-                            DecisionTreeClassifier(max_depth=100, max_features='sqrt', class_weight='balanced'),
-                            DecisionTreeClassifier(max_features='sqrt', class_weight='balanced')]
+    decision_tree_models = [DecisionTreeClassifier(max_depth=10, max_features='sqrt', class_weight=None),
+                            DecisionTreeClassifier(max_depth=100, max_features='sqrt', class_weight=None),
+                            DecisionTreeClassifier(max_features='sqrt', class_weight=None)]
 
     random_forest_models = [
-        RandomForestClassifier(n_estimators=20, max_depth=3, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=20, max_depth=10, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=20, max_depth=100, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=50, max_depth=3, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=50, max_depth=10, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=50, max_depth=100, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=100, max_depth=3, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=100, max_depth=10, max_features='sqrt', class_weight='balanced'),
-        RandomForestClassifier(n_estimators=100, max_depth=100, max_features='sqrt', class_weight='balanced')]
+        RandomForestClassifier(n_estimators=20, max_depth=3, max_features='sqrt', class_weight=None),
+        RandomForestClassifier(n_estimators=20, max_depth=10, max_features='sqrt', class_weight=None),
+        RandomForestClassifier(n_estimators=20, max_depth=100, max_features='sqrt', class_weight=None),
+        RandomForestClassifier(n_estimators=50, max_depth=3, max_features='sqrt', class_weight=None),
+        RandomForestClassifier(n_estimators=50, max_depth=10, max_features='sqrt', class_weight=None),
+        RandomForestClassifier(n_estimators=50, max_depth=100, max_features='sqrt', class_weight=None),
+        RandomForestClassifier(n_estimators=100, max_depth=3, max_features='sqrt', class_weight=None),
+        RandomForestClassifier(n_estimators=100, max_depth=10, max_features='sqrt', class_weight=None),
+        RandomForestClassifier(n_estimators=100, max_depth=100, max_features='sqrt', class_weight=None)]
 
-    l_svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight='balanced', max_iter=500),
-                    LinearSVC(penalty='l2', dual=False, C=0.1, class_weight='balanced', max_iter=500),
-                    LinearSVC(penalty='l1', dual=False, C=1.0, class_weight='balanced', max_iter=500),
-                    LinearSVC(penalty='l1', dual=False, C=0.1, class_weight='balanced', max_iter=500)]
+    l_svm_models = [LinearSVC(penalty='l2', dual=False, C=1.0, class_weight=None, max_iter=500),
+                    LinearSVC(penalty='l2', dual=False, C=0.1, class_weight=None, max_iter=500),
+                    LinearSVC(penalty='l1', dual=False, C=1.0, class_weight=None, max_iter=500),
+                    LinearSVC(penalty='l1', dual=False, C=0.1, class_weight=None, max_iter=500)]
 
-    nl_svm_models = [SVC(C=0.1, class_weight='balanced'),
-                     SVC(C=1.0, class_weight='balanced'),
-                     SVC(C=10.0, class_weight='balanced'),
-                     SVC(C=0.1, kernel='poly', class_weight='balanced'),
-                     SVC(C=0.1, kernel='poly', class_weight='balanced'),
-                     SVC(C=10.0, kernel='poly', class_weight='balanced')]
+    nl_svm_models = [SVC(C=0.1, class_weight=None),
+                     SVC(C=1.0, class_weight=None),
+                     SVC(C=10.0, class_weight=None),
+                     SVC(C=0.1, kernel='poly', class_weight=None),
+                     SVC(C=0.1, kernel='poly', class_weight=None),
+                     SVC(C=10.0, kernel='poly', class_weight=None)]
 
     naive_bayes_models = [GaussianNB()]
 
@@ -321,7 +321,7 @@ def define_models(model_selection):
                              GradientBoostingClassifier(n_estimators=500, max_features='log2')]
 
     log_reg_cv_models = [
-        LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight='balanced')]
+        LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight=None)]
 
     estimators = [[('svc', SVC(C=1.0, class_weight='balanced')),
                    ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],

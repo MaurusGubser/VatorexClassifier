@@ -20,7 +20,7 @@ def compute_cv_scores(model_type, data, labels, cv_params, score_param):
     k = cv_params['nb_split_cv']
     train_scores, test_scores = validation_curve(estimator=model_type, X=data, y=labels, param_name=model_parameter,
                                                  param_range=parameter_range, cv=k, scoring=score_param,
-                                                 n_jobs=-1, verbose=2)
+                                                 n_jobs=-1, verbose=2, fit_params=fit_params)
     print('Train scores {}: {}'.format(score_param, train_scores))
     print('Test scores {}: {}'.format(score_param, test_scores))
     return train_scores, test_scores
@@ -67,6 +67,13 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     indices = np.arange(labels.shape[0])
     np.random.shuffle(indices)
     data, labels, paths_imgs = data[indices], labels[indices], paths_imgs[indices]
+    if data_params['use_weights']:
+        weights = np.zeros(nb_samples)
+        weight_0, weight_1 = use_weights
+        weights[y_train == 0] = weight_0 / nb_samples
+        weights[y_train == 1] = weight_1 / nb_samples
+    else:
+        weights = None
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
     for score_param in ['recall', 'precision', 'f1']:
