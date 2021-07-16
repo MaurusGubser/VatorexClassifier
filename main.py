@@ -5,6 +5,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassif
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, LinearSVC
+from lightgbm import LGBMClassifier
 
 from model_parameter_tuning import cross_validate_model, grid_search_model
 from model_train_test import train_and_test_model_selection, evaluate_trained_model
@@ -30,7 +31,7 @@ quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
-use_weights = [0.5, 0.5]  # weights for model fitting; must be None or [weight_0, weight_1] in percent
+use_weights = None  # weights for model fitting; must be None or [weight_0, weight_1] in percent
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -42,11 +43,11 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.20  # fraction of test set
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
-log_reg = False
+log_reg = True
 sgd = False
-ridge_class = False
+ridge_class = True
 decision_tree = False
 random_forest = False
 l_svm = True
@@ -85,38 +86,42 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
 # ----- cross-validation for one parameter -----
 cross_validation = False
 
-model_cv = HistGradientBoostingClassifier(learning_rate=0.2, max_iter=10, l2_regularization=10.0, max_leaf_nodes=10)
-model_name = 'HistBoost'
-model_parameter = 'max_iter'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
+model_cv = LGBMClassifier(n_estimators=500, class_weight='balanced') # HistGradientBoostingClassifier(learning_rate=0.2, max_iter=10, l2_regularization=10.0)
+model_name = 'LGBMClassifier'
+model_parameter = 'reg_lambda'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = False  # if x axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
-parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter
+# parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
-# parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes
-# parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)    # l2_regularization
+# parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
+parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)    # l2_regularization/reg_lambda
 # parameter_range = np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255])   # max_bins
 # parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
 # parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
 # parameter_range = np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
-nb_split_cv = 10  # number of split cvs
+nb_split_cv = 5  # number of split cvs
 
 cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
                              ('parameter_range', parameter_range), ('semilog', semilog),
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
 
-model_gs = SVC()
-model_name = 'SVC'
+model_gs = LGBMClassifier()
+model_name = 'LGBM'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-Cs = ('C', np.insert(np.logspace(-2, 3, 12), 0, 0.0))
+learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
+n_estimators = ('n_estimators', np.array([10, 50, 100, 300]))
+max_depth = ('max_depth', np.array([4, 10, 20, 50, -1]))
+num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
+reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
-max_iter = ('max_iter', np.array([-1, 10, 50, 100, 500]))
 
-parameters_grid = OrderedDict([Cs, class_weight, max_iter])
+parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, reg_alpha, class_weight])
 nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),

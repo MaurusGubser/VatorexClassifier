@@ -14,13 +14,13 @@ from model_train_test import get_name_index, evaluate_model, export_evaluation_i
     export_model_evaluation_stats_json
 
 
-def compute_cv_scores(model_type, data, labels, cv_params, score_param):
+def compute_cv_scores(model_type, data, labels, cv_params, score_param, weights_dict):
     model_parameter = cv_params['model_parameter']
     parameter_range = cv_params['parameter_range']
     k = cv_params['nb_split_cv']
     train_scores, test_scores = validation_curve(estimator=model_type, X=data, y=labels, param_name=model_parameter,
                                                  param_range=parameter_range, cv=k, scoring=score_param,
-                                                 n_jobs=-1, verbose=2, fit_params=fit_params)
+                                                 n_jobs=-1, verbose=2, fit_params=weights_dict)
     print('Train scores {}: {}'.format(score_param, train_scores))
     print('Test scores {}: {}'.format(score_param, test_scores))
     return train_scores, test_scores
@@ -67,18 +67,25 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     indices = np.arange(labels.shape[0])
     np.random.shuffle(indices)
     data, labels, paths_imgs = data[indices], labels[indices], paths_imgs[indices]
-    if data_params['use_weights']:
-        weights = np.zeros(nb_samples)
-        weight_0, weight_1 = use_weights
-        weights[y_train == 0] = weight_0 / nb_samples
-        weights[y_train == 1] = weight_1 / nb_samples
-    else:
-        weights = None
+
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
+
+    if data_params['use_weights']:
+        nb_samples = labels.size
+        nb_pos = np.sum(labels)
+        nb_neg = nb_samples - nb_pos
+        weights = np.zeros(nb_samples)
+        weight_0, weight_1 = data_params['use_weights']
+        weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
+        weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
+        weights_dict = {'sample_weight': weights}
+    else:
+        weights_dict = {'sample_weight': None}
+
     for score_param in ['recall', 'precision', 'f1']:
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, data, labels, cv_params,
-                                                                                score_param)
+                                                                                score_param, weights_dict)
     plot_validation_curve(train_scores, test_scores, cv_params)
     return None
 
@@ -107,10 +114,21 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
                                                                                  test_size=test_size, shuffle=True,
                                                                                  random_state=42)
+    if data_params['use_weights']:
+        nb_samples = y_train.size
+        nb_pos = np.sum(y_train)
+        nb_neg = nb_samples - nb_pos
+        weights = np.zeros(nb_samples)
+        weight_0, weight_1 = data_params['use_weights']
+        weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
+        weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
+        weights_dict = {'sample_weight': weights}
+    else:
+        weights_dict = {'sample_weight': None}
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
                        n_jobs=-1, refit=grid_search_params['refit_param'], cv=grid_search_params['nb_split_cv'],
                        verbose=2)
-    clf.fit(X_train, y_train)
+    clf.fit(X_train, y_train, fit_params=weights_dict)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
     gs_df = clean_df(gs_df)
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
