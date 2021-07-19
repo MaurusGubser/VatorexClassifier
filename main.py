@@ -84,12 +84,12 @@ models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularizati
                     HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3)]
 
 # ----- cross-validation for one parameter -----
-cross_validation = False
+cross_validation = True
 
-model_cv = LGBMClassifier(n_estimators=500, class_weight='balanced') # HistGradientBoostingClassifier(learning_rate=0.2, max_iter=10, l2_regularization=10.0)
+model_cv = LGBMClassifier(n_estimators=100, class_weight='balanced') # HistGradientBoostingClassifier(learning_rate=0.2, max_iter=10, l2_regularization=10.0)
 model_name = 'LGBMClassifier'
 model_parameter = 'reg_lambda'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
-semilog = False  # if x axis should be logarithmic
+semilog = True  # if x axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
 # parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
@@ -106,7 +106,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = LGBMClassifier()
 model_name = 'LGBM'

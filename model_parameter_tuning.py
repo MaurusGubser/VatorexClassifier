@@ -31,7 +31,8 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
         os.mkdir('CV_Plots')
     parameter_range = cv_params['parameter_range']
     export_name = cv_params['model_name'] + '_' + cv_params['model_parameter']
-    fig, axs = plt.subplots(ncols=1, nrows=3, figsize=(18, 10))
+    nb_rows = len(train_scores.keys())
+    fig, axs = plt.subplots(ncols=1, nrows=nb_rows, figsize=(18, 10))
     i = 0
     for key in train_scores.keys():
         train_scores_mean = np.mean(train_scores[key], axis=1)
@@ -83,7 +84,7 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     else:
         weights_dict = {'sample_weight': None}
 
-    for score_param in ['recall', 'precision', 'f1']:
+    for score_param in ['recall', 'precision', 'f1', 'balanced_accuracy']:
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, data, labels, cv_params,
                                                                                 score_param, weights_dict)
     plot_validation_curve(train_scores, test_scores, cv_params)
@@ -128,7 +129,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
                        n_jobs=-1, refit=grid_search_params['refit_param'], cv=grid_search_params['nb_split_cv'],
                        verbose=2)
-    clf.fit(X_train, y_train, fit_params=weights_dict)
+    clf.fit(X_train, y_train)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
     gs_df = clean_df(gs_df)
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
