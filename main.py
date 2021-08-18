@@ -1,7 +1,6 @@
 import numpy as np
 from collections import OrderedDict
-from sklearn.experimental import enable_hist_gradient_boosting
-from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, LinearSVC
@@ -14,7 +13,7 @@ from sequential_model import train_and_test_sequential_models, define_sequential
 
 # ----- data parameters -----
 read_image = False  # True or False
-read_hist = 'context'    # 'context'    # 'candidate', 'context' or False
+read_hist = 'context'   # must be 'candidate', 'context' or False
 with_image = None  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = None    # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
@@ -40,14 +39,14 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
                                ('percentage_true', percentage_true), ('quadratic_features', quadratic_features),
                                ('with_mean', with_mean), ('with_std', with_std), ('use_weights', use_weights)])
-test_size = 0.20  # fraction of test set
+test_size = 0.10  # fraction of test set
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
-log_reg = True
+log_reg = False
 sgd = False
-ridge_class = True
+ridge_class = False
 decision_tree = False
 random_forest = False
 l_svm = True
@@ -77,16 +76,15 @@ models_recall = [SVC(C=1.0, class_weight=None), GaussianNB(),
                  LogisticRegression(penalty='none', C=0.1, solver='lbfgs', l1_ratio=0.1, class_weight='balanced'),
                  RandomForestClassifier(n_estimators=20, max_depth=3, max_features='sqrt', class_weight='balanced')]
 
-models_precision = [HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3),
-                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3),
-                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3),
-                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3),
-                    HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3)]
+models_precision = [LGBMClassifier(n_estimators=300, class_weight='balanced', l2_regularization=5.0, max_depth=3),
+                    LGBMClassifier(n_estimators=300, class_weight='balanced', l2_regularization=5.0, max_depth=3),
+                    LGBMClassifier(n_estimators=300, class_weight='balanced', l2_regularization=5.0, max_depth=3),
+                    LGBMClassifier(n_estimators=300, class_weight='balanced', l2_regularization=5.0, max_depth=3)]
 
 # ----- cross-validation for one parameter -----
-cross_validation = True
+cross_validation = False
 
-model_cv = LGBMClassifier(n_estimators=100, class_weight='balanced') # HistGradientBoostingClassifier(learning_rate=0.2, max_iter=10, l2_regularization=10.0)
+model_cv = LGBMClassifier(n_estimators=100, class_weight='balanced')
 model_name = 'LGBMClassifier'
 model_parameter = 'reg_lambda'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = True  # if x axis should be logarithmic
@@ -134,7 +132,7 @@ path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Ima
 model_name = 'LinearSVC_1_200812R09AS'
 
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/Mite4_Dataset_relabelledsmall/200328-S14(labeled)/"
+    path_image_folders = "Candidate_Images/Mite4_relabelledtol02/200328-S09(labeled)/"
     if train_models + evaluate_sequential + cross_validation + grid_search + evaluate_model > 1:
         raise AssertionError('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
     elif train_models:

@@ -9,9 +9,8 @@ from collections import OrderedDict
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
     recall_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, LogisticRegressionCV
-from sklearn.experimental import enable_hist_gradient_boosting
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, \
-    HistGradientBoostingClassifier, StackingClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
+from lightgbm import LGBMClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
@@ -300,18 +299,18 @@ def define_models(model_selection):
                         AdaBoostClassifier(n_estimators=100, learning_rate=0.1),
                         AdaBoostClassifier(n_estimators=200, learning_rate=0.1)]
 
-    histogram_boost_models = [HistGradientBoostingClassifier(max_iter=10),
-                              HistGradientBoostingClassifier(max_iter=10, l2_regularization=0.1),
-                              HistGradientBoostingClassifier(max_iter=10, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=10, l2_regularization=10.0),
-                              HistGradientBoostingClassifier(max_iter=100),
-                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=0.1),
-                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=100, l2_regularization=10.0),
-                              HistGradientBoostingClassifier(max_iter=300),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0),
-                              HistGradientBoostingClassifier(max_iter=300, l2_regularization=10.0)]
+    histogram_boost_models = [LGBMClassifier(n_estimators=10, class_weight='balanced'),
+                              LGBMClassifier(n_estimators=10, class_weight='balanced', reg_lambda=0.1),
+                              LGBMClassifier(n_estimators=10, class_weight='balanced', reg_lambda=1.0),
+                              LGBMClassifier(n_estimators=10, class_weight='balanced', reg_lambda=10.0),
+                              LGBMClassifier(n_estimators=100, class_weight='balanced'),
+                              LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=0.1),
+                              LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=1.0),
+                              LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=10.0),
+                              LGBMClassifier(n_estimators=300, class_weight='balanced'),
+                              LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=0.1),
+                              LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=1.0),
+                              LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=10.0)]
 
     gradient_boost_models = [GradientBoostingClassifier(n_estimators=100),
                              GradientBoostingClassifier(n_estimators=100, max_features='sqrt'),
@@ -326,33 +325,22 @@ def define_models(model_selection):
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight=None)]
 
     estimators = [[('svc', SVC(C=1.0, class_weight='balanced')),
-                   ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                   ('hist_boost', LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=5.0))],
                   [('nb', GaussianNB()),
-                   ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                   ('hist_boost', LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=5.0))],
                   [('ridge', RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced')),
-                   ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))],
+                   ('hist_boost', LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=5.0))],
                   [('log_reg', LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1,
                                                   class_weight='balanced')),
-                   ('hist_boost', HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0))]]
+                   ('hist_boost', LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=5.0))]]
 
     stacked_models = [StackingClassifier(estimators=estimators[0]), StackingClassifier(estimators=estimators[1]),
                       StackingClassifier(estimators=estimators[2]), StackingClassifier(estimators=estimators[3])]
 
-    experimental_models = [HistGradientBoostingClassifier(max_iter=300),
-                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1),
-                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0),
-                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0),
-                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=10.0),
-                           HistGradientBoostingClassifier(max_iter=300),
-                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=0.1, max_depth=3),
-                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=1.0, max_depth=3),
-                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=5.0, max_depth=3),
-                           HistGradientBoostingClassifier(max_iter=300, l2_regularization=10.0, max_depth=3),
-                           HistGradientBoostingClassifier(max_iter=300),
-                           HistGradientBoostingClassifier(max_iter=500, l2_regularization=0.1),
-                           HistGradientBoostingClassifier(max_iter=500, l2_regularization=1.0),
-                           HistGradientBoostingClassifier(max_iter=500, l2_regularization=5.0),
-                           HistGradientBoostingClassifier(max_iter=500, l2_regularization=10.0)]
+    experimental_models = [LGBMClassifier(n_estimators=100, class_weight='balanced', num_leaves=5),
+                           LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=0.1, num_leaves=5),
+                           LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=1.0, num_leaves=5),
+                           LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=10.0, num_leaves=5)]
 
     models = OrderedDict([('log_reg', log_reg_models), ('sgd', sgd_models), ('ridge_class', ridge_class_models),
                           ('decision_tree', decision_tree_models), ('random_forest', random_forest_models),
