@@ -8,7 +8,6 @@ from lightgbm import LGBMClassifier
 
 from model_parameter_tuning import cross_validate_model, grid_search_model
 from model_train_test import train_and_test_model_selection, evaluate_trained_model
-from sequential_model import train_and_test_sequential_models, define_sequential_models
 
 
 # ----- data parameters -----
@@ -65,21 +64,6 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
                                ('gradient_boost', gradient_boost), ('experimental', experimental)])
 
-# ----- train and evaluate sequential models -----
-evaluate_sequential = False
-
-names_sequential = ['svc_hist', 'nb_hist', 'ridge_hist', 'logreg_hist', 'rf_hist']
-
-models_recall = [SVC(C=1.0, class_weight=None), GaussianNB(),
-                 RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced'),
-                 LogisticRegression(penalty='none', C=0.1, solver='lbfgs', l1_ratio=0.1, class_weight='balanced'),
-                 RandomForestClassifier(n_estimators=20, max_depth=3, max_features='sqrt', class_weight='balanced')]
-
-models_precision = [LGBMClassifier(n_estimators=300, class_weight='balanced', l2_regularization=5.0, max_depth=3),
-                    LGBMClassifier(n_estimators=300, class_weight='balanced', l2_regularization=5.0, max_depth=3),
-                    LGBMClassifier(n_estimators=300, class_weight='balanced', l2_regularization=5.0, max_depth=3),
-                    LGBMClassifier(n_estimators=300, class_weight='balanced', l2_regularization=5.0, max_depth=3)]
-
 # ----- cross-validation for one parameter -----
 cross_validation = False
 
@@ -132,13 +116,10 @@ model_name = 'LinearSVC_1_200812R09AS'
 
 if __name__ == '__main__':
     path_image_folders = "Candidate_Images/Mite4_relabelledtol02/200328-S09(labeled)/"
-    if train_models + evaluate_sequential + cross_validation + grid_search + evaluate_model > 1:
-        raise AssertionError('Only one of evaluate_models, evaluate_sequential, cross_validation, grid_search should be True.')
+    if train_models + cross_validation + grid_search + evaluate_model > 1:
+        raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
         train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size)
-    elif evaluate_sequential:
-        models_sequential = define_sequential_models(names_sequential, models_recall, models_precision)
-        train_and_test_sequential_models(models_sequential, path_image_folders, data_parameters, test_size)
     elif cross_validation:
         cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
