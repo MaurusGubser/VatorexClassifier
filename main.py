@@ -29,7 +29,7 @@ quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
-use_weights = None  # weights for model fitting; must be None or [weight_0, weight_1] in percent
+use_weights = None  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -41,7 +41,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.10  # fraction of test set
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
 log_reg = False
 sgd = False
@@ -54,20 +54,18 @@ naive_bayes = False
 ada_boost = False
 histogram_boost = False
 gradient_boost = False
-experimental = False
-
-class_weight = 'balanced'   # must be None or 'balanced'
+handicraft = False
 
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
                                ('decision_tree', decision_tree), ('random_forest', random_forest),
                                ('l_svm', l_svm), ('nl_svm', nl_svm), ('naive_bayes', naive_bayes),
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
-                               ('gradient_boost', gradient_boost), ('experimental', experimental)])
+                               ('gradient_boost', gradient_boost), ('handicraft', handicraft)])
 
 # ----- cross-validation for one parameter -----
 cross_validation = False
 
-model_cv = LGBMClassifier(n_estimators=100, class_weight='balanced')
+model_cv = LGBMClassifier(n_estimators=10, class_weight='balanced')
 model_name = 'LGBMClassifier'
 model_parameter = 'reg_lambda'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = True  # if x axis should be logarithmic
@@ -87,23 +85,19 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
 
-model_gs = LGBMClassifier()
-model_name = 'LGBM'
+model_gs = LinearSVC()
+model_name = 'LinearSVC'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
-n_estimators = ('n_estimators', np.array([10, 50, 100, 300]))
-max_depth = ('max_depth', np.array([4, 10, 20, 50, -1]))
-num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
-reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
-reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+Cs = ('C', np.insert(np.logspace(-2, 3, 12), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
+max_iter = ('max_iter', np.array([-1, 10, 50, 100, 500]))
 
-parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, reg_alpha, class_weight])
-nb_split_cv = 10    # number of split cvs
+parameters_grid = OrderedDict([Cs, class_weight, max_iter])
+nb_split_cv = 3    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
