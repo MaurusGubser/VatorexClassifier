@@ -321,9 +321,6 @@ def define_models(model_selection):
                              GradientBoostingClassifier(n_estimators=500, max_features='sqrt'),
                              GradientBoostingClassifier(n_estimators=500, max_features='log2')]
 
-    log_reg_cv_models = [
-        LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight=None)]
-
     experimental_models = [LGBMClassifier(n_estimators=100, class_weight='balanced', num_leaves=5),
                            LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=0.1, num_leaves=5),
                            LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=1.0, num_leaves=5),
