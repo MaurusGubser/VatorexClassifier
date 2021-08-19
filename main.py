@@ -41,7 +41,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.10  # fraction of test set
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
 log_reg = False
 sgd = False
@@ -85,7 +85,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
 
 model_gs = LinearSVC()
 model_name = 'LinearSVC'
