@@ -72,7 +72,9 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
 
-    if data_params['use_weights']:
+    if data_params['use_weights'] == 'balanced' or data_params['use_weights'] is None:
+        weights_dict = {'sample_weight': None}
+    else:
         nb_samples = labels.size
         nb_pos = np.sum(labels)
         nb_neg = nb_samples - nb_pos
@@ -81,8 +83,6 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
         weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
         weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
         weights_dict = {'sample_weight': weights}
-    else:
-        weights_dict = {'sample_weight': None}
 
     for score_param in ['recall', 'precision', 'f1', 'balanced_accuracy']:
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, data, labels, cv_params,
@@ -115,7 +115,9 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
                                                                                  test_size=test_size, shuffle=True,
                                                                                  random_state=42)
-    if data_params['use_weights'] != 'balanced' and data_params['use_weights'] is not None:
+    if data_params['use_weights'] == 'balanced' or data_params['use_weights'] is None:
+        weights_dict = {'sample_weight': None}
+    else:
         nb_samples = y_train.size
         nb_pos = np.sum(y_train)
         nb_neg = nb_samples - nb_pos
@@ -124,8 +126,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
         weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
         weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
         weights_dict = {'sample_weight': weights}
-    else:
-        weights_dict = {'sample_weight': None}
+
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
                        n_jobs=-1, refit=grid_search_params['refit_param'], cv=grid_search_params['nb_split_cv'],
                        verbose=2)
