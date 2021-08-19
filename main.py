@@ -56,15 +56,16 @@ ada_boost = False
 histogram_boost = False
 gradient_boost = False
 log_reg_cv = False
-stacked = False
 experimental = False
+
+class_weight = 'balanced'   # must be None or 'balanced'
 
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
                                ('decision_tree', decision_tree), ('random_forest', random_forest),
                                ('l_svm', l_svm), ('nl_svm', nl_svm), ('naive_bayes', naive_bayes),
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
                                ('gradient_boost', gradient_boost), ('log_reg_cv', log_reg_cv),
-                               ('stacked', stacked), ('experimental', experimental)])
+                               ('experimental', experimental)])
 
 # ----- train and evaluate sequential models -----
 evaluate_sequential = False

@@ -324,19 +324,6 @@ def define_models(model_selection):
     log_reg_cv_models = [
         LogisticRegressionCV(Cs=[0.0001, 0.001, 0.01, 0.1, 1], max_iter=200, penalty='l2', class_weight=None)]
 
-    estimators = [[('svc', SVC(C=1.0, class_weight='balanced')),
-                   ('hist_boost', LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=5.0))],
-                  [('nb', GaussianNB()),
-                   ('hist_boost', LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=5.0))],
-                  [('ridge', RidgeClassifier(alpha=1.0, normalize=True, max_iter=None, class_weight='balanced')),
-                   ('hist_boost', LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=5.0))],
-                  [('log_reg', LogisticRegression(penalty='elasticnet', C=0.1, solver='saga', l1_ratio=0.1,
-                                                  class_weight='balanced')),
-                   ('hist_boost', LGBMClassifier(n_estimators=300, class_weight='balanced', reg_lambda=5.0))]]
-
-    stacked_models = [StackingClassifier(estimators=estimators[0]), StackingClassifier(estimators=estimators[1]),
-                      StackingClassifier(estimators=estimators[2]), StackingClassifier(estimators=estimators[3])]
-
     experimental_models = [LGBMClassifier(n_estimators=100, class_weight='balanced', num_leaves=5),
                            LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=0.1, num_leaves=5),
                            LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=1.0, num_leaves=5),
