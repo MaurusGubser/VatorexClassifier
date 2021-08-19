@@ -29,7 +29,7 @@ quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
-use_weights = None  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
+use_weights = 'balanced'  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -41,7 +41,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.10  # fraction of test set
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = False
 sgd = False
@@ -85,7 +85,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = LinearSVC()
 model_name = 'LinearSVC'

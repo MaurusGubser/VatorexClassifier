@@ -115,7 +115,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
                                                                                  test_size=test_size, shuffle=True,
                                                                                  random_state=42)
-    if data_params['use_weights']:
+    if data_params['use_weights'] != 'balanced' and data_params['use_weights'] is not None:
         nb_samples = y_train.size
         nb_pos = np.sum(y_train)
         nb_neg = nb_samples - nb_pos
