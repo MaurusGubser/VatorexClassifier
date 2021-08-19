@@ -158,10 +158,12 @@ def read_data_and_labels(path, data_params):
         export_data(data_images, data_histograms, labels, paths_images, data_name)
 
     data = concatenate_data(data_images, data_histograms, read_image, read_hist)
-    del data_images
-    del data_histograms
+    print('Data before preprocessing of shape {}'.format(data.shape))
+    if data_params['quadratic_features']:
+        data = compute_quadratic_features(data)
     if data_params['with_mean'] or data_params['with_std']:
         data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
+    print('Data after preprocessing of shape {}'.format(data.shape))
     return data, labels, paths_images
 
 
@@ -172,4 +174,10 @@ def concatenate_data(data_img, data_hist, read_image, read_hist):
         data = data_img
     else:
         data = np.append(data_img, data_hist, axis=1)
+    return data
+
+
+def compute_quadratic_features(data):
+    data_squared = np.square(data)
+    data = np.append(data, data_squared, axis=1)
     return data

@@ -1,4 +1,6 @@
 import os
+import re
+
 import pandas as pd
 from collections import OrderedDict
 import numpy as np
@@ -8,16 +10,17 @@ from sklearn.metrics import plot_confusion_matrix
 
 from data_handling import downsize_false_candidates
 from data_reading_writing import read_data_and_labels
-from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model, export_model
+from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model, export_model, \
+    export_model_evaluation_stats_json
 
 
-def compute_cv_scores(model_type, data, labels, cv_params, score_param):
+def compute_cv_scores(model_type, data, labels, cv_params, score_param, weights_dict):
     model_parameter = cv_params['model_parameter']
     parameter_range = cv_params['parameter_range']
     k = cv_params['nb_split_cv']
     train_scores, test_scores = validation_curve(estimator=model_type, X=data, y=labels, param_name=model_parameter,
                                                  param_range=parameter_range, cv=k, scoring=score_param,
-                                                 n_jobs=-1, verbose=2)
+                                                 n_jobs=-1, verbose=2, fit_params=weights_dict)
     print('Train scores {}: {}'.format(score_param, train_scores))
     print('Test scores {}: {}'.format(score_param, test_scores))
     return train_scores, test_scores
@@ -28,7 +31,8 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
         os.mkdir('CV_Plots')
     parameter_range = cv_params['parameter_range']
     export_name = cv_params['model_name'] + '_' + cv_params['model_parameter']
-    fig, axs = plt.subplots(ncols=1, nrows=3, figsize=(18, 10))
+    nb_rows = len(train_scores.keys())
+    fig, axs = plt.subplots(ncols=1, nrows=nb_rows, figsize=(18, 10))
     i = 0
     for key in train_scores.keys():
         train_scores_mean = np.mean(train_scores[key], axis=1)
@@ -64,11 +68,25 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     indices = np.arange(labels.shape[0])
     np.random.shuffle(indices)
     data, labels, paths_imgs = data[indices], labels[indices], paths_imgs[indices]
+
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
-    for score_param in ['recall', 'precision', 'f1']:
+
+    if data_params['use_weights']:
+        nb_samples = labels.size
+        nb_pos = np.sum(labels)
+        nb_neg = nb_samples - nb_pos
+        weights = np.zeros(nb_samples)
+        weight_0, weight_1 = data_params['use_weights']
+        weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
+        weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
+        weights_dict = {'sample_weight': weights}
+    else:
+        weights_dict = {'sample_weight': None}
+
+    for score_param in ['recall', 'precision', 'f1', 'balanced_accuracy']:
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, data, labels, cv_params,
-                                                                                score_param)
+                                                                                score_param, weights_dict)
     plot_validation_curve(train_scores, test_scores, cv_params)
     return None
 
@@ -82,24 +100,46 @@ def export_stats_gs(export_name, gs_dataframe):
     return None
 
 
+def clean_df(df):
+    pattern = r'split[0-9][_]test'
+    column_names = df.columns
+    for name in column_names:
+        if re.search(pattern, name):
+            df = df.drop(name, axis=1)
+    return df
+
+
 def grid_search_model(model, folder_path, data_params, grid_search_params, test_size):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
                                                                                  test_size=test_size, shuffle=True,
                                                                                  random_state=42)
+    if data_params['use_weights']:
+        nb_samples = y_train.size
+        nb_pos = np.sum(y_train)
+        nb_neg = nb_samples - nb_pos
+        weights = np.zeros(nb_samples)
+        weight_0, weight_1 = data_params['use_weights']
+        weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
+        weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
+        weights_dict = {'sample_weight': weights}
+    else:
+        weights_dict = {'sample_weight': None}
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
-                       n_jobs=-1, refit='recall', cv=grid_search_params['nb_split_cv'], verbose=2)
+                       n_jobs=-1, refit=grid_search_params['refit_param'], cv=grid_search_params['nb_split_cv'],
+                       verbose=2)
     clf.fit(X_train, y_train)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
-    gs_df = gs_df[gs_df['rank_test_recall'] <= 10]
+    gs_df = clean_df(gs_df)
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
     export_name = grid_search_params['model_name'] + '_' + str(model_nb)
     export_stats_gs(export_name, gs_df)
     _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train)
-    _, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test)
+    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test)
     export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
     export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')
+    export_model_evaluation_stats_json(stats_test, export_name)
     print('Best estimator:', clf.best_estimator_)
     export_model(clf.best_estimator_, export_name)
     print('Testing score:', clf.score(X_test, y_test))

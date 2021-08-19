@@ -3,6 +3,7 @@ from sklearn.preprocessing import scale
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import IncrementalPCA
 from skimage.feature import local_binary_pattern
+from skimage.transform import rescale
 from skimage.segmentation import slic
 import random
 import time
@@ -32,9 +33,9 @@ def compute_histograms(image, nb_divisions, nb_bins):
         for i in range(0, nb_divisions):
             for j in range(0, nb_divisions):
                 sub_img = image[i * width_subregion:(i + 1) * width_subregion,
-                                j * length_subregion:(j + 1) * length_subregion, ch]
+                          j * length_subregion:(j + 1) * length_subregion, ch]
                 histograms[ch, i * nb_divisions + j, :] = np.histogram(sub_img, bins=nb_bins, density=True)[0]
-    histograms = histograms / np.amax(histograms)
+        histograms[ch, :, :] = histograms[ch, :, :] / np.sum(histograms[ch, :, :])
     return histograms
 
 
@@ -53,10 +54,10 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
     start = time.time()
     data = []
 
-    while images_list:
-        img = images_list.pop(0)
+    for img in images_list:
         data_img = np.empty(0)
         if with_image:
+            img = rescale(img, with_image)
             data_img = np.append(data_img, img.flatten())
         if with_binary_patterns:
             data_img = np.append(data_img, compute_local_binary_pattern(img).flatten())
@@ -67,10 +68,9 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
         if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
-        del img
     data = np.array(data)
     end = time.time()
-    print('Computed features in {:.1f} minutes; data of shape {}'.format((end - start) / 60, data.shape))
+    print('Computed features in {:.1f} minutes.'.format((end - start) / 60))
     return data
 
 
@@ -94,8 +94,7 @@ def remove_low_var_features(data, threshold_low_var):
         selector = VarianceThreshold(threshold=threshold_low_var)
         data = selector.fit_transform(data)
         end_time = time.time()
-        print('Removed low var features in {:.1f} minutes; data of shape {}'.format((end_time - start_time) / 60,
-                                                                                    data.shape))
+        print('Removed low var features in {:.1f} minutes.'.format((end_time - start_time) / 60))
     return data
 
 
