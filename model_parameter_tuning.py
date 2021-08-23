@@ -62,7 +62,7 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
     return None
 
 
-def cross_validate_model(model, folder_path, data_params, cv_params):
+def cross_validate_model(model, folder_path, data_params, cv_params, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
     indices = np.arange(labels.shape[0])
@@ -72,7 +72,7 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
 
-    if data_params['use_weights'] == 'balanced' or data_params['use_weights'] is None:
+    if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
     else:
         nb_samples = labels.size
@@ -109,13 +109,13 @@ def clean_df(df):
     return df
 
 
-def grid_search_model(model, folder_path, data_params, grid_search_params, test_size):
+def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
                                                                                  test_size=test_size, shuffle=True,
                                                                                  random_state=42)
-    if data_params['use_weights'] == 'balanced' or data_params['use_weights'] is None:
+    if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
     else:
         nb_samples = y_train.size

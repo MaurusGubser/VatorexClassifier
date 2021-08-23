@@ -39,7 +39,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.10  # fraction of test set
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
 log_reg = False
 sgd = False
@@ -85,7 +85,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
 
 model_gs = LinearSVC()
 model_name = 'LinearSVC'
@@ -115,9 +115,9 @@ if __name__ == '__main__':
     elif train_models:
         train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, use_weights)
     elif cross_validation:
-        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, use_weights)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, use_weights)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     else:
