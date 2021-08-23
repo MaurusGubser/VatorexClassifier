@@ -29,19 +29,17 @@ quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
 
-use_weights = 'balanced'  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
-
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
                                ('nb_segments', nb_segments), ('threshold_low_var', threshold_low_var),
                                ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
                                ('percentage_true', percentage_true), ('quadratic_features', quadratic_features),
-                               ('with_mean', with_mean), ('with_std', with_std), ('use_weights', use_weights)])
+                               ('with_mean', with_mean), ('with_std', with_std)])
 test_size = 0.10  # fraction of test set
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = False
 sgd = False
@@ -61,6 +59,8 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('l_svm', l_svm), ('nl_svm', nl_svm), ('naive_bayes', naive_bayes),
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
                                ('gradient_boost', gradient_boost), ('handicraft', handicraft)])
+
+use_weights = None  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
 
 # ----- cross-validation for one parameter -----
 cross_validation = False
@@ -85,7 +85,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = LinearSVC()
 model_name = 'LinearSVC'
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     if train_models + cross_validation + grid_search + evaluate_model > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
-        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size)
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, use_weights)
     elif cross_validation:
         cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
