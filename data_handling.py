@@ -153,19 +153,21 @@ def rearrange_hists(histograms_list, data_params, read_hist):
 def downsize_false_candidates(data, labels, paths_images, percentage_true):
     nb_candidates = labels.size
     nb_true_cand = np.sum(labels)
-    if nb_true_cand / nb_candidates > percentage_true:
+    if percentage_true is None:
+        return data, labels, paths_images
+    elif nb_true_cand / nb_candidates <= percentage_true:
+        nb_false_remove = nb_candidates - int(nb_true_cand / percentage_true)
+        idxs_false = list(np.arange(0, nb_candidates)[labels == 0])
+        random.seed(42)  # to assure, same sample is drawn; remove if selection should be random
+        idxs_false_remove = random.sample(idxs_false, k=nb_false_remove)
+        print('Before downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
+        data = np.delete(data, idxs_false_remove, axis=0)
+        labels = np.delete(labels, idxs_false_remove)
+        paths_images = np.delete(paths_images, idxs_false_remove)
+        print('After downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
+        return data, labels, paths_images
+    else:
         raise ValueError(
             'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand,
                                                                                                    nb_candidates,
                                                                                                    percentage_true))
-    nb_false_remove = nb_candidates - int(nb_true_cand / percentage_true)
-    idxs_false = list(np.arange(0, nb_candidates)[labels == 0])
-    random.seed(42)  # to assure, same sample is drawn; remove if selection should be random
-    idxs_false_remove = random.sample(idxs_false, k=nb_false_remove)
-
-    print('Before downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
-    data = np.delete(data, idxs_false_remove, axis=0)
-    labels = np.delete(labels, idxs_false_remove)
-    paths_images = np.delete(paths_images, idxs_false_remove)
-    print('After downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
-    return data, labels, paths_images

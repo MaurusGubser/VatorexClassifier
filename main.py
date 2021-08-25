@@ -6,16 +6,16 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, LinearSVC
 from lightgbm import LGBMClassifier
 
+from lgbm_train_export import export_GUI_model
 from model_parameter_tuning import cross_validate_model, grid_search_model
 from model_train_test import train_and_test_model_selection, evaluate_trained_model
 
-
 # ----- data parameters -----
 read_image = False  # True or False
-read_hist = 'context'   # must be 'candidate', 'context' or False
+read_hist = 'context'  # must be 'candidate', 'context' or False
 with_image = None  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
-histogram_params = None    # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
+histogram_params = None  # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
 nb_segments = None  # must be None or a integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
 nb_components_pca = None  # must be None or a integer, which defines number of components
@@ -73,7 +73,7 @@ semilog = True  # if x axis should be logarithmic
 # parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
-parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)    # l2_regularization/reg_lambda
+parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)  # l2_regularization/reg_lambda
 # parameter_range = np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255])   # max_bins
 # parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
 # parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
@@ -85,7 +85,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = LinearSVC()
 model_name = 'LinearSVC'
@@ -97,7 +97,7 @@ class_weight = ('class_weight', [None, 'balanced'])
 max_iter = ('max_iter', np.array([-1, 10, 50, 100, 500]))
 
 parameters_grid = OrderedDict([Cs, class_weight, max_iter])
-nb_split_cv = 3    # number of split cvs
+nb_split_cv = 3  # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
@@ -108,9 +108,33 @@ path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Tr
 path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_Dataset_contextellipsis/200812R09AS(labeled)/'
 model_name = 'LinearSVC_1_200812R09AS'
 
+# ----- train and export model for GUI ------
+train_export_GUI = True
+path_data = 'GUI_Model_Export/Model_0/Mite4_relabelledtol02_False_context_None_False_None_None_None_None_None_True_True_True_True_0.05_False_False_False.npz'
+percentage_true = 0.005     # can be None
+cv = 10
+parameters_lgbm = {'task': 'train',
+                   'objective': 'binary',
+                   'boosting': 'gbdt',
+                   'num_iterations': 100,
+                   'learning_rate': 0.2,
+                   'num_leaves': 31,
+                   'num_threads': 4,
+                   'deterministic': True,
+                   'max_depth': 20,
+                   'lambda_l2': 1.0,
+                   'max_bin': 31,
+                   'n_iter_no_change': 10,
+                   'is_unbalance': True,
+                   'output_model': 'LightGBM_ModelX.txt',
+                   'output_result': 'Prediction_ModelX.txt',
+                   'metric': 'binary_logloss'}
+export_name = 'LightGBM_Model_Vatorex_balanced.txt'
+
+# ----- apply parameters and code ------
 if __name__ == '__main__':
     path_image_folders = "Candidate_Images/Mite4_relabelledtol02/200328-S09(labeled)/"
-    if train_models + cross_validation + grid_search + evaluate_model > 1:
+    if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
         train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, use_weights)
@@ -120,5 +144,7 @@ if __name__ == '__main__':
         grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, use_weights)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
+    elif train_export_GUI:
+        export_GUI_model(path_data, percentage_true, cv, parameters_lgbm, export_name)
     else:
         print('No option chosen.')
