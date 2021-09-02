@@ -8,7 +8,7 @@ refit_param = 'f1'
 
 Cs = ('C', np.insert(np.logspace(-2, 3, 12), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
-max_iter = ('max_iter', np.array([-1, 10, 50, 100, 500]))
+max_iter = ('max_iter', np.array([10, 50, 100, 500, 1000, -1]))
 
 parameters_grid = OrderedDict([Cs, class_weight, max_iter])
 nb_split_cv = 10    # number of split cvs

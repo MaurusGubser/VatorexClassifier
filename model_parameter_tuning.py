@@ -62,9 +62,9 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
     return None
 
 
-def cross_validate_model(model, folder_path, data_params, cv_params):
+def cross_validate_model(model, folder_path, data_params, cv_params, percentage_true, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
+    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, percentage_true)
     indices = np.arange(labels.shape[0])
     np.random.shuffle(indices)
     data, labels, paths_imgs = data[indices], labels[indices], paths_imgs[indices]
@@ -72,7 +72,9 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
 
-    if data_params['use_weights']:
+    if use_weights == 'balanced' or use_weights is None:
+        weights_dict = {'sample_weight': None}
+    else:
         nb_samples = labels.size
         nb_pos = np.sum(labels)
         nb_neg = nb_samples - nb_pos
@@ -81,8 +83,6 @@ def cross_validate_model(model, folder_path, data_params, cv_params):
         weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
         weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
         weights_dict = {'sample_weight': weights}
-    else:
-        weights_dict = {'sample_weight': None}
 
     for score_param in ['recall', 'precision', 'f1', 'balanced_accuracy']:
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, data, labels, cv_params,
@@ -109,13 +109,15 @@ def clean_df(df):
     return df
 
 
-def grid_search_model(model, folder_path, data_params, grid_search_params, test_size):
+def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, percentage_true, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
+    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, percentage_true)
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
                                                                                  test_size=test_size, shuffle=True,
                                                                                  random_state=42)
-    if data_params['use_weights']:
+    if use_weights == 'balanced' or use_weights is None:
+        weights_dict = {'sample_weight': None}
+    else:
         nb_samples = y_train.size
         nb_pos = np.sum(y_train)
         nb_neg = nb_samples - nb_pos
@@ -124,8 +126,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
         weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
         weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
         weights_dict = {'sample_weight': weights}
-    else:
-        weights_dict = {'sample_weight': None}
+
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
                        n_jobs=-1, refit=grid_search_params['refit_param'], cv=grid_search_params['nb_split_cv'],
                        verbose=2)
