@@ -62,13 +62,20 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
     return None
 
 
-def cross_validate_model(model, folder_path, data_params, cv_params, percentage_true, use_weights):
+def cross_validate_model(model, folder_path, data_params, cv_params, test_size, percentage_true, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, percentage_true)
+    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
+                                                                                 labels,
+                                                                                 paths_imgs,
+                                                                                 test_size=test_size,
+                                                                                 random_state=42,
+                                                                                 stratify=labels)
+    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
+    '''
     indices = np.arange(labels.shape[0])
     np.random.shuffle(indices)
     data, labels, paths_imgs = data[indices], labels[indices], paths_imgs[indices]
-
+    '''
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
 
@@ -85,7 +92,7 @@ def cross_validate_model(model, folder_path, data_params, cv_params, percentage_
         weights_dict = {'sample_weight': weights}
 
     for score_param in ['recall', 'precision', 'f1', 'balanced_accuracy']:
-        train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, data, labels, cv_params,
+        train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, X_train, y_train, cv_params,
                                                                                 score_param, weights_dict)
     plot_validation_curve(train_scores, test_scores, cv_params)
     return None
@@ -111,10 +118,13 @@ def clean_df(df):
 
 def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, percentage_true, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, percentage_true)
-    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
-                                                                                 test_size=test_size, shuffle=True,
-                                                                                 random_state=42)
+    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
+                                                                                 labels,
+                                                                                 paths_imgs,
+                                                                                 test_size=test_size,
+                                                                                 random_state=42,
+                                                                                 stratify=labels)
+    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
     if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
     else:

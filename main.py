@@ -34,10 +34,10 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('quadratic_features', quadratic_features), ('with_mean', with_mean),
                                ('with_std', with_std)])
 test_size = 0.10  # fraction of test set
-percentage_true = 0.05  # desired percentage of trues in data set
+percentage_true = 0.10  # desired percentage of trues in training data set
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
 log_reg = False
 sgd = False
@@ -83,7 +83,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
 
 model_gs = LinearSVC()
 model_name = 'LinearSVC'
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     elif train_models:
         train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, percentage_true, use_weights)
     elif cross_validation:
-        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, percentage_true, use_weights)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, test_size, percentage_true, use_weights)
     elif grid_search:
         grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, percentage_true, use_weights)
     elif evaluate_model:
