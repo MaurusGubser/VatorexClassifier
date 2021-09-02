@@ -108,10 +108,11 @@ def export_stats_gs(export_name, gs_dataframe):
 
 
 def clean_df(df):
-    pattern = r'split[0-9][_]test'
+    pattern_datasplits = r'split[0-9][_]test'
+    pattern_time = r'[_]time'
     column_names = df.columns
     for name in column_names:
-        if re.search(pattern, name):
+        if re.search(pattern_datasplits, name) or re.search(pattern_time, name):
             df = df.drop(name, axis=1)
     return df
 
