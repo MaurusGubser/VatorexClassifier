@@ -62,9 +62,9 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
     return None
 
 
-def cross_validate_model(model, folder_path, data_params, cv_params, use_weights):
+def cross_validate_model(model, folder_path, data_params, cv_params, percentage_true, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
+    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, percentage_true)
     indices = np.arange(labels.shape[0])
     np.random.shuffle(indices)
     data, labels, paths_imgs = data[indices], labels[indices], paths_imgs[indices]
@@ -109,9 +109,9 @@ def clean_df(df):
     return df
 
 
-def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, use_weights):
+def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, percentage_true, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, data_params['percentage_true'])
+    data, labels, paths_imgs = downsize_false_candidates(data, labels, paths_imgs, percentage_true)
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data, labels, paths_imgs,
                                                                                  test_size=test_size, shuffle=True,
                                                                                  random_state=42)

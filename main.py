@@ -1,8 +1,6 @@
 import numpy as np
 from collections import OrderedDict
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import RidgeClassifier, LogisticRegression
-from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from lightgbm import LGBMClassifier
 
@@ -24,7 +22,6 @@ hist_hsl = True
 hist_h = True
 hist_s = True
 hist_l = True
-percentage_true = 0.05  # desired percentage of trues in data set
 quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
@@ -34,12 +31,13 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('nb_segments', nb_segments), ('threshold_low_var', threshold_low_var),
                                ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
-                               ('percentage_true', percentage_true), ('quadratic_features', quadratic_features),
-                               ('with_mean', with_mean), ('with_std', with_std)])
+                               ('quadratic_features', quadratic_features), ('with_mean', with_mean),
+                               ('with_std', with_std)])
 test_size = 0.10  # fraction of test set
+percentage_true = 0.05  # desired percentage of trues in data set
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = False
 sgd = False
@@ -104,32 +102,30 @@ gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', par
 
 # ----- evaluate trained model ------
 evaluate_model = False
-path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Trained/LinearSVC_1.sav'
-path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_Dataset_contextellipsis/200812R09AS(labeled)/'
+path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Trained/LinearSVC_8.sav'
+path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_relabelledtol02/200328-S09(labeled)/'
 model_name = 'LinearSVC_1_200812R09AS'
 
 # ----- train and export model for GUI ------
-train_export_GUI = True
-path_data = 'GUI_Model_Export/Model_0/Mite4_relabelledtol02_False_context_None_False_None_None_None_None_None_True_True_True_True_0.05_False_False_False.npz'
-percentage_true = 0.005     # can be None
-cv = 10
+train_export_GUI = False
+path_data = 'GUI_Model_Export/Model_true02_jointmarginal/Mite4_relabelledtol02_False_context_None_False_None_None_None_None_None_True_True_True_True_0.2_False_False_False.npz'
+percentage_true_GUI = 0.2  # can be None
+cv = 5
 parameters_lgbm = {'task': 'train',
                    'objective': 'binary',
                    'boosting': 'gbdt',
-                   'num_iterations': 100,
+                   'num_iterations': 30,
                    'learning_rate': 0.2,
                    'num_leaves': 31,
                    'num_threads': 4,
                    'deterministic': True,
                    'max_depth': 20,
-                   'lambda_l2': 1.0,
+                   'lambda_l2': 50.0,
                    'max_bin': 31,
                    'n_iter_no_change': 10,
                    'is_unbalance': True,
-                   'output_model': 'LightGBM_ModelX.txt',
-                   'output_result': 'Prediction_ModelX.txt',
                    'metric': 'binary_logloss'}
-export_name = 'LightGBM_Model_Vatorex_balanced.txt'
+export_name = 'LightGBM_Model_02true_joint_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
@@ -137,14 +133,14 @@ if __name__ == '__main__':
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
-        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, use_weights)
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, percentage_true, use_weights)
     elif cross_validation:
-        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, use_weights)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, percentage_true, use_weights)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, use_weights)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, percentage_true, use_weights)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:
-        export_GUI_model(path_data, percentage_true, cv, parameters_lgbm, export_name)
+        export_GUI_model(path_data, percentage_true_GUI, cv, parameters_lgbm, export_name)
     else:
         print('No option chosen.')

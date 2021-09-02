@@ -217,7 +217,7 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
     return None
 
 
-def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, use_weights):
+def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, percentage_true, use_weights):
     data, labels, paths_images = read_data_and_labels(folder_path, data_params)
     if use_weights == 'balanced':
         class_weight = 'balanced'
@@ -225,13 +225,14 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
         class_weight = None
     models = define_models(model_selection, class_weight)
 
-    data, labels, paths_images = downsize_false_candidates(data, labels, paths_images, data_params['percentage_true'])
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
                                                                                  labels,
                                                                                  paths_images,
                                                                                  test_size=test_size,
                                                                                  random_state=42,
                                                                                  stratify=labels)
+    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
+
     del data
 
     for key, value in models.items():
