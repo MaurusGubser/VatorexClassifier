@@ -8,16 +8,15 @@ import time
 from collections import OrderedDict
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
     recall_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
-from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, LogisticRegressionCV
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
+from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
 from lightgbm import LGBMClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
 
 from data_reading_writing import read_data_and_labels
-from data_handling import undersample_false_candidates, split_and_sample_data
+from data_handling import split_and_sample_data
 
 
 def export_model(model, model_name):
@@ -111,7 +110,11 @@ def evaluate_model(model, X, y, paths):
                               ('acc_balanced', balanced_accuracy_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
                               ('f1_scr', f1_score(y, y_pred))])
-    misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
+    if paths is not None:
+        misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
+    else:
+        misclassified_imgs = None
+        true_pos_imgs = None
     return stats_dict, misclassified_imgs, true_pos_imgs
 
 
@@ -198,24 +201,18 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
-
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train, use_weights)
-        dict_model['model_stats_train'], misclassified_train, true_pos_train = evaluate_model(dict_model['model'],
-                                                                                              X_train, y_train,
-                                                                                              paths_train)
-        dict_model['model_stats_test'], misclassified_test, true_pos_test = evaluate_model(dict_model['model'], X_test,
-                                                                                           y_test, paths_test)
-
+        dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train)
+        dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test)
         # export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_training_stats_csv(dict_model, model_name, dict_data)
-        # export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
-        # export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
 
     return None
 
 
-def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, percentage_true, use_weights):
+def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, undersampling_rate,
+                                   oversampling_rate, use_weights):
     if use_weights == 'balanced':
         class_weight = 'balanced'
     else:
@@ -223,13 +220,16 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
     models = define_models(model_selection, class_weight)
 
     data, labels, paths_images = read_data_and_labels(folder_path, data_params)
-    X_train, y_train, paths_train, X_test, y_test, paths_test = split_and_sample_data(data, labels, paths_images, test_size, percentage_true)
-
+    X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data,
+                                                                   labels,
+                                                                   paths_images,
+                                                                   test_size,
+                                                                   undersampling_rate,
+                                                                   oversampling_rate)
     del data
 
     for key, value in models.items():
-        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, paths_train, paths_test, data_params,
-                                  use_weights)
+        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, None, None, data_params, use_weights)
     return None
 
 

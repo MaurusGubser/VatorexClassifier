@@ -33,11 +33,12 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
                                ('quadratic_features', quadratic_features), ('with_mean', with_mean),
                                ('with_std', with_std)])
-test_size = 0.10  # fraction of test set
-percentage_true = 0.10  # desired percentage of trues in training data set
+test_size = 0.10  # must be float in (0,1); fraction of test set
+undersampling_rate = 0.10  # must be None or float in [0,1]; false candidates get undersampled to according ratio
+oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = False
 sgd = False
@@ -83,7 +84,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = LinearSVC()
 model_name = 'LinearSVC'
@@ -109,7 +110,8 @@ model_name = 'LinearSVC_1_200812R09AS'
 # ----- train and export model for GUI ------
 train_export_GUI = False
 path_data = 'GUI_Model_Export/Model_true02_jointmarginal/Mite4_relabelledtol02_False_context_None_False_None_None_None_None_None_True_True_True_True_0.2_False_False_False.npz'
-percentage_true_GUI = 0.2  # can be None
+undersampling_GUI = 0.2  # must be None or float in (0, 1)
+oversampling_GUI = None     # must be None or float in (0, 1)
 cv = 5
 parameters_lgbm = {'task': 'train',
                    'objective': 'binary',
@@ -133,14 +135,16 @@ if __name__ == '__main__':
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
-        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, percentage_true, use_weights)
+        if test_size is None:
+            raise ValueError('Parameter test_size cannot be None.')
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, undersampling_rate, oversampling_rate, use_weights)
     elif cross_validation:
-        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, test_size, percentage_true, use_weights)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, undersampling_rate, oversampling_rate, use_weights)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, percentage_true, use_weights)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, undersampling_rate, oversampling_rate, use_weights)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:
-        export_GUI_model(path_data, percentage_true_GUI, cv, parameters_lgbm, export_name)
+        export_GUI_model(path_data, undersampling_GUI, oversampling_GUI, cv, parameters_lgbm, export_name)
     else:
         print('No option chosen.')

@@ -6,6 +6,7 @@ from sklearn.decomposition import IncrementalPCA
 from skimage.feature import local_binary_pattern
 from skimage.transform import rescale
 from skimage.segmentation import slic
+from imblearn.over_sampling import RandomOverSampler
 import random
 import time
 
@@ -151,13 +152,12 @@ def rearrange_hists(histograms_list, data_params, read_hist):
     return data
 
 
-def undersample_false_candidates(data, labels, paths_images, percentage_true):
+def undersample_false_candidates(data, labels, paths_images, undersampling_rate):
     nb_candidates = labels.size
     nb_true_cand = np.sum(labels)
-    if percentage_true is None:
-        return data, labels, paths_images
-    elif nb_true_cand / nb_candidates <= percentage_true:
-        nb_false_remove = nb_candidates - int(nb_true_cand / percentage_true)
+
+    if nb_true_cand / nb_candidates <= undersampling_rate:
+        nb_false_remove = nb_candidates - int(nb_true_cand / undersampling_rate)
         idxs_false = list(np.arange(0, nb_candidates)[labels == 0])
         random.seed(42)  # to assure, same sample is drawn; remove if selection should be random
         idxs_false_remove = random.sample(idxs_false, k=nb_false_remove)
@@ -169,18 +169,46 @@ def undersample_false_candidates(data, labels, paths_images, percentage_true):
         raise ValueError(
             'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand,
                                                                                                    nb_candidates,
-                                                                                                   percentage_true))
+                                                                                                   undersampling_rate))
 
 
-def split_and_sample_data(data, labels, paths_imgs, test_size, percentage_true):
-    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
-                                                                                 labels,
-                                                                                 paths_imgs,
-                                                                                 test_size=test_size,
-                                                                                 random_state=42,
-                                                                                 stratify=labels)
+def oversample_true_candidates(data, labels, oversampling_rate):
+    nb_candidates = labels.size
+    nb_true_cand = np.sum(labels)
+
+    if nb_true_cand / nb_candidates <= oversampling_rate:
+        ros = RandomOverSampler(sampling_strategy=oversampling_rate)
+        data_res, labels_res = ros.fit_resample(data, labels)
+        return data_res, labels_res
+    else:
+        raise ValueError(
+            'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand,
+                                                                                                   nb_candidates,
+                                                                                                   oversampling_rate))
+
+
+def split_and_sample_data(data, labels, paths_imgs, test_size, undersampling_rate, oversampling_rate):
+    if test_size is not None:
+        X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
+                                                                                     labels,
+                                                                                     paths_imgs,
+                                                                                     test_size=test_size,
+                                                                                     random_state=42,
+                                                                                     stratify=labels)
+    else:
+        X_train = data
+        X_test = np.array([])
+        y_train = labels
+        y_test = np.array([])
+        paths_train = paths_imgs
+        paths_test = None
+    if undersampling_rate is not None:
+        X_train, y_train, paths_train = undersample_false_candidates(X_train, y_train, paths_train, undersampling_rate)
+    elif oversampling_rate is not None:
+        X_train, y_train = oversample_true_candidates(X_train, y_train, oversampling_rate)
+        paths_train = None
+        paths_test = None
     print('Data before undersampling: {} positive, {} total.'.format(np.sum(labels), labels.size))
-    X_train, y_train, paths_train = undersample_false_candidates(X_train, y_train, paths_train, percentage_true)
     print('Training data: {} positive, {} total'.format(np.sum(y_train), y_train.size))
     print('Test data: {} positive, {} total'.format(np.sum(y_test), y_test.size))
-    return X_train, y_train, paths_train, X_test, y_test, paths_test
+    return X_train, X_test, y_train, y_test, paths_train, paths_test
