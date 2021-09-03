@@ -3,7 +3,7 @@ import pandas as pd
 import lightgbm as lgb
 from sklearn.metrics import confusion_matrix, precision_recall_curve, plot_confusion_matrix
 
-from data_handling import downsize_false_candidates
+from data_handling import undersample_false_candidates
 from data_reading_writing import load_data_and_labels
 
 
@@ -24,7 +24,7 @@ def train_lgbm(parameters, data, labels, cv, export_path):
 
 def export_GUI_model(path_data, percentage_true, cv, param_lgbm, export_name):
     _, data, labels, path_images = load_data_and_labels(path_data)
-    data, labels, _ = downsize_false_candidates(data, labels, path_images, percentage_true)
+    data, labels, _ = undersample_false_candidates(data, labels, path_images, percentage_true)
     export_path = get_data_path(path_data) + export_name
     train_lgbm(param_lgbm, data, labels, cv, export_path)
     return None

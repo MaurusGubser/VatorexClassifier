@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import validation_curve, learning_curve, train_test_split, GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
 
-from data_handling import downsize_false_candidates
+from data_handling import undersample_false_candidates, split_and_sample_data
 from data_reading_writing import read_data_and_labels
 from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model, export_model, \
     export_model_evaluation_stats_json
@@ -62,15 +62,7 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
 
 def cross_validate_model(model, folder_path, data_params, cv_params, test_size, percentage_true, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
-                                                                                 labels,
-                                                                                 paths_imgs,
-                                                                                 test_size=test_size,
-                                                                                 random_state=42,
-                                                                                 stratify=labels)
-    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
-    train_scores = OrderedDict({})
-    test_scores = OrderedDict({})
+    X_train, y_train, paths_train, X_test, y_test, paths_train = split_and_sample_data(data, labels, paths_imgs, test_size, percentage_true)
 
     if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
@@ -83,6 +75,9 @@ def cross_validate_model(model, folder_path, data_params, cv_params, test_size, 
         weights[labels == 0] = weight_0 * nb_samples / (2 * nb_neg)
         weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
         weights_dict = {'sample_weight': weights}
+
+    train_scores = OrderedDict({})
+    test_scores = OrderedDict({})
 
     for score_param in ['recall', 'precision', 'f1', 'balanced_accuracy']:
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model, X_train, y_train, cv_params,
@@ -113,13 +108,8 @@ def clean_df(df):
 
 def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, percentage_true, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
-                                                                                 labels,
-                                                                                 paths_imgs,
-                                                                                 test_size=test_size,
-                                                                                 random_state=42,
-                                                                                 stratify=labels)
-    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
+    X_train, y_train, paths_train, X_test, y_test, paths_test = split_and_sample_data(data, labels, paths_imgs, test_size, percentage_true)
+
     if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
     else:
@@ -210,7 +200,7 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None, train_sizes=
 
 def plot_learning_curve_model(folder_path, data_params, model, model_name):
     data, labels = read_data_and_labels(folder_path, data_params)
-    data, labels = downsize_false_candidates(data, labels, data_params['percentage_true'])
+    data, labels = undersample_false_candidates(data, labels, data_params['percentage_true'])
     cv = 10
     plot_learning_curve(model, model_name, data, labels, ylim=None, cv=cv)
     return None

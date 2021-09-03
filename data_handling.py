@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import scale
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import IncrementalPCA
@@ -150,7 +151,7 @@ def rearrange_hists(histograms_list, data_params, read_hist):
     return data
 
 
-def downsize_false_candidates(data, labels, paths_images, percentage_true):
+def undersample_false_candidates(data, labels, paths_images, percentage_true):
     nb_candidates = labels.size
     nb_true_cand = np.sum(labels)
     if percentage_true is None:
@@ -160,14 +161,26 @@ def downsize_false_candidates(data, labels, paths_images, percentage_true):
         idxs_false = list(np.arange(0, nb_candidates)[labels == 0])
         random.seed(42)  # to assure, same sample is drawn; remove if selection should be random
         idxs_false_remove = random.sample(idxs_false, k=nb_false_remove)
-        print('Before downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
         data = np.delete(data, idxs_false_remove, axis=0)
         labels = np.delete(labels, idxs_false_remove)
         paths_images = np.delete(paths_images, idxs_false_remove)
-        print('After downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
         return data, labels, paths_images
     else:
         raise ValueError(
             'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand,
                                                                                                    nb_candidates,
                                                                                                    percentage_true))
+
+
+def split_and_sample_data(data, labels, paths_imgs, test_size, percentage_true):
+    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
+                                                                                 labels,
+                                                                                 paths_imgs,
+                                                                                 test_size=test_size,
+                                                                                 random_state=42,
+                                                                                 stratify=labels)
+    print('Data before undersampling: {} positive, {} total.'.format(np.sum(labels), labels.size))
+    X_train, y_train, paths_train = undersample_false_candidates(X_train, y_train, paths_train, percentage_true)
+    print('Training data: {} positive, {} total'.format(np.sum(y_train), y_train.size))
+    print('Test data: {} positive, {} total'.format(np.sum(y_test), y_test.size))
+    return X_train, y_train, paths_train, X_test, y_test, paths_test

@@ -3,11 +3,10 @@ import matplotlib.pyplot as plt
 from collections import OrderedDict
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC, SVC
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve, precision_recall_curve, roc_curve
+from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve
 
 from data_reading_writing import read_data_and_labels
-from data_handling import downsize_false_candidates
+from data_handling import split_and_sample_data
 
 
 def compute_precrcll_curve(clf, X_train, X_test, y_train, y_test):
@@ -30,23 +29,9 @@ def compute_roc_curve(clf, X_train, X_test, y_train, y_test):
     return None
 
 
-def get_train_and_test_data(dir_data, data_params, test_size, percentage_true):
-    data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
-    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
-                                                                                 labels,
-                                                                                 paths_imgs,
-                                                                                 test_size=test_size,
-                                                                                 random_state=42,
-                                                                                 stratify=labels)
-    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
-    print('Training data: {} positive, {} total'.format(np.sum(y_train), y_train.size))
-    print('Test data: {} positive, {} total'.format(np.sum(y_test), y_test.size))
-    return X_train, X_test, y_train, y_test
-
-
 def plot_scores(clf, dir_data, data_params, test_size, percentage_true):
-    X_train, X_test, y_train, y_test = get_train_and_test_data(dir_data, data_params, test_size, percentage_true)
-
+    data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
+    X_train, y_train, _, X_test, y_test, _ = split_and_sample_data(data, labels, paths_imgs, test_size, percentage_true)
     compute_precrcll_curve(clf, X_train, X_test, y_train, y_test)
     compute_roc_curve(clf, X_train, X_test, y_train, y_test)
     return None

@@ -17,7 +17,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 
 from data_reading_writing import read_data_and_labels
-from data_handling import downsize_false_candidates
+from data_handling import undersample_false_candidates, split_and_sample_data
 
 
 def export_model(model, model_name):
@@ -216,20 +216,14 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
 
 
 def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, percentage_true, use_weights):
-    data, labels, paths_images = read_data_and_labels(folder_path, data_params)
     if use_weights == 'balanced':
         class_weight = 'balanced'
     else:
         class_weight = None
     models = define_models(model_selection, class_weight)
 
-    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
-                                                                                 labels,
-                                                                                 paths_images,
-                                                                                 test_size=test_size,
-                                                                                 random_state=42,
-                                                                                 stratify=labels)
-    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
+    data, labels, paths_images = read_data_and_labels(folder_path, data_params)
+    X_train, y_train, paths_train, X_test, y_test, paths_test = split_and_sample_data(data, labels, paths_images, test_size, percentage_true)
 
     del data
 
