@@ -20,9 +20,7 @@ def compute_cv_scores(model_type, data, labels, cv_params, score_param, weights_
     k = cv_params['nb_split_cv']
     train_scores, test_scores = validation_curve(estimator=model_type, X=data, y=labels, param_name=model_parameter,
                                                  param_range=parameter_range, cv=k, scoring=score_param,
-                                                 n_jobs=-1, verbose=2, fit_params=weights_dict)
-    print('Train scores {}: {}'.format(score_param, train_scores))
-    print('Test scores {}: {}'.format(score_param, test_scores))
+                                                 n_jobs=-1, verbose=1, fit_params=weights_dict)
     return train_scores, test_scores
 
 
@@ -71,11 +69,6 @@ def cross_validate_model(model, folder_path, data_params, cv_params, test_size, 
                                                                                  random_state=42,
                                                                                  stratify=labels)
     X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
-    '''
-    indices = np.arange(labels.shape[0])
-    np.random.shuffle(indices)
-    data, labels, paths_imgs = data[indices], labels[indices], paths_imgs[indices]
-    '''
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
 
@@ -141,7 +134,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
 
     clf = GridSearchCV(model, grid_search_params['parameters_grid'], grid_search_params['scoring_parameters'],
                        n_jobs=-1, refit=grid_search_params['refit_param'], cv=grid_search_params['nb_split_cv'],
-                       verbose=2)
+                       verbose=1)
     clf.fit(X_train, y_train)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
     gs_df = clean_df(gs_df)

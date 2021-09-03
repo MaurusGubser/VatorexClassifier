@@ -10,38 +10,28 @@ from data_reading_writing import read_data_and_labels
 from data_handling import downsize_false_candidates
 
 
-def compute_precrcll_curve(clf, data_dir, data_params, test_size, percentage_true):
-    data, labels, paths_imgs = read_data_and_labels(data_dir, data_params)
-    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
-                                                                                 labels,
-                                                                                 paths_imgs,
-                                                                                 test_size=test_size,
-                                                                                 random_state=42,
-                                                                                 stratify=labels)
-    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
+def compute_precrcll_curve(clf, X_train, X_test, y_train, y_test):
     clf.fit(X_train, y_train)
-
-    probs_train = clf.predict_proba(X_train)
-    prec_train, rcll_train, thres_train = precision_recall_curve(y_train, probs_train[:, 1])
-    print('Precision training data:\n', prec_train)
-    print('Recall training data:\n', rcll_train)
-    dsp = plot_precision_recall_curve(clf, X_train, y_train)
-    dsp.ax_.set_title('Precision-recall training set')
+    plot_train = plot_precision_recall_curve(clf, X_train, y_train)
+    plot_train.ax_.set_title('Precision-recall training set')
+    plot_test = plot_precision_recall_curve(clf, X_test, y_test)
+    plot_test.ax_.set_title('Precision-recall test set')
     plt.show()
-
-    probs_test = clf.predict_proba(X_test)
-    prec_test, rcll_test, thres_test = precision_recall_curve(y_test, probs_test[:, 1])
-    print('Precision test data:\n', prec_test)
-    print('Recall test data:\n', rcll_test)
-    dsp = plot_precision_recall_curve(clf, X_test, y_test)
-    dsp.ax_.set_title('Precision-recall test set')
-    plt.show()
-
     return None
 
 
-def compute_roc_curve(clf, data_dir, data_params, test_size, percentage_true):
-    data, labels, paths_imgs = read_data_and_labels(data_dir, data_params)
+def compute_roc_curve(clf, X_train, X_test, y_train, y_test):
+    clf.fit(X_train, y_train)
+    plot_train = plot_roc_curve(clf, X_train, y_train)
+    plot_train.ax_.set_title('ROC training set')
+    plot_test = plot_roc_curve(clf, X_test, y_test)
+    plot_test.ax_.set_title('ROC test set')
+    plt.show()
+    return None
+
+
+def get_train_and_test_data(dir_data, data_params, test_size, percentage_true):
+    data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
     X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
                                                                                  labels,
                                                                                  paths_imgs,
@@ -49,24 +39,16 @@ def compute_roc_curve(clf, data_dir, data_params, test_size, percentage_true):
                                                                                  random_state=42,
                                                                                  stratify=labels)
     X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
-    clf.fit(X_train, y_train)
+    print('Training data: {} positive, {} total'.format(np.sum(y_train), y_train.size))
+    print('Test data: {} positive, {} total'.format(np.sum(y_test), y_test.size))
+    return X_train, X_test, y_train, y_test
 
-    probs_train = clf.predict_proba(X_train)
-    fpr_train, tpr_train, thres_train = roc_curve(y_train, probs_train[:, 1])
-    print('False positive rate train:\n', fpr_train)
-    print('True positive rate train:\n', tpr_train)
-    dsp = plot_roc_curve(clf, X_train, y_train)
-    dsp.ax_.set_title('ROC training set')
-    plt.show()
 
-    probs_test = clf.predict_proba(X_test)
-    fpr_test, tpr_test, thres_test = roc_curve(y_test, probs_test[:, 1])
-    print('False positive rate test:\n', fpr_test)
-    print('True positive rate test:\n', tpr_test)
-    dsp = plot_roc_curve(clf, X_test, y_test)
-    dsp.ax_.set_title('ROC test set')
-    plt.show()
+def plot_scores(clf, dir_data, data_params, test_size, percentage_true):
+    X_train, X_test, y_train, y_test = get_train_and_test_data(dir_data, data_params, test_size, percentage_true)
 
+    compute_precrcll_curve(clf, X_train, X_test, y_train, y_test)
+    compute_roc_curve(clf, X_train, X_test, y_train, y_test)
     return None
 
 
@@ -100,16 +82,6 @@ percentage_true = 0.10  # desired percentage of trues in training data set
 
 # ----------- execute functions ----------------------
 clf = LogisticRegression()
-path_dir = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_relabelledtol05/'
+dir_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_relabelledtol05/'
 
-compute_roc_curve(clf=clf,
-                  data_dir=path_dir,
-                  data_params=data_parameters,
-                  test_size=test_size,
-                  percentage_true=percentage_true)
-
-compute_precrcll_curve(clf=clf,
-                       data_dir=path_dir,
-                       data_params=data_parameters,
-                       test_size=test_size,
-                       percentage_true=percentage_true)
+plot_scores(clf=clf, dir_data=dir_data)

@@ -73,8 +73,6 @@ def export_model_training_stats_csv(model_dict, model_name, data_dict):
     model_string = model_string + '\n'
     with open(filename, 'a') as outfile:
         outfile.write(model_string)
-
-    print("Model statistics of {} appended to {}".format(model_name, filename))
     return None
 
 

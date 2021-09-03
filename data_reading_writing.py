@@ -59,7 +59,7 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
         if read_hist == 'candidate':
             histograms.append(hist_read(path_hist))
         if read_hist == 'context':
-            histograms.append(hist_read(path_hist)+hist_read(path_hist_context))
+            histograms.append(hist_read(path_hist) + hist_read(path_hist_context))
         if re.search(pattern_true, path_img):
             labels.append(1)
         elif re.search(pattern_false, path_img):
@@ -83,7 +83,8 @@ def read_images_and_histograms(folder_list, read_image, read_hist):
         labels = labels + lbls
         images_paths = images_paths + imgs_paths
     end_time = time.time()
-    print('Read images and histograms in {:.1f} minutes'.format((end_time - start_time) / 60))
+    print('Read images and histograms in {:.1f} minutes and {:.0f} seconds'.format((end_time - start_time) / 60,
+                                                                                   (end_time - start_time) % 60))
     return images, histograms, labels, images_paths
 
 
