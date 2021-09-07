@@ -131,12 +131,12 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('quadratic_features', quadratic_features), ('with_mean', with_mean),
                                ('with_std', with_std)])
 test_size = 0.10  # fraction of test set
-undersampling_rate = 0.10  # desired percentage of trues in training data set
-oversampling_rate = None
+undersampling_rate = 0.01  # desired percentage of trues in training data set
+oversampling_rate = 0.30
 
 # ----------- execute functions ----------------------
 clf = LogisticRegression()
-dir_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_relabelledtol05/'
+dir_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)/'
 
 plot_scores(clf=clf,
             dir_data=dir_data,

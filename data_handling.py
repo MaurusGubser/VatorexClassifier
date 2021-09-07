@@ -176,8 +176,9 @@ def oversample_true_candidates(data, labels, oversampling_rate):
     nb_candidates = labels.size
     nb_true_cand = np.sum(labels)
 
+    alpha = oversampling_rate / (1 - oversampling_rate)
     if nb_true_cand / nb_candidates <= oversampling_rate:
-        ros = RandomOverSampler(sampling_strategy=oversampling_rate)
+        ros = RandomOverSampler(sampling_strategy=alpha)
         data_res, labels_res = ros.fit_resample(data, labels)
         return data_res, labels_res
     else:
