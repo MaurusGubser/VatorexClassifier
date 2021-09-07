@@ -204,7 +204,7 @@ def split_and_sample_data(data, labels, paths_imgs, test_size, undersampling_rat
         paths_test = None
     if undersampling_rate is not None:
         X_train, y_train, paths_train = undersample_false_candidates(X_train, y_train, paths_train, undersampling_rate)
-    elif oversampling_rate is not None:
+    if oversampling_rate is not None:
         X_train, y_train = oversample_true_candidates(X_train, y_train, oversampling_rate)
         paths_train = None
         paths_test = None

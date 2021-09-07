@@ -34,7 +34,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('quadratic_features', quadratic_features), ('with_mean', with_mean),
                                ('with_std', with_std)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
-undersampling_rate = None  # must be None or float in [0,1]; false candidates get undersampled to according ratio
+undersampling_rate = 0.05  # must be None or float in [0,1]; false candidates get undersampled to according ratio
 oversampling_rate = 0.30  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 # ----- train and evaluate models -----
