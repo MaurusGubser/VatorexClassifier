@@ -21,12 +21,12 @@ def train_lgbm(parameters, data, labels, cv, export_path):
 
 def export_GUI_model(path_data, undersampling_rate, oversampling_rate, cv, param_lgbm, export_name):
     _, data, labels, path_images = load_data_and_labels(path_data)
-    data, _, labels, _, _, _ = split_and_sample_data(data,
-                                                     labels,
-                                                     path_images,
-                                                     None,
-                                                     undersampling_rate,
-                                                     oversampling_rate)
+    data, _, labels, _, _, _ = split_and_sample_data(data=data,
+                                                     labels=labels,
+                                                     paths_imgs=path_images,
+                                                     test_size=None,
+                                                     undersampling_rate=undersampling_rate,
+                                                     oversampling_rate=oversampling_rate)
     export_path = get_data_path(path_data) + export_name
     train_lgbm(param_lgbm, data, labels, cv, export_path)
     return None

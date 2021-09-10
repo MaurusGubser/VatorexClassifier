@@ -66,7 +66,12 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None, train_sizes=
 
 def plot_learning_curve_model(folder_path, data_params, model, model_name, undersampling_rate, oversampling_rate):
     data, labels, paths = read_data_and_labels(folder_path, data_params)
-    data, labels, _ = split_and_sample_data(data, labels, paths, None, undersampling_rate, oversampling_rate)
+    data, labels, _ = split_and_sample_data(data=data,
+                                            labels=labels,
+                                            paths_imgs=paths,
+                                            test_size=None,
+                                            undersampling_rate=undersampling_rate,
+                                            oversampling_rate=oversampling_rate)
     cv = 10
     plot_learning_curve(model, model_name, data, labels, ylim=None, cv=cv)
     return None
@@ -94,12 +99,12 @@ def compute_roc_curve(clf, X_train, X_test, y_train, y_test):
 
 def plot_scores(clf, dir_data, data_params, test_size, undersampling_rate, oversampling_rate):
     data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
-    X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data,
-                                                                   labels,
-                                                                   paths_imgs,
-                                                                   test_size,
-                                                                   undersampling_rate,
-                                                                   oversampling_rate)
+    X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
+                                                                   labels=labels,
+                                                                   paths_imgs=paths_imgs,
+                                                                   test_size=test_size,
+                                                                   undersampling_rate=undersampling_rate,
+                                                                   oversampling_rate=oversampling_rate)
     compute_precisionrecall_curve(clf, X_train, X_test, y_train, y_test)
     compute_roc_curve(clf, X_train, X_test, y_train, y_test)
     return None
@@ -136,7 +141,7 @@ oversampling_rate = 0.30
 
 # ----------- execute functions ----------------------
 clf = LogisticRegression()
-dir_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)/'
+dir_data = 'Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)/'
 
 plot_scores(clf=clf,
             dir_data=dir_data,

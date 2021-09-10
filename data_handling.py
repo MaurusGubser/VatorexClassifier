@@ -6,7 +6,7 @@ from sklearn.decomposition import IncrementalPCA
 from skimage.feature import local_binary_pattern
 from skimage.transform import rescale
 from skimage.segmentation import slic
-from imblearn.over_sampling import RandomOverSampler
+from imblearn.over_sampling import RandomOverSampler, SMOTE
 import random
 import time
 
@@ -178,8 +178,12 @@ def oversample_true_candidates(data, labels, oversampling_rate):
 
     alpha = oversampling_rate / (1 - oversampling_rate)
     if nb_true_cand / nb_candidates <= oversampling_rate:
-        ros = RandomOverSampler(sampling_strategy=alpha)
-        data_res, labels_res = ros.fit_resample(data, labels)
+        oversampling_type = 'random'
+        if oversampling_type == 'random':
+            oversampler = RandomOverSampler(sampling_strategy=alpha, shrinkage=0.1, random_state=42)
+        elif oversampling_type == 'smote':
+            oversampler = SMOTE(sampling_strategy=alpha, n_jobs=-1, random_state=42)
+        data_res, labels_res = oversampler.fit_resample(data, labels)
         return data_res, labels_res
     else:
         raise ValueError(

@@ -149,7 +149,8 @@ def export_model_evaluation_stats_json(stats_dict, model_name):
 def evaluate_trained_model(path_test_data, data_params, path_trained_model, model_name):
     model = pickle.load(open(path_trained_model, 'rb'))
     X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
-    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images)
+    # To do: prior weight cannot be computed since training data is not given
+    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_weight=1.0)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
     plot_confusion_matrix(model, X_test, y_test)
@@ -226,12 +227,12 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
     models = define_models(model_selection, class_weight)
 
     data, labels, paths_images = read_data_and_labels(folder_path, data_params)
-    X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data,
-                                                                   labels,
-                                                                   paths_images,
-                                                                   test_size,
-                                                                   undersampling_rate,
-                                                                   oversampling_rate)
+    X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
+                                                                   labels=labels,
+                                                                   paths_imgs=paths_images,
+                                                                   test_size=test_size,
+                                                                   undersampling_rate=undersampling_rate,
+                                                                   oversampling_rate=oversampling_rate)
     del data
     prior_weight = compute_prior_weight(np.array(labels), y_train)
     for key, value in models.items():
@@ -298,12 +299,12 @@ def define_models(model_selection, class_weight):
                     LinearSVC(penalty='l1', dual=False, C=1.0, max_iter=500, class_weight=class_weight),
                     LinearSVC(penalty='l1', dual=False, C=0.1, max_iter=500, class_weight=class_weight)]
 
-    nl_svm_models = [SVC(C=0.1, class_weight=class_weight),
-                     SVC(C=1.0, class_weight=class_weight),
-                     SVC(C=10.0, class_weight=class_weight),
-                     SVC(C=0.1, kernel='poly', class_weight=class_weight),
-                     SVC(C=0.1, kernel='poly', class_weight=class_weight),
-                     SVC(C=10.0, kernel='poly', class_weight=class_weight)]
+    nl_svm_models = [SVC(C=0.1, class_weight=class_weight, probability=True),
+                     SVC(C=1.0, class_weight=class_weight, probability=True),
+                     SVC(C=10.0, class_weight=class_weight, probability=True),
+                     SVC(C=0.1, kernel='poly', class_weight=class_weight, probability=True),
+                     SVC(C=0.1, kernel='poly', class_weight=class_weight, probability=True),
+                     SVC(C=10.0, kernel='poly', class_weight=class_weight, probability=True)]
 
     naive_bayes_models = [GaussianNB()]
 
