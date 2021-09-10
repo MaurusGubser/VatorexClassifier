@@ -208,7 +208,6 @@ def split_and_sample_data(data, labels, paths_imgs, test_size, undersampling_rat
     if oversampling_rate is not None:
         X_train, y_train = oversample_true_candidates(X_train, y_train, oversampling_rate)
         paths_train = None
-        paths_test = None
     print('Data before sampling: {} positive, {} total.'.format(np.sum(labels), labels.size))
     print('Training data: {} positive, {} total'.format(np.sum(y_train), y_train.size))
     print('Test data: {} positive, {} total'.format(np.sum(y_test), y_test.size))

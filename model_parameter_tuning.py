@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import validation_curve, GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
 
-from data_handling import split_and_sample_data
+from data_handling import split_and_sample_data, compute_prior_weight
 from data_reading_writing import read_data_and_labels
 from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model, export_model, \
     export_model_evaluation_stats_json
@@ -63,12 +63,12 @@ def cross_validate_model(model, folder_path, data_params, cv_params, undersampli
                          use_weights):
     test_size = None
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    X_train, _, y_train, _, _, _ = split_and_sample_data(data,
-                                                         labels,
-                                                         paths_imgs,
-                                                         test_size,
-                                                         undersampling_rate,
-                                                         oversampling_rate)
+    X_train, _, y_train, _, _, _ = split_and_sample_data(data=data,
+                                                         labels=labels,
+                                                         paths_imgs=paths_imgs,
+                                                         test_size=test_size,
+                                                         undersampling_rate=undersampling_rate,
+                                                         oversampling_rate=oversampling_rate)
 
     if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
@@ -86,12 +86,12 @@ def cross_validate_model(model, folder_path, data_params, cv_params, undersampli
     test_scores = OrderedDict({})
 
     for score_param in ['recall', 'precision', 'f1', 'balanced_accuracy']:
-        train_scores[score_param], test_scores[score_param] = compute_cv_scores(model,
-                                                                                X_train,
-                                                                                y_train,
-                                                                                cv_params,
-                                                                                score_param,
-                                                                                weights_dict)
+        train_scores[score_param], test_scores[score_param] = compute_cv_scores(model_type=model,
+                                                                                data=X_train,
+                                                                                labels=y_train,
+                                                                                cv_params=cv_params,
+                                                                                score_param=score_param,
+                                                                                weights_dict=weights_dict)
     plot_validation_curve(train_scores, test_scores, cv_params)
     return None
 
@@ -119,13 +119,13 @@ def clean_df(df):
 def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, undersampling_rate,
                       oversampling_rate, use_weights):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
-    X_train, X_test, y_train, y_test, paths_train, paths_test = split_and_sample_data(data,
-                                                                                      labels,
-                                                                                      paths_imgs,
-                                                                                      test_size,
-                                                                                      undersampling_rate,
-                                                                                      oversampling_rate)
-
+    X_train, X_test, y_train, y_test, paths_train, paths_test = split_and_sample_data(data=data,
+                                                                                      labels=labels,
+                                                                                      paths_imgs=paths_imgs,
+                                                                                      test_size=test_size,
+                                                                                      undersampling_rate=undersampling_rate,
+                                                                                      oversampling_rate=oversampling_rate)
+    prior_weight = compute_prior_weight(np.array(labels), y_train)
     if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
     else:
@@ -138,9 +138,9 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
         weights[labels == 1] = weight_0 * nb_samples / (2 * nb_pos)
         weights_dict = {'sample_weight': weights}
 
-    clf = GridSearchCV(model,
-                       grid_search_params['parameters_grid'],
-                       grid_search_params['scoring_parameters'],
+    clf = GridSearchCV(estimator=model,
+                       param_grid=grid_search_params['parameters_grid'],
+                       scoring=grid_search_params['scoring_parameters'],
                        n_jobs=-1,
                        refit=grid_search_params['refit_param'],
                        cv=grid_search_params['nb_split_cv'],
@@ -152,9 +152,10 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
     export_name = grid_search_params['model_name'] + '_' + str(model_nb)
     export_stats_gs(export_name, gs_df)
-    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train)
-    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test)
-    export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
+    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train, prior_weight)
+    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_weight)
+    if misclassified_train is not None:
+        export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
     export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')
     export_model_evaluation_stats_json(stats_test, export_name)
     print('Best estimator:', clf.best_estimator_)
