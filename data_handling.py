@@ -1,10 +1,12 @@
 import numpy as np
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import scale
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import IncrementalPCA
 from skimage.feature import local_binary_pattern
 from skimage.transform import rescale
 from skimage.segmentation import slic
+from imblearn.over_sampling import RandomOverSampler, SMOTE
 import random
 import time
 
@@ -150,24 +152,73 @@ def rearrange_hists(histograms_list, data_params, read_hist):
     return data
 
 
-def downsize_false_candidates(data, labels, paths_images, percentage_true):
+def undersample_false_candidates(data, labels, paths_images, undersampling_rate):
     nb_candidates = labels.size
     nb_true_cand = np.sum(labels)
-    if percentage_true is None:
-        return data, labels, paths_images
-    elif nb_true_cand / nb_candidates <= percentage_true:
-        nb_false_remove = nb_candidates - int(nb_true_cand / percentage_true)
+
+    if nb_true_cand / nb_candidates <= undersampling_rate:
+        nb_false_remove = nb_candidates - int(nb_true_cand / undersampling_rate)
         idxs_false = list(np.arange(0, nb_candidates)[labels == 0])
         random.seed(42)  # to assure, same sample is drawn; remove if selection should be random
         idxs_false_remove = random.sample(idxs_false, k=nb_false_remove)
-        print('Before downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
         data = np.delete(data, idxs_false_remove, axis=0)
         labels = np.delete(labels, idxs_false_remove)
         paths_images = np.delete(paths_images, idxs_false_remove)
-        print('After downsizing: {} candidates; {} mites.'.format(labels.size, np.sum(labels)))
         return data, labels, paths_images
     else:
         raise ValueError(
             'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand,
                                                                                                    nb_candidates,
-                                                                                                   percentage_true))
+                                                                                                   undersampling_rate))
+
+
+def oversample_true_candidates(data, labels, oversampling_rate):
+    nb_candidates = labels.size
+    nb_true_cand = np.sum(labels)
+
+    alpha = oversampling_rate / (1 - oversampling_rate)
+    if nb_true_cand / nb_candidates <= oversampling_rate:
+        oversampling_type = 'random'
+        if oversampling_type == 'random':
+            oversampler = RandomOverSampler(sampling_strategy=alpha, shrinkage=0.1, random_state=42)
+        elif oversampling_type == 'smote':
+            oversampler = SMOTE(sampling_strategy=alpha, n_jobs=-1, random_state=42)
+        data_res, labels_res = oversampler.fit_resample(data, labels)
+        return data_res, labels_res
+    else:
+        raise ValueError(
+            'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand,
+                                                                                                   nb_candidates,
+                                                                                                   oversampling_rate))
+
+
+def split_and_sample_data(data, labels, paths_imgs, test_size, undersampling_rate, oversampling_rate):
+    if test_size is not None:
+        X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
+                                                                                     labels,
+                                                                                     paths_imgs,
+                                                                                     test_size=test_size,
+                                                                                     random_state=42,
+                                                                                     stratify=labels)
+    else:
+        X_train = data
+        X_test = np.array([])
+        y_train = labels
+        y_test = np.array([])
+        paths_train = paths_imgs
+        paths_test = None
+    if undersampling_rate is not None:
+        X_train, y_train, paths_train = undersample_false_candidates(X_train, y_train, paths_train, undersampling_rate)
+    if oversampling_rate is not None:
+        X_train, y_train = oversample_true_candidates(X_train, y_train, oversampling_rate)
+        paths_train = None
+    print('Data before sampling: {} positive, {} total.'.format(np.sum(labels), labels.size))
+    print('Training data: {} positive, {} total'.format(np.sum(y_train), y_train.size))
+    print('Test data: {} positive, {} total'.format(np.sum(y_test), y_test.size))
+    return X_train, X_test, y_train, y_test, paths_train, paths_test
+
+
+def compute_prior_weight(y_unbalanced, y_balanced):
+    p_unbalanced = np.sum(y_unbalanced)/y_unbalanced.size
+    p_balanced = np.sum(y_balanced)/y_balanced.size
+    return p_unbalanced/p_balanced

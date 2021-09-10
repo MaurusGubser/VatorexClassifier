@@ -8,16 +8,15 @@ import time
 from collections import OrderedDict
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
     recall_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
-from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, LogisticRegressionCV
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
+from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
 from lightgbm import LGBMClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
 
 from data_reading_writing import read_data_and_labels
-from data_handling import downsize_false_candidates
+from data_handling import split_and_sample_data, compute_prior_weight
 
 
 def export_model(model, model_name):
@@ -73,8 +72,6 @@ def export_model_training_stats_csv(model_dict, model_name, data_dict):
     model_string = model_string + '\n'
     with open(filename, 'a') as outfile:
         outfile.write(model_string)
-
-    print("Model statistics of {} appended to {}".format(model_name, filename))
     return None
 
 
@@ -104,16 +101,26 @@ def train_model(model, X_train, y_train, use_weights):
     return model
 
 
-def evaluate_model(model, X, y, paths):
+def evaluate_model(model, X, y, paths, prior_weight):
     start_time = time.time()
-    y_pred = model.predict(X)
+    try:
+        y_probs = model.predict_proba(X)
+        y_probs = y_probs[:, 1]
+        y_pred = np.where(y_probs <= prior_weight, 0, 1)
+    except AttributeError:
+        y_pred = model.predict(X)
+        print('No probabilistic model for {} available; working with predictions instead.'.format(model))
     end_time = time.time()
     print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
                               ('acc_balanced', balanced_accuracy_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
                               ('f1_scr', f1_score(y, y_pred))])
-    misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
+    if paths is not None:
+        misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
+    else:
+        misclassified_imgs = None
+        true_pos_imgs = None
     return stats_dict, misclassified_imgs, true_pos_imgs
 
 
@@ -142,7 +149,8 @@ def export_model_evaluation_stats_json(stats_dict, model_name):
 def evaluate_trained_model(path_test_data, data_params, path_trained_model, model_name):
     model = pickle.load(open(path_trained_model, 'rb'))
     X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
-    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images)
+    # To do: prior weight cannot be computed since training data is not given
+    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_weight=1.0)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
     plot_confusion_matrix(model, X_test, y_test)
@@ -191,7 +199,7 @@ def get_name_index(model_name, folder_name, file_format):
 
 
 def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test,
-                              data_params, use_weights):
+                              data_params, use_weights, prior_weight):
     index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                              ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),
@@ -200,44 +208,45 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
-
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train, use_weights)
-        dict_model['model_stats_train'], misclassified_train, true_pos_train = evaluate_model(dict_model['model'],
-                                                                                              X_train, y_train,
-                                                                                              paths_train)
-        dict_model['model_stats_test'], misclassified_test, true_pos_test = evaluate_model(dict_model['model'], X_test,
-                                                                                           y_test, paths_test)
-
+        dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train, prior_weight)
+        dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test, prior_weight)
         # export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_training_stats_csv(dict_model, model_name, dict_data)
-        # export_evaluation_images_model(misclassified_train, true_pos_train, model_name, 'Train')
-        # export_evaluation_images_model(misclassified_test, true_pos_test, model_name, 'Test')
 
     return None
 
 
-def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, percentage_true, use_weights):
-    data, labels, paths_images = read_data_and_labels(folder_path, data_params)
+def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, undersampling_rate,
+                                   oversampling_rate, use_weights):
     if use_weights == 'balanced':
         class_weight = 'balanced'
     else:
         class_weight = None
     models = define_models(model_selection, class_weight)
 
-    X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
-                                                                                 labels,
-                                                                                 paths_images,
-                                                                                 test_size=test_size,
-                                                                                 random_state=42,
-                                                                                 stratify=labels)
-    X_train, y_train, paths_train = downsize_false_candidates(X_train, y_train, paths_train, percentage_true)
-
+    data, labels, paths_images = read_data_and_labels(folder_path, data_params)
+    X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
+                                                                   labels=labels,
+                                                                   paths_imgs=paths_images,
+                                                                   test_size=test_size,
+                                                                   undersampling_rate=undersampling_rate,
+                                                                   oversampling_rate=oversampling_rate)
     del data
-
+    prior_weight = compute_prior_weight(np.array(labels), y_train)
     for key, value in models.items():
-        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, paths_train, paths_test, data_params,
-                                  use_weights)
+        train_and_test_modelgroup(modelgroup=value,
+                                  modelgroup_name=key,
+                                  X_train=X_train,
+                                  X_test=X_test,
+                                  y_train=y_train,
+                                  y_test=y_test,
+                                  paths_train=None,
+                                  paths_test=None,
+                                  data_params=data_params,
+                                  use_weights=use_weights,
+                                  prior_weight=prior_weight)
     return None
 
 
@@ -290,12 +299,12 @@ def define_models(model_selection, class_weight):
                     LinearSVC(penalty='l1', dual=False, C=1.0, max_iter=500, class_weight=class_weight),
                     LinearSVC(penalty='l1', dual=False, C=0.1, max_iter=500, class_weight=class_weight)]
 
-    nl_svm_models = [SVC(C=0.1, class_weight=class_weight),
-                     SVC(C=1.0, class_weight=class_weight),
-                     SVC(C=10.0, class_weight=class_weight),
-                     SVC(C=0.1, kernel='poly', class_weight=class_weight),
-                     SVC(C=0.1, kernel='poly', class_weight=class_weight),
-                     SVC(C=10.0, kernel='poly', class_weight=class_weight)]
+    nl_svm_models = [SVC(C=0.1, class_weight=class_weight, probability=True),
+                     SVC(C=1.0, class_weight=class_weight, probability=True),
+                     SVC(C=10.0, class_weight=class_weight, probability=True),
+                     SVC(C=0.1, kernel='poly', class_weight=class_weight, probability=True),
+                     SVC(C=0.1, kernel='poly', class_weight=class_weight, probability=True),
+                     SVC(C=10.0, kernel='poly', class_weight=class_weight, probability=True)]
 
     naive_bayes_models = [GaussianNB()]
 
