@@ -38,7 +38,7 @@ undersampling_rate = 0.05  # must be None or float in [0,1]; false candidates ge
 oversampling_rate = 0.30  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = True
 sgd = False
@@ -84,7 +84,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_cv)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = LinearSVC()
 model_name = 'LinearSVC'
@@ -131,7 +131,7 @@ export_name = 'LightGBM_Model_02true_joint_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/Mite4_relabelledtol02/200328-S09(labeled)/"
+    path_image_folders = "Candidate_Images/Mite4_relabelledtol05_local/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:

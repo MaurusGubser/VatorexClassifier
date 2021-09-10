@@ -219,6 +219,8 @@ def split_and_sample_data(data, labels, paths_imgs, test_size, undersampling_rat
 
 
 def compute_prior_weight(y_unbalanced, y_balanced):
-    p_unbalanced = np.sum(y_unbalanced)/y_unbalanced.size
-    p_balanced = np.sum(y_balanced)/y_balanced.size
-    return p_unbalanced/p_balanced
+    p_unbalanced_mite = np.sum(y_unbalanced)/y_unbalanced.size
+    p_balanced_mite = np.sum(y_balanced)/y_balanced.size
+    factor_mite = p_unbalanced_mite/p_balanced_mite
+    factor_no_mite = (1-p_unbalanced_mite)/(1 - p_balanced_mite)
+    return factor_mite, factor_no_mite
