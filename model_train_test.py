@@ -16,7 +16,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 
 from data_reading_writing import read_data_and_labels
-from data_handling import split_and_sample_data
+from data_handling import split_and_sample_data, compute_prior_weight
 
 
 def export_model(model, model_name):
@@ -101,9 +101,15 @@ def train_model(model, X_train, y_train, use_weights):
     return model
 
 
-def evaluate_model(model, X, y, paths):
+def evaluate_model(model, X, y, paths, prior_weight):
     start_time = time.time()
-    y_pred = model.predict(X)
+    try:
+        y_probs = model.predict_proba(X)
+        y_probs = y_probs[:, 1]
+        y_pred = np.where(y_probs <= prior_weight, 0, 1)
+    except AttributeError:
+        y_pred = model.predict(X)
+        print('No probabilistic model for {} available; working with predictions instead.'.format(model))
     end_time = time.time()
     print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
@@ -192,7 +198,7 @@ def get_name_index(model_name, folder_name, file_format):
 
 
 def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test,
-                              data_params, use_weights):
+                              data_params, use_weights, prior_weight):
     index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                              ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),
@@ -202,8 +208,8 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train, use_weights)
-        dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train)
-        dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test)
+        dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train, prior_weight)
+        dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test, prior_weight)
         # export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_training_stats_csv(dict_model, model_name, dict_data)
@@ -227,9 +233,19 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
                                                                    undersampling_rate,
                                                                    oversampling_rate)
     del data
-
+    prior_weight = compute_prior_weight(np.array(labels), y_train)
     for key, value in models.items():
-        train_and_test_modelgroup(value, key, X_train, X_test, y_train, y_test, None, None, data_params, use_weights)
+        train_and_test_modelgroup(modelgroup=value,
+                                  modelgroup_name=key,
+                                  X_train=X_train,
+                                  X_test=X_test,
+                                  y_train=y_train,
+                                  y_test=y_test,
+                                  paths_train=None,
+                                  paths_test=None,
+                                  data_params=data_params,
+                                  use_weights=use_weights,
+                                  prior_weight=prior_weight)
     return None
 
 

@@ -30,6 +30,7 @@ def plot_images_and_hist(path_folder):
             axs[0, j].grid(axis='both')
             axs[0, j].legend()
             axs[1, j].plot(hist[idx_false[i]][j], label=hist_labels[j - 1])
+            axs[1, j].grid(axis='both')
             axs[1, j].legend()
         fig.suptitle(get_last_path_str(path_folder))
         fig.tight_layout()
@@ -37,5 +38,5 @@ def plot_images_and_hist(path_folder):
     return None
 
 
-path_folder = 'Candidate_Images/Mite4_relabelledtol05/200328-R02(43Milben,labeled)'
+path_folder = 'Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)'
 plot_images_and_hist(path_folder)

@@ -213,3 +213,9 @@ def split_and_sample_data(data, labels, paths_imgs, test_size, undersampling_rat
     print('Training data: {} positive, {} total'.format(np.sum(y_train), y_train.size))
     print('Test data: {} positive, {} total'.format(np.sum(y_test), y_test.size))
     return X_train, X_test, y_train, y_test, paths_train, paths_test
+
+
+def compute_prior_weight(y_unbalanced, y_balanced):
+    p_unbalanced = np.sum(y_unbalanced)/y_unbalanced.size
+    p_balanced = np.sum(y_balanced)/y_balanced.size
+    return p_unbalanced/p_balanced

@@ -40,7 +40,7 @@ oversampling_rate = 0.30  # must be None or float in [0,1]; true candidates get 
 # ----- train and evaluate models -----
 train_models = True
 
-log_reg = False
+log_reg = True
 sgd = False
 ridge_class = False
 decision_tree = False
