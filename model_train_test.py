@@ -110,7 +110,6 @@ def evaluate_model(model, X, y, paths, prior_mite, prior_no_mite):
         sum_normalize = np.sum(y_probs, axis=1)
         y_probs = y_probs / sum_normalize[:, np.newaxis]
         y_pred = np.where(y_probs[:, 1] <= 0.5, 0, 1)
-        # y_pred = np.where(y_probs <= 0.1, 0, 1)
     except AttributeError:
         y_pred = model.predict(X)
         print('No probabilistic model for {} available; working with predictions instead.'.format(model))
