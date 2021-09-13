@@ -101,12 +101,15 @@ def train_model(model, X_train, y_train, use_weights):
     return model
 
 
-def evaluate_model(model, X, y, paths, prior_weight):
+def evaluate_model(model, X, y, paths, prior_mite, prior_no_mite):
     start_time = time.time()
     try:
         y_probs = model.predict_proba(X)
-        y_probs = y_probs[:, 1]
-        y_pred = np.where(y_probs <= prior_weight, 0, 1)
+        y_probs[:, 1] = y_probs[:, 1] * prior_mite
+        y_probs[:, 0] = y_probs[:, 0] * prior_no_mite
+        sum_normalize = np.sum(y_probs, axis=1)
+        y_probs = y_probs / sum_normalize[:, np.newaxis]
+        y_pred = np.where(y_probs[:, 1] <= 0.5, 0, 1)
     except AttributeError:
         y_pred = model.predict(X)
         print('No probabilistic model for {} available; working with predictions instead.'.format(model))
@@ -150,7 +153,7 @@ def evaluate_trained_model(path_test_data, data_params, path_trained_model, mode
     model = pickle.load(open(path_trained_model, 'rb'))
     X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
     # To do: prior weight cannot be computed since training data is not given
-    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_weight=1.0)
+    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
     plot_confusion_matrix(model, X_test, y_test)
@@ -199,7 +202,7 @@ def get_name_index(model_name, folder_name, file_format):
 
 
 def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test,
-                              data_params, use_weights, prior_weight):
+                              data_params, use_weights, prior_mite, prior_no_mite):
     index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                              ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),
@@ -209,8 +212,8 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train, use_weights)
-        dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train, prior_weight)
-        dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test, prior_weight)
+        dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train, prior_mite, prior_no_mite)
+        dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test, prior_mite, prior_no_mite)
         # export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_training_stats_csv(dict_model, model_name, dict_data)
@@ -234,7 +237,7 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
                                                                    undersampling_rate=undersampling_rate,
                                                                    oversampling_rate=oversampling_rate)
     del data
-    prior_weight = compute_prior_weight(np.array(labels), y_train)
+    prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
     for key, value in models.items():
         train_and_test_modelgroup(modelgroup=value,
                                   modelgroup_name=key,
@@ -246,7 +249,8 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
                                   paths_test=None,
                                   data_params=data_params,
                                   use_weights=use_weights,
-                                  prior_weight=prior_weight)
+                                  prior_mite=prior_mite,
+                                  prior_no_mite=prior_no_mite)
     return None
 
 

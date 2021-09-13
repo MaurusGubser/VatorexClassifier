@@ -125,7 +125,7 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
                                                                                       test_size=test_size,
                                                                                       undersampling_rate=undersampling_rate,
                                                                                       oversampling_rate=oversampling_rate)
-    prior_weight = compute_prior_weight(np.array(labels), y_train)
+    prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
     if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
     else:
@@ -152,8 +152,8 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
     export_name = grid_search_params['model_name'] + '_' + str(model_nb)
     export_stats_gs(export_name, gs_df)
-    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train, prior_weight)
-    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_weight)
+    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train, prior_mite)
+    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_mite)
     if misclassified_train is not None:
         export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
     export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')
