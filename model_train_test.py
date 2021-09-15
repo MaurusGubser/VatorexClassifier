@@ -103,16 +103,19 @@ def train_model(model, X_train, y_train, use_weights):
 
 def evaluate_model(model, X, y, paths, prior_mite, prior_no_mite):
     start_time = time.time()
-    try:
-        y_probs = model.predict_proba(X)
-        y_probs[:, 1] = y_probs[:, 1] * prior_mite
-        y_probs[:, 0] = y_probs[:, 0] * prior_no_mite
-        sum_normalize = np.sum(y_probs, axis=1)
-        y_probs = y_probs / sum_normalize[:, np.newaxis]
-        y_pred = np.where(y_probs[:, 1] <= 0.5, 0, 1)
-    except AttributeError:
+    if prior_mite is None and prior_no_mite is None:
         y_pred = model.predict(X)
-        print('No probabilistic model for {} available; working with predictions instead.'.format(model))
+    else:
+        try:
+            y_probs = model.predict_proba(X)
+            y_probs[:, 1] = y_probs[:, 1] * prior_mite
+            y_probs[:, 0] = y_probs[:, 0] * prior_no_mite
+            sum_normalize = np.sum(y_probs, axis=1)
+            y_probs = y_probs / sum_normalize[:, np.newaxis]
+            y_pred = np.where(y_probs[:, 1] <= 0.5, 0, 1)
+        except AttributeError:
+            y_pred = model.predict(X)
+            print('No probabilistic model for {} available; working with predictions instead.'.format(model))
     end_time = time.time()
     print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
@@ -153,7 +156,7 @@ def evaluate_trained_model(path_test_data, data_params, path_trained_model, mode
     model = pickle.load(open(path_trained_model, 'rb'))
     X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
     # To do: prior weight cannot be computed since training data is not given
-    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0)
+    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0, prior_no_mite=1.0)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
     plot_confusion_matrix(model, X_test, y_test)
@@ -222,7 +225,7 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
 
 
 def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, undersampling_rate,
-                                   oversampling_rate, use_weights):
+                                   oversampling_rate, use_weights, reweight_posterior):
     if use_weights == 'balanced':
         class_weight = 'balanced'
     else:
@@ -237,7 +240,10 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
                                                                    undersampling_rate=undersampling_rate,
                                                                    oversampling_rate=oversampling_rate)
     del data
-    prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
+    if reweight_posterior:
+        prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
+    else:
+        prior_mite, prior_no_mite = None, None
     for key, value in models.items():
         train_and_test_modelgroup(modelgroup=value,
                                   modelgroup_name=key,
@@ -303,12 +309,12 @@ def define_models(model_selection, class_weight):
                     LinearSVC(penalty='l1', dual=False, C=1.0, max_iter=500, class_weight=class_weight),
                     LinearSVC(penalty='l1', dual=False, C=0.1, max_iter=500, class_weight=class_weight)]
 
-    nl_svm_models = [SVC(C=0.1, class_weight=class_weight, probability=True),
-                     SVC(C=1.0, class_weight=class_weight, probability=True),
-                     SVC(C=10.0, class_weight=class_weight, probability=True),
-                     SVC(C=0.1, kernel='poly', class_weight=class_weight, probability=True),
-                     SVC(C=0.1, kernel='poly', class_weight=class_weight, probability=True),
-                     SVC(C=10.0, kernel='poly', class_weight=class_weight, probability=True)]
+    nl_svm_models = [SVC(C=0.1, class_weight=class_weight),
+                     SVC(C=1.0, class_weight=class_weight),
+                     SVC(C=10.0, class_weight=class_weight),
+                     SVC(C=0.1, kernel='poly', class_weight=class_weight),
+                     SVC(C=0.1, kernel='poly', class_weight=class_weight),
+                     SVC(C=10.0, kernel='poly', class_weight=class_weight)]
 
     naive_bayes_models = [GaussianNB()]
 
