@@ -38,7 +38,7 @@ undersampling_rate = 0.05  # must be None or float in [0,1]; false candidates ge
 oversampling_rate = 0.30  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
 log_reg = True
 sgd = False
@@ -60,9 +60,10 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('gradient_boost', gradient_boost), ('handicraft', handicraft)])
 
 use_weights = None  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
+reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
 
 # ----- cross-validation for one parameter -----
-cross_validation = False
+cross_validation = True
 
 model_cv = LGBMClassifier(n_estimators=10, class_weight='balanced')
 model_name = 'LGBMClassifier'
@@ -137,11 +138,11 @@ if __name__ == '__main__':
     elif train_models:
         if test_size is None:
             raise ValueError('Parameter test_size cannot be None.')
-        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, undersampling_rate, oversampling_rate, use_weights)
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, undersampling_rate, oversampling_rate, use_weights, reweight_posterior)
     elif cross_validation:
         cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, undersampling_rate, oversampling_rate, use_weights)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, undersampling_rate, oversampling_rate, use_weights)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, undersampling_rate, oversampling_rate, use_weights, reweight_posterior)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:

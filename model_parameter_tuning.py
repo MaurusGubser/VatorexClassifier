@@ -117,7 +117,7 @@ def clean_df(df):
 
 
 def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, undersampling_rate,
-                      oversampling_rate, use_weights):
+                      oversampling_rate, use_weights, reweight_posterior):
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     X_train, X_test, y_train, y_test, paths_train, paths_test = split_and_sample_data(data=data,
                                                                                       labels=labels,
@@ -125,7 +125,11 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
                                                                                       test_size=test_size,
                                                                                       undersampling_rate=undersampling_rate,
                                                                                       oversampling_rate=oversampling_rate)
-    prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
+    if reweight_posterior:
+        prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
+    else:
+        prior_mite, prior_no_mite = None, None
+
     if use_weights == 'balanced' or use_weights is None:
         weights_dict = {'sample_weight': None}
     else:
@@ -152,8 +156,8 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
     export_name = grid_search_params['model_name'] + '_' + str(model_nb)
     export_stats_gs(export_name, gs_df)
-    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train, prior_mite)
-    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_mite)
+    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train, prior_mite, prior_no_mite)
+    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_mite, prior_no_mite)
     if misclassified_train is not None:
         export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
     export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')
