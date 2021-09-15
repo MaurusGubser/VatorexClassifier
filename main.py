@@ -34,11 +34,11 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('quadratic_features', quadratic_features), ('with_mean', with_mean),
                                ('with_std', with_std)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
-undersampling_rate = 0.05  # must be None or float in [0,1]; false candidates get undersampled to according ratio
-oversampling_rate = 0.30  # must be None or float in [0,1]; true candidates get oversample to according ratio
+undersampling_rate = None  # must be None or float in [0,1]; false candidates get undersampled to according ratio
+oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = True
 sgd = False
@@ -59,11 +59,11 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
                                ('gradient_boost', gradient_boost), ('handicraft', handicraft)])
 
-use_weights = None  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
+use_weights = 'balanced'  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
 reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
 
 # ----- cross-validation for one parameter -----
-cross_validation = True
+cross_validation = False
 
 model_cv = LGBMClassifier(n_estimators=10, class_weight='balanced')
 model_name = 'LGBMClassifier'
