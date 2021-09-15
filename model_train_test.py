@@ -309,12 +309,12 @@ def define_models(model_selection, class_weight):
                     LinearSVC(penalty='l1', dual=False, C=1.0, max_iter=500, class_weight=class_weight),
                     LinearSVC(penalty='l1', dual=False, C=0.1, max_iter=500, class_weight=class_weight)]
 
-    nl_svm_models = [SVC(C=0.1, class_weight=class_weight, probability=True),
-                     SVC(C=1.0, class_weight=class_weight, probability=True),
-                     SVC(C=10.0, class_weight=class_weight, probability=True),
-                     SVC(C=0.1, kernel='poly', class_weight=class_weight, probability=True),
-                     SVC(C=0.1, kernel='poly', class_weight=class_weight, probability=True),
-                     SVC(C=10.0, kernel='poly', class_weight=class_weight, probability=True)]
+    nl_svm_models = [SVC(C=0.1, class_weight=class_weight),
+                     SVC(C=1.0, class_weight=class_weight),
+                     SVC(C=10.0, class_weight=class_weight),
+                     SVC(C=0.1, kernel='poly', class_weight=class_weight),
+                     SVC(C=0.1, kernel='poly', class_weight=class_weight),
+                     SVC(C=10.0, kernel='poly', class_weight=class_weight)]
 
     naive_bayes_models = [GaussianNB()]
 
