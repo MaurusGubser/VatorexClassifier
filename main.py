@@ -25,6 +25,7 @@ hist_l = True
 quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
+with_false1 = True     # use false1 labelled data
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -32,7 +33,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
                                ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
                                ('quadratic_features', quadratic_features), ('with_mean', with_mean),
-                               ('with_std', with_std)])
+                               ('with_std', with_std), ('with_false1', with_false1)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
 undersampling_rate = None  # must be None or float in [0,1]; false candidates get undersampled to according ratio
 oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
@@ -65,19 +66,20 @@ reweight_posterior = False  # if posterior probabilities should be reweighted fo
 # ----- cross-validation for one parameter -----
 cross_validation = False
 
-model_cv = LGBMClassifier(n_estimators=10, class_weight='balanced')
-model_name = 'LGBMClassifier'
-model_parameter = 'reg_lambda'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
-semilog = True  # if x axis should be logarithmic
+model_cv = LogisticRegression()     # LGBMClassifier(n_estimators=10, class_weight='balanced')
+model_name = 'LogReg'
+model_parameter = 'class_weight'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
+semilog = False  # if x axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
 # parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
-parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)  # l2_regularization/reg_lambda
+# parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)  # l2_regularization/reg_lambda
 # parameter_range = np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255])   # max_bins
 # parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
 # parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
 # parameter_range = np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
+parameter_range = [{0: 1, 1: k} for k in range(1, 101+1, 10)]
 nb_split_cv = 5  # number of split cvs
 
 cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
@@ -132,7 +134,7 @@ export_name = 'LightGBM_Model_02true_joint_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/Mite4_relabelledtol05_local/"
+    path_image_folders = "Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:

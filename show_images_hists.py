@@ -38,5 +38,5 @@ def plot_images_and_hist(path_folder):
     return None
 
 
-path_folder = 'Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)'
+path_folder = 'Candidate_Images/Mite4_relabelledtol05/200328-R02(43Milben,labeled)/'
 plot_images_and_hist(path_folder)

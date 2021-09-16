@@ -39,7 +39,7 @@ def hist_read(path):
     return histograms
 
 
-def read_images_hist_from_folder(path_folder, read_image, read_hist):
+def read_images_hist_from_folder(path_folder, read_image, read_hist, with_false1):
     if not read_image and read_hist not in ['candidate', 'context']:
         raise AssertionError('Got invalid values for read_image and read_hist; {} and {}'.format(read_image, read_hist))
 
@@ -50,7 +50,8 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
     histograms = []
     labels = []
     pattern_true = r'true'
-    pattern_false = r'false'
+    pattern_false1 = r'false1'
+    pattern_false2 = r'false2'
 
     for path_img, path_hist, path_hist_context in zip(images_paths, histograms_paths, histograms_context_paths):
         if read_image:
@@ -62,22 +63,35 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist):
             histograms.append(hist_read(path_hist) + hist_read(path_hist_context))
         if re.search(pattern_true, path_img):
             labels.append(1)
-        elif re.search(pattern_false, path_img):
+        elif re.search(pattern_false1, path_img):
+            labels.append(2)
+        elif re.search(pattern_false2, path_img):
             labels.append(0)
         else:
-            raise AssertionError('Image path {} does not contain true or false.'.format(path_img))
-
+            raise AssertionError('Image path {} does not contain true, false1 or false2.'.format(path_img))
+    if with_false1:
+        for i in range(0, len(labels)):
+            if labels[i] == 2:
+                labels[i] = 0
+    else:
+        labels_copy = labels.copy()
+        for i in range(0, len(labels_copy)):
+            if labels_copy[i] == 2:
+                images.pop(i)
+                histograms.pop(i)
+                labels.pop(i)
+                images_paths.pop(i)
     return images, histograms, labels, images_paths
 
 
-def read_images_and_histograms(folder_list, read_image, read_hist):
+def read_images_and_histograms(folder_list, read_image, read_hist, with_false1):
     start_time = time.time()
     images = []
     histograms = []
     labels = []
     images_paths = []
     for folder_path in folder_list:
-        imgs, hists, lbls, imgs_paths = read_images_hist_from_folder(folder_path, read_image, read_hist)
+        imgs, hists, lbls, imgs_paths = read_images_hist_from_folder(folder_path, read_image, read_hist, with_false1)
         images = images + imgs
         histograms = histograms + hists
         labels = labels + lbls
@@ -142,13 +156,14 @@ def read_data_and_labels(path, data_params):
     path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, data_params) + '.npz'
     read_image = data_params['read_image']
     read_hist = data_params['read_hist']
+    with_false1 = data_params['with_false1']
     if os.path.exists(path_preprocessed):
         data_images, data_histograms, labels, paths_images = load_data_and_labels(path_preprocessed)
         print('Re-loaded preprocessed data and labels from {}'.format(path_preprocessed))
     else:
         folder_list = get_paths_of_image_folders(path)
         data_images, data_histograms, labels, paths_images = read_images_and_histograms(folder_list, read_image,
-                                                                                        read_hist)
+                                                                                        read_hist, with_false1)
         if read_image:
             data_images = preprocess_images(data_images, data_params)
         if read_hist in ['candidate', 'context']:

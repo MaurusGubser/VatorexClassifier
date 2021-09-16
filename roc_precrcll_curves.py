@@ -4,6 +4,8 @@ from collections import OrderedDict
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import learning_curve
 from sklearn.svm import LinearSVC, SVC
+from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
+from lightgbm import LGBMClassifier
 from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve
 
 from data_reading_writing import read_data_and_labels
@@ -78,7 +80,6 @@ def plot_learning_curve_model(folder_path, data_params, model, model_name, under
 
 
 def compute_precisionrecall_curve(clf, X_train, X_test, y_train, y_test):
-    clf.fit(X_train, y_train)
     plot_train = plot_precision_recall_curve(clf, X_train, y_train)
     plot_train.ax_.set_title('Precision-recall training set')
     plot_test = plot_precision_recall_curve(clf, X_test, y_test)
@@ -88,7 +89,6 @@ def compute_precisionrecall_curve(clf, X_train, X_test, y_train, y_test):
 
 
 def compute_roc_curve(clf, X_train, X_test, y_train, y_test):
-    clf.fit(X_train, y_train)
     plot_train = plot_roc_curve(clf, X_train, y_train)
     plot_train.ax_.set_title('ROC training set')
     plot_test = plot_roc_curve(clf, X_test, y_test)
@@ -105,6 +105,7 @@ def plot_scores(clf, dir_data, data_params, test_size, undersampling_rate, overs
                                                                    test_size=test_size,
                                                                    undersampling_rate=undersampling_rate,
                                                                    oversampling_rate=oversampling_rate)
+    clf.fit(X_train, y_train)
     compute_precisionrecall_curve(clf, X_train, X_test, y_train, y_test)
     compute_roc_curve(clf, X_train, X_test, y_train, y_test)
     return None
@@ -136,12 +137,12 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('quadratic_features', quadratic_features), ('with_mean', with_mean),
                                ('with_std', with_std)])
 test_size = 0.10  # fraction of test set
-undersampling_rate = 0.01  # desired percentage of trues in training data set
-oversampling_rate = 0.30
+undersampling_rate = None  # desired percentage of trues in training data set
+oversampling_rate = None
 
 # ----------- execute functions ----------------------
-clf = LogisticRegression()
-dir_data = 'Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)/'
+clf = RandomForestClassifier(class_weight='balanced')
+dir_data = 'Candidate_Images/Mite4_relabelledtol05_local/'
 
 plot_scores(clf=clf,
             dir_data=dir_data,
