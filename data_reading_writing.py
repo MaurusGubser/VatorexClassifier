@@ -74,13 +74,13 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist, with_false1
             if labels[i] == 2:
                 labels[i] = 0
     else:
-        labels_copy = labels.copy()
-        for i in range(0, len(labels_copy)):
-            if labels_copy[i] == 2:
-                images.pop(i)
-                histograms.pop(i)
-                labels.pop(i)
-                images_paths.pop(i)
+        mask = [i != 2 for i in labels]
+        if read_hist:
+            histograms = [histograms[i] for i in range(0, len(labels)) if mask[i]]
+        if read_image:
+            images = [images[i] for i in range(0, len(labels)) if mask[i]]
+        images_paths = [images_paths[i] for i in range(0, len(labels)) if mask[i]]
+        labels = [label for label in labels if label!=2]
     return images, histograms, labels, images_paths
 
 

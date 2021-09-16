@@ -25,7 +25,7 @@ hist_l = True
 quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
-with_false1 = True     # use false1 labelled data
+with_false1 = False     # use false1 labelled data
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
