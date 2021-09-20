@@ -106,7 +106,7 @@ def export_stats_gs(export_name, gs_dataframe):
 
 
 def clean_df(df):
-    pattern_datasplits = r'split[0-9][_]test'
+    pattern_datasplits = r'split[0-9]{1,2}[_]test'
     pattern_time = r'[_]time'
     pattern_rank = r'rank[_]'
     column_names = df.columns
