@@ -1,5 +1,6 @@
 import numpy as np
 from collections import OrderedDict
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from lightgbm import LGBMClassifier
@@ -7,6 +8,7 @@ from lightgbm import LGBMClassifier
 from lgbm_train_export import export_GUI_model
 from model_parameter_tuning import cross_validate_model, grid_search_model
 from model_train_test import train_and_test_model_selection, evaluate_trained_model
+from roc_precrcll_curves import plot_roc_precrcll_curves
 
 # ----- data parameters -----
 read_image = False  # True or False
@@ -39,7 +41,7 @@ undersampling_rate = None  # must be None or float in [0,1]; false candidates ge
 oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
 log_reg = True
 sgd = False
@@ -104,6 +106,11 @@ gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', par
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
 
+# ----------- plot curves ----------------------
+plot_curves = False
+clf = RandomForestClassifier(class_weight='balanced')
+dir_data = 'Candidate_Images/Mite4_relabelledtol05_local/'
+
 # ----- evaluate trained model ------
 evaluate_model = False
 path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Trained/LinearSVC_8.sav'
@@ -111,26 +118,26 @@ path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Ima
 model_name = 'LinearSVC_1_200812R09AS'
 
 # ----- train and export model for GUI ------
-train_export_GUI = False
-path_data = 'GUI_Model_Export/Model_true02_jointmarginal/Mite4_relabelledtol02_False_context_None_False_None_None_None_None_None_True_True_True_True_0.2_False_False_False.npz'
-undersampling_GUI = 0.2  # must be None or float in (0, 1)
+train_export_GUI = True
+path_data = 'GUI_Model_Export/Model_balanced_withoutfalse1/Mite4_relabelledtol05_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
+undersampling_GUI = None  # must be None or float in (0, 1)
 oversampling_GUI = None     # must be None or float in (0, 1)
-cv = 5
+cv = 20
 parameters_lgbm = {'task': 'train',
                    'objective': 'binary',
                    'boosting': 'gbdt',
-                   'num_iterations': 30,
+                   'num_iterations': 300,
                    'learning_rate': 0.2,
                    'num_leaves': 31,
                    'num_threads': 4,
                    'deterministic': True,
-                   'max_depth': 20,
-                   'lambda_l2': 50.0,
-                   'max_bin': 31,
+                   'max_depth': -1,
+                   'lambda_l2': 1.0,
                    'n_iter_no_change': 10,
+                   'max_bin': 255,
                    'is_unbalance': True,
                    'metric': 'binary_logloss'}
-export_name = 'LightGBM_Model_02true_joint_balanced.txt'
+export_name = 'LightGBM_Model_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
@@ -145,6 +152,8 @@ if __name__ == '__main__':
         cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, undersampling_rate, oversampling_rate, use_weights)
     elif grid_search:
         grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, undersampling_rate, oversampling_rate, use_weights, reweight_posterior)
+    elif plot_curves:
+        plot_roc_precrcll_curves(clf, dir_data, data_parameters, test_size, undersampling_rate, oversampling_rate)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:

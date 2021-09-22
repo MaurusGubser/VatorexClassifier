@@ -97,7 +97,7 @@ def compute_roc_curve(clf, X_train, X_test, y_train, y_test):
     return None
 
 
-def plot_scores(clf, dir_data, data_params, test_size, undersampling_rate, oversampling_rate):
+def plot_roc_precrcll_curves(clf, dir_data, data_params, test_size, undersampling_rate, oversampling_rate):
     data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
@@ -109,44 +109,3 @@ def plot_scores(clf, dir_data, data_params, test_size, undersampling_rate, overs
     compute_precisionrecall_curve(clf, X_train, X_test, y_train, y_test)
     compute_roc_curve(clf, X_train, X_test, y_train, y_test)
     return None
-
-
-# ----- data parameters -----
-read_image = False  # True or False
-read_hist = 'context'  # must be 'candidate', 'context' or False
-with_image = None  # must be None or a scalar, which defines downsize factor; use image
-with_binary_patterns = False  # use local binary patterns of image
-histogram_params = None  # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-nb_segments = None  # must be None or a integer; segment image using k-means in color space
-threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
-nb_components_pca = None  # must be None or a integer, which defines number of components
-batch_size_pca = None  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
-hist_hsl = True
-hist_h = True
-hist_s = True
-hist_l = True
-quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
-with_mean = False  # data gets shifted such that mean is 0.0
-with_std = False  # data gets scaled such that std is 1.0
-
-data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
-                               ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
-                               ('nb_segments', nb_segments), ('threshold_low_var', threshold_low_var),
-                               ('nb_components_pca', nb_components_pca), ('batch_size_pca', batch_size_pca),
-                               ('hist_hsl', hist_hsl), ('hist_h', hist_h), ('hist_s', hist_s), ('hist_l', hist_l),
-                               ('quadratic_features', quadratic_features), ('with_mean', with_mean),
-                               ('with_std', with_std)])
-test_size = 0.10  # fraction of test set
-undersampling_rate = None  # desired percentage of trues in training data set
-oversampling_rate = None
-
-# ----------- execute functions ----------------------
-clf = RandomForestClassifier(class_weight='balanced')
-dir_data = 'Candidate_Images/Mite4_relabelledtol05_local/'
-
-plot_scores(clf=clf,
-            dir_data=dir_data,
-            data_params=data_parameters,
-            test_size=test_size,
-            undersampling_rate=undersampling_rate,
-            oversampling_rate=oversampling_rate)
