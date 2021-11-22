@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import validation_curve, GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
+from typing import Union
 
 from data_handling import split_and_sample_data, compute_prior_weight
 from data_reading_writing import read_data_and_labels
@@ -13,7 +14,8 @@ from model_train_test import get_name_index, evaluate_model, export_evaluation_i
     export_model_evaluation_stats_json
 
 
-def compute_cv_scores(model_type, data, labels, cv_params, score_param, weights_dict):
+def compute_cv_scores(model_type: object, data: np.ndarray, labels: np.ndarray, cv_params: dict, score_param: str,
+                      weights_dict: dict) -> (np.ndarray, np.ndarray):
     model_parameter = cv_params['model_parameter']
     parameter_range = cv_params['parameter_range']
     k = cv_params['nb_split_cv']
@@ -23,7 +25,7 @@ def compute_cv_scores(model_type, data, labels, cv_params, score_param, weights_
     return train_scores, test_scores
 
 
-def plot_validation_curve(train_scores, test_scores, cv_params):
+def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict) -> None:
     if not os.path.exists('CV_Plots'):
         os.mkdir('CV_Plots')
     parameter_range = cv_params['parameter_range']
@@ -59,8 +61,8 @@ def plot_validation_curve(train_scores, test_scores, cv_params):
     return None
 
 
-def cross_validate_model(model, folder_path, data_params, cv_params, undersampling_rate, oversampling_rate,
-                         use_weights):
+def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_params: dict, undersampling_rate: float,
+                         oversampling_rate: float, use_weights: Union[None, str, (float, float)]) -> None:
     test_size = None
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     X_train, _, y_train, _, _, _ = split_and_sample_data(data=data,
@@ -96,7 +98,7 @@ def cross_validate_model(model, folder_path, data_params, cv_params, undersampli
     return None
 
 
-def export_stats_gs(export_name, gs_dataframe):
+def export_stats_gs(export_name: str, gs_dataframe: pd.DataFrame) -> None:
     if not os.path.exists('GridSearch_Statistics'):
         os.mkdir('GridSearch_Statistics')
     rel_file_path = 'GridSearch_Statistics/' + export_name + '.csv'
@@ -105,7 +107,7 @@ def export_stats_gs(export_name, gs_dataframe):
     return None
 
 
-def clean_df(df):
+def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     pattern_datasplits = r'split[0-9]{1,2}[_]test'
     pattern_time = r'[_]time'
     pattern_rank = r'rank[_]'
@@ -116,8 +118,9 @@ def clean_df(df):
     return df
 
 
-def grid_search_model(model, folder_path, data_params, grid_search_params, test_size, undersampling_rate,
-                      oversampling_rate, use_weights, reweight_posterior):
+def grid_search_model(model: object, folder_path: str, data_params: dict, grid_search_params: dict, test_size: float,
+                      undersampling_rate: float, oversampling_rate: float,
+                      use_weights: Union[None, str, (float, float)], reweight_posterior: bool) -> None:
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     X_train, X_test, y_train, y_test, paths_train, paths_test = split_and_sample_data(data=data,
                                                                                       labels=labels,
@@ -156,8 +159,10 @@ def grid_search_model(model, folder_path, data_params, grid_search_params, test_
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
     export_name = grid_search_params['model_name'] + '_' + str(model_nb)
     export_stats_gs(export_name, gs_df)
-    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train, prior_mite, prior_no_mite)
-    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_mite, prior_no_mite)
+    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train, prior_mite,
+                                                            prior_no_mite)
+    stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_mite,
+                                                                   prior_no_mite)
     if misclassified_train is not None:
         export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
     export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')

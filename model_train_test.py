@@ -14,12 +14,13 @@ from lightgbm import LGBMClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
+from typing import Union
 
 from data_reading_writing import read_data_and_labels
 from data_handling import split_and_sample_data, compute_prior_weight
 
 
-def export_model(model, model_name):
+def export_model(model: object, model_name: str) -> None:
     if not os.path.exists('Models_Trained'):
         os.mkdir('Models_Trained')
     rel_file_path = 'Models_Trained/' + model_name + '.sav'
@@ -28,7 +29,7 @@ def export_model(model, model_name):
     return None
 
 
-def export_model_stats_json(model_dict, model_name, data_dict):
+def export_model_stats_json(model_dict: dict, model_name: str, data_dict: dict) -> None:
     if not os.path.exists('Training_Statistics'):
         os.mkdir('Training_Statistics')
     rel_file_path = 'Training_Statistics/' + model_name + '.json'
@@ -46,7 +47,7 @@ def export_model_stats_json(model_dict, model_name, data_dict):
     return None
 
 
-def export_model_training_stats_csv(model_dict, model_name, data_dict):
+def export_model_training_stats_csv(model_dict: dict, model_name: str, data_dict: dict) -> None:
     if not os.path.exists('Training_Statistics'):
         os.mkdir('Training_Statistics')
     filename = 'Training_Statistics/Model_Statistics.csv'
@@ -75,7 +76,7 @@ def export_model_training_stats_csv(model_dict, model_name, data_dict):
     return None
 
 
-def read_model_stats_json(stats_path):
+def read_model_stats_json(stats_path: str) -> dict:
     with open(stats_path) as infile:
         stats_dict = json.load(infile)
     stats_dict['model_stats_train']['conf_matrix'] = np.reshape(stats_dict['model_stats_train']['conf_matrix'], (2, 2))
@@ -83,7 +84,8 @@ def read_model_stats_json(stats_path):
     return stats_dict
 
 
-def train_model(model, X_train, y_train, use_weights):
+def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray,
+                use_weights: Union[None, str, (float, float)]) -> object:
     if use_weights is None or use_weights == 'balanced':
         weights = None
     else:
@@ -101,7 +103,8 @@ def train_model(model, X_train, y_train, use_weights):
     return model
 
 
-def evaluate_model(model, X, y, paths, prior_mite, prior_no_mite):
+def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: str, prior_mite: float,
+                   prior_no_mite: float) -> (dict, list, list):
     start_time = time.time()
     if prior_mite is None and prior_no_mite is None:
         y_pred = model.predict(X)
@@ -130,7 +133,7 @@ def evaluate_model(model, X, y, paths, prior_mite, prior_no_mite):
     return stats_dict, misclassified_imgs, true_pos_imgs
 
 
-def export_model_evaluation_stats_json(stats_dict, model_name):
+def export_model_evaluation_stats_json(stats_dict: dict, model_name: str) -> None:
     if not os.path.exists('Evaluation_Images'):
         os.mkdir('Evaluation_Images')
     if not os.path.exists('Evaluation_Images/' + model_name):
@@ -152,11 +155,12 @@ def export_model_evaluation_stats_json(stats_dict, model_name):
     return None
 
 
-def evaluate_trained_model(path_test_data, data_params, path_trained_model, model_name):
+def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_model: str, model_name: str) -> None:
     model = pickle.load(open(path_trained_model, 'rb'))
     X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
     # To do: prior weight cannot be computed since training data is not given
-    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0, prior_no_mite=1.0)
+    stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0,
+                                                                   prior_no_mite=1.0)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
     plot_confusion_matrix(model, X_test, y_test)
@@ -164,13 +168,14 @@ def evaluate_trained_model(path_test_data, data_params, path_trained_model, mode
     return None
 
 
-def list_fp_fn_tp_images(y_true, y_pred, paths_images):
+def list_fp_fn_tp_images(y_true: np.ndarray, y_pred: np.ndarray, paths_images: list) -> (list, list):
     misclassified_imgs = paths_images[y_true + y_pred == 1]
     correct_imgs = paths_images[y_true + y_pred == 2]
     return misclassified_imgs, correct_imgs
 
 
-def export_evaluation_images_model(misclassified_images, true_pos_images, model_name, train_test):
+def export_evaluation_images_model(misclassified_images: list, true_pos_images: list, model_name: str,
+                                   train_test: str) -> None:
     model_dir = 'Evaluation_Images/' + model_name
     if not os.path.exists('Evaluation_Images'):
         os.mkdir('Evaluation_Images')
@@ -184,7 +189,7 @@ def export_evaluation_images_model(misclassified_images, true_pos_images, model_
     return None
 
 
-def export_images(images_list, export_directory):
+def export_images(images_list: list, export_directory: str) -> None:
     if not os.path.exists(export_directory):
         os.mkdir(export_directory)
     filename_list = export_directory + 'image_list.txt'
@@ -196,7 +201,7 @@ def export_images(images_list, export_directory):
     return None
 
 
-def get_name_index(model_name, folder_name, file_format):
+def get_name_index(model_name: str, folder_name: str, file_format: str) -> int:
     idx = 0
     if os.path.exists(folder_name):
         list_model_paths = [str(path) for path in Path(folder_name).rglob(model_name + '*.' + file_format)]
@@ -204,8 +209,10 @@ def get_name_index(model_name, folder_name, file_format):
     return idx
 
 
-def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_train, y_test, paths_train, paths_test,
-                              data_params, use_weights, prior_mite, prior_no_mite):
+def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: np.ndarray, X_test: np.ndarray,
+                              y_train: np.ndarray, y_test: np.ndarray, paths_train: list, paths_test: list,
+                              data_params: dict, use_weights: Union[None, str, (float, float)], prior_mite: float,
+                              prior_no_mite: float) -> None:
     index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
                              ('test_size', y_test.size), ('test_nb_mites', int(np.sum(y_test))),
@@ -215,8 +222,10 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
         dict_model['model'] = train_model(dict_model['model'], X_train, y_train, use_weights)
-        dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train, prior_mite, prior_no_mite)
-        dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test, prior_mite, prior_no_mite)
+        dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train,
+                                                               prior_mite, prior_no_mite)
+        dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test,
+                                                              prior_mite, prior_no_mite)
         # export_model(dict_model['model'], model_name)
         export_model_stats_json(dict_model, model_name, dict_data)
         export_model_training_stats_csv(dict_model, model_name, dict_data)
@@ -224,8 +233,9 @@ def train_and_test_modelgroup(modelgroup, modelgroup_name, X_train, X_test, y_tr
     return None
 
 
-def train_and_test_model_selection(model_selection, folder_path, data_params, test_size, undersampling_rate,
-                                   oversampling_rate, use_weights, reweight_posterior):
+def train_and_test_model_selection(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
+                                   undersampling_rate: float, oversampling_rate: float,
+                                   use_weights: Union[None, str, (float, float)], reweight_posterior: bool) -> None:
     if use_weights == 'balanced':
         class_weight = 'balanced'
     else:
@@ -260,7 +270,7 @@ def train_and_test_model_selection(model_selection, folder_path, data_params, te
     return None
 
 
-def define_models(model_selection, class_weight):
+def define_models(model_selection: dict, class_weight: Union[None, str]) -> dict:
     log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight=class_weight),
                       LogisticRegression(penalty='l2', C=10.0, max_iter=200, class_weight=class_weight),
                       LogisticRegression(penalty='l1', C=10.0, max_iter=200, solver='saga', class_weight=class_weight),
@@ -368,7 +378,7 @@ def define_models(model_selection, class_weight):
     return models
 
 
-def read_models(model_list):
+def read_models(model_list: list) -> dict:
     model_dict = OrderedDict({})
     for name in model_list:
         model = pickle.load(open('Models_Trained/' + name + '.sav', 'rb'))
@@ -376,7 +386,7 @@ def read_models(model_list):
     return model_dict
 
 
-def test_model(model, X_test, y_test):
+def test_model(model: object, X_test: np.ndarray, y_test: np.ndarray) -> None:
     y_pred = model.predict(X_test)
     print(classification_report(y_test, y_pred, target_names=['Non-mite', 'Mite']))
     plot_confusion_matrix(model, X_test, y_test, display_labels=['Non-mite', 'Mite'])
@@ -385,7 +395,7 @@ def test_model(model, X_test, y_test):
     return None
 
 
-def get_feature_dims(model_dict):
+def get_feature_dims(model_dict: dict) -> dict:
     feature_dims = OrderedDict({})
     for key, value in model_dict.items():
         model_type = key[0:key.rfind('_')]

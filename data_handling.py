@@ -11,7 +11,7 @@ import random
 import time
 
 
-def compute_local_binary_pattern(image, nb_pts=None, radius=3):
+def compute_local_binary_pattern(image: np.ndarray, nb_pts=None, radius=3) -> np.ndarray:
     if image.ndim == 2:
         image = np.reshape(image, (image.shape[0], image.shape[1], 1))
     if nb_pts is None:
@@ -23,7 +23,7 @@ def compute_local_binary_pattern(image, nb_pts=None, radius=3):
     return image_lbp
 
 
-def compute_histograms(image, nb_divisions, nb_bins):
+def compute_histograms(image: np.ndarray, nb_divisions: int, nb_bins: int) -> np.ndarray:
     width = image.shape[0]
     length = image.shape[1]
     if image.ndim == 2:
@@ -41,15 +41,16 @@ def compute_histograms(image, nb_divisions, nb_bins):
     return histograms
 
 
-def segment_image(img, nb_segments):
+def segment_image(img: np.ndarray, nb_segments: int) -> np.ndarray:
     return slic(img, n_segments=nb_segments)
 
 
-def scale_data(data, with_mean, with_std):
+def scale_data(data: np.ndarray, with_mean: bool, with_std: bool) -> np.ndarray:
     return scale(data, axis=-1, with_mean=with_mean, with_std=with_std)
 
 
-def feature_computation(images_list, with_image, with_binary_patterns, histogram_params, nb_segments):
+def feature_computation(images_list: list, with_image: bool, with_binary_patterns: bool, histogram_params: dict,
+                        nb_segments: int) -> np.ndarray:
     if not (with_image or with_binary_patterns or histogram_params or nb_segments):
         raise ValueError(
             "At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
@@ -76,7 +77,7 @@ def feature_computation(images_list, with_image, with_binary_patterns, histogram
     return data
 
 
-def dimension_reduction(data, nb_components_pca, batch_size_pca):
+def dimension_reduction(data: np.ndarray, nb_components_pca: int, batch_size_pca: int) -> np.ndarray:
     start = time.time()
     old_shape = data.shape
     if nb_components_pca:
@@ -90,7 +91,7 @@ def dimension_reduction(data, nb_components_pca, batch_size_pca):
     return data
 
 
-def remove_low_var_features(data, threshold_low_var):
+def remove_low_var_features(data: np.ndarray, threshold_low_var: float) -> np.ndarray:
     start_time = time.time()
     if threshold_low_var:
         selector = VarianceThreshold(threshold=threshold_low_var)
@@ -100,7 +101,7 @@ def remove_low_var_features(data, threshold_low_var):
     return data
 
 
-def preprocess_images(images_list, data_params):
+def preprocess_images(images_list: list, data_params: dict) -> np.ndarray:
     with_image = data_params['with_image']
     with_binary_patterns = data_params['with_binary_patterns']
     histogram_params = data_params['histogram_params']
@@ -116,7 +117,7 @@ def preprocess_images(images_list, data_params):
     return data
 
 
-def rearrange_hists(histograms_list, data_params, read_hist):
+def rearrange_hists(histograms_list: list, data_params: dict, read_hist: bool) -> np.ndarray:
     start_time = time.time()
     hist_hsl = data_params['hist_hsl']
     hist_h = data_params['hist_h']
@@ -152,7 +153,8 @@ def rearrange_hists(histograms_list, data_params, read_hist):
     return data
 
 
-def undersample_false_candidates(data, labels, paths_images, undersampling_rate):
+def undersample_false_candidates(data: np.ndarray, labels: np.ndarray, paths_images: list,
+                                 undersampling_rate: float) -> (np.ndarray, np.ndarray, list):
     nb_candidates = labels.size
     nb_true_cand = np.sum(labels)
 
@@ -172,7 +174,8 @@ def undersample_false_candidates(data, labels, paths_images, undersampling_rate)
                                                                                                    undersampling_rate))
 
 
-def oversample_true_candidates(data, labels, oversampling_rate):
+def oversample_true_candidates(data: np.ndarray, labels: np.ndarray, oversampling_rate: float) -> (
+        np.ndarray, np.ndarray):
     nb_candidates = labels.size
     nb_true_cand = np.sum(labels)
 
@@ -192,7 +195,9 @@ def oversample_true_candidates(data, labels, oversampling_rate):
                                                                                                    oversampling_rate))
 
 
-def split_and_sample_data(data, labels, paths_imgs, test_size, undersampling_rate, oversampling_rate):
+def split_and_sample_data(data: np.ndarray, labels: np.ndarray, paths_imgs: list, test_size: float,
+                          undersampling_rate: float, oversampling_rate: float) -> (
+np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list):
     if test_size is not None:
         X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
                                                                                      labels,
@@ -218,7 +223,7 @@ def split_and_sample_data(data, labels, paths_imgs, test_size, undersampling_rat
     return X_train, X_test, y_train, y_test, paths_train, paths_test
 
 
-def compute_prior_weight(y_unbalanced, y_balanced):
+def compute_prior_weight(y_unbalanced: np.ndarray, y_balanced: np.ndarray) -> (float, float):
     p_unbalanced_mite = np.sum(y_unbalanced) / y_unbalanced.size
     p_balanced_mite = np.sum(y_balanced) / y_balanced.size
     factor_mite = p_unbalanced_mite / p_balanced_mite

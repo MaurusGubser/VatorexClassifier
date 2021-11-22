@@ -3,13 +3,13 @@ import numpy as np
 from data_reading_writing import read_images_hist_from_folder
 
 
-def get_last_path_str(path):
+def get_last_path_str(path: str) -> str:
     start = path.rfind('/') + 1
     name = path[start:]
     return name
 
 
-def plot_images_and_hist(path_folder):
+def plot_images_and_hist(path_folder: str) -> None:
     images, hist, labels, images_paths = read_images_hist_from_folder(path_folder, True, 'candidate')
     labels = np.array(labels)
     nb_true = np.sum(labels)

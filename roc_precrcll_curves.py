@@ -12,7 +12,8 @@ from data_reading_writing import read_data_and_labels
 from data_handling import split_and_sample_data
 
 
-def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None, train_sizes=np.linspace(.1, 1.0, 5)):
+def plot_learning_curve(estimator: object, title: str, X: np.ndarray, y: np.ndarray, ylim=None, cv=None,
+                        train_sizes=np.linspace(.1, 1.0, 5)) -> None:
     _, axes = plt.subplots(1, 3, figsize=(20, 15))
     axes[0].set_title(title)
     if ylim is not None:
@@ -66,7 +67,8 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None, train_sizes=
     return None
 
 
-def plot_learning_curve_model(folder_path, data_params, model, model_name, undersampling_rate, oversampling_rate):
+def plot_learning_curve_model(folder_path: str, data_params: dict, model: object, model_name: str,
+                              undersampling_rate: float, oversampling_rate: float) -> None:
     data, labels, paths = read_data_and_labels(folder_path, data_params)
     data, labels, _ = split_and_sample_data(data=data,
                                             labels=labels,
@@ -79,7 +81,8 @@ def plot_learning_curve_model(folder_path, data_params, model, model_name, under
     return None
 
 
-def compute_precisionrecall_curve(clf, X_train, X_test, y_train, y_test):
+def compute_precisionrecall_curve(clf: object, X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
+                                  y_test: np.ndarray) -> None:
     plot_train = plot_precision_recall_curve(clf, X_train, y_train)
     plot_train.ax_.set_title('Precision-recall training set')
     plot_test = plot_precision_recall_curve(clf, X_test, y_test)
@@ -88,7 +91,8 @@ def compute_precisionrecall_curve(clf, X_train, X_test, y_train, y_test):
     return None
 
 
-def compute_roc_curve(clf, X_train, X_test, y_train, y_test):
+def compute_roc_curve(clf: object, X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
+                      y_test: np.ndarray) -> None:
     plot_train = plot_roc_curve(clf, X_train, y_train)
     plot_train.ax_.set_title('ROC training set')
     plot_test = plot_roc_curve(clf, X_test, y_test)
@@ -97,7 +101,7 @@ def compute_roc_curve(clf, X_train, X_test, y_train, y_test):
     return None
 
 
-def plot_roc_precrcll_curves(clf, dir_data, data_params, test_size, undersampling_rate, oversampling_rate):
+def plot_roc_precrcll_curves(clf: object, dir_data: str, data_params: dict, test_size: float, undersampling_rate: float, oversampling_rate: float) -> None:
     data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,

@@ -10,7 +10,7 @@ import time
 from data_handling import preprocess_images, rearrange_hists, scale_data
 
 
-def hist_read(path):
+def hist_read(path: str) -> list:
     with open(path, 'r') as read_file:
         for line in read_file.readlines():
             line_tokens = line.replace('\n', '').split(':')
@@ -39,7 +39,8 @@ def hist_read(path):
     return histograms
 
 
-def read_images_hist_from_folder(path_folder, read_image, read_hist, with_false1):
+def read_images_hist_from_folder(path_folder: str, read_image: bool, read_hist: bool, with_false1: bool) -> (
+        list, list, list, list):
     if not read_image and read_hist not in ['candidate', 'context']:
         raise AssertionError('Got invalid values for read_image and read_hist; {} and {}'.format(read_image, read_hist))
 
@@ -80,11 +81,12 @@ def read_images_hist_from_folder(path_folder, read_image, read_hist, with_false1
         if read_image:
             images = [images[i] for i in range(0, len(labels)) if mask[i]]
         images_paths = [images_paths[i] for i in range(0, len(labels)) if mask[i]]
-        labels = [label for label in labels if label!=2]
+        labels = [label for label in labels if label != 2]
     return images, histograms, labels, images_paths
 
 
-def read_images_and_histograms(folder_list, read_image, read_hist, with_false1):
+def read_images_and_histograms(folder_list: list, read_image: bool, read_hist: bool, with_false1: bool) -> (
+        list, list, list, list):
     start_time = time.time()
     images = []
     histograms = []
@@ -102,7 +104,7 @@ def read_images_and_histograms(folder_list, read_image, read_hist, with_false1):
     return images, histograms, labels, images_paths
 
 
-def get_paths_of_image_folders(path_folder):
+def get_paths_of_image_folders(path_folder: str) -> list:
     folder_list = []
     for root, dirs, files in os.walk(path_folder):
         if root != path_folder:
@@ -112,21 +114,22 @@ def get_paths_of_image_folders(path_folder):
     return folder_list
 
 
-def get_folder_name(path_folder):
+def get_folder_name(path_folder: str) -> str:
     name_start = path_folder[:len(path_folder) - 1].rfind('/')
     folder_name = path_folder[name_start + 1:]
     folder_name = folder_name.replace('/', '')
     return folder_name
 
 
-def set_export_data_name(folder_name, data_params):
+def set_export_data_name(folder_name: str, data_params: dict) -> str:
     name = folder_name
     for value in data_params.values():
         name = name + '_' + str(value)
     return name
 
 
-def export_data(data_img, data_hist, labels, paths_images, data_name):
+def export_data(data_img: np.ndarray, data_hist: np.ndarray, labels: np.ndarray, paths_images: np.ndarray,
+                data_name: str) -> None:
     path_export = 'Preprocessed_Data/' + data_name
     if os.path.exists(path_export + '.npz'):
         print('Preprocessed data with these parameters already exported.')
@@ -142,7 +145,7 @@ def export_data(data_img, data_hist, labels, paths_images, data_name):
     return None
 
 
-def load_data_and_labels(path_data):
+def load_data_and_labels(path_data: str) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
     data = np.load(path_data)
     images = data['img']
     histograms = data['hist']
@@ -151,7 +154,7 @@ def load_data_and_labels(path_data):
     return images, histograms, labels, paths_images
 
 
-def read_data_and_labels(path, data_params):
+def read_data_and_labels(path: str, data_params: dict) -> (np.ndarray, np.ndarray, np.ndarray):
     folder_name = get_folder_name(path)
     path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, data_params) + '.npz'
     read_image = data_params['read_image']
@@ -183,7 +186,7 @@ def read_data_and_labels(path, data_params):
     return data, labels, paths_images
 
 
-def concatenate_data(data_img, data_hist, read_image, read_hist):
+def concatenate_data(data_img: np.ndarray, data_hist: np.ndarray, read_image: bool, read_hist: bool) -> np.ndarray:
     if not read_image:
         data = data_hist
     elif not read_hist:
@@ -193,7 +196,7 @@ def concatenate_data(data_img, data_hist, read_image, read_hist):
     return data
 
 
-def compute_quadratic_features(data):
+def compute_quadratic_features(data: np.ndarray) -> np.ndarray:
     data_squared = np.square(data)
     data = np.append(data, data_squared, axis=1)
     return data

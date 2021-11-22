@@ -43,16 +43,16 @@ oversampling_rate = None  # must be None or float in [0,1]; true candidates get 
 # ----- train and evaluate models -----
 train_models = False
 
-log_reg = True
+log_reg = False
 sgd = False
 ridge_class = False
 decision_tree = False
 random_forest = False
-l_svm = True
+l_svm = False
 nl_svm = False
 naive_bayes = False
 ada_boost = False
-histogram_boost = False
+histogram_boost = True
 gradient_boost = False
 handicraft = False
 
@@ -91,17 +91,18 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 # ----- grid search for several parameters -----
 grid_search = False
 
-model_gs = LinearSVC()
-model_name = 'LinearSVC'
+model_gs = LGBMClassifier(n_estimators=500, class_weight='balanced')
+model_name = 'LGBM'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-Cs = ('C', np.insert(np.logspace(-2, 3, 12), 0, 0.0))
-class_weight = ('class_weight', [None, 'balanced'])
-max_iter = ('max_iter', np.array([-1, 10, 50, 100, 500]))
+learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
+max_depth = ('max_depth', np.array([4, 50, -1]))
+num_leaves = ('num_leaves', np.array([3, 15, 31]))
+reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
 
-parameters_grid = OrderedDict([Cs, class_weight, max_iter])
-nb_split_cv = 3  # number of split cvs
+parameters_grid = OrderedDict([learning_rate, max_depth, num_leaves, reg_lambda])
+nb_split_cv = 20    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
@@ -119,10 +120,16 @@ model_name = 'LinearSVC_1_200812R09AS'
 
 # ----- train and export model for GUI ------
 train_export_GUI = True
-path_data = 'GUI_Model_Export/Model_balanced_withoutfalse1/Mite4_relabelledtol05_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
-undersampling_GUI = None  # must be None or float in (0, 1)
-oversampling_GUI = None     # must be None or float in (0, 1)
-cv = 20
+path_data = 'GUI_Model_Export/Model_tol03_local_balanced_withoutfalse1/Mite4_relabelledtol03_local_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
+cv = 3
+parameters_lgbm = {'objective': 'binary',
+                   'num_iterations': 500,
+                   'learning_rate': 0.2,
+                   'deterministic': True,
+                   'num_threads': 4,
+                   'lambda_l2': 1.0,
+                   'is_unbalance': True}
+"""
 parameters_lgbm = {'task': 'train',
                    'objective': 'binary',
                    'boosting': 'gbdt',
@@ -137,11 +144,12 @@ parameters_lgbm = {'task': 'train',
                    'max_bin': 255,
                    'is_unbalance': True,
                    'metric': 'binary_logloss'}
+"""
 export_name = 'LightGBM_Model_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)/"
+    path_image_folders = "Candidate_Images/Mite4_relabelledtol03_local/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
@@ -157,6 +165,6 @@ if __name__ == '__main__':
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:
-        export_GUI_model(path_data, undersampling_GUI, oversampling_GUI, cv, parameters_lgbm, export_name)
+        export_GUI_model(path_data, undersampling_rate, oversampling_rate, test_size, cv, parameters_lgbm, export_name)
     else:
         print('No option chosen.')
