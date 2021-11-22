@@ -12,7 +12,7 @@ from roc_precrcll_curves import plot_roc_precrcll_curves
 
 # ----- data parameters -----
 read_image = False  # True or False
-read_hist = 'context'  # must be 'candidate', 'context' or False
+read_hist = 'context'  # must be 'candidate', 'context' or None
 with_image = None  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = None  # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
@@ -27,7 +27,7 @@ hist_l = True
 quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
-with_false1 = False     # use false1 labelled data
+with_false1 = False  # use false1 labelled data
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -68,7 +68,7 @@ reweight_posterior = False  # if posterior probabilities should be reweighted fo
 # ----- cross-validation for one parameter -----
 cross_validation = False
 
-model_cv = LogisticRegression()     # LGBMClassifier(n_estimators=10, class_weight='balanced')
+model_cv = LogisticRegression()  # LGBMClassifier(n_estimators=10, class_weight='balanced')
 model_name = 'LogReg'
 model_parameter = 'class_weight'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = False  # if x axis should be logarithmic
@@ -81,7 +81,7 @@ semilog = False  # if x axis should be logarithmic
 # parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
 # parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
 # parameter_range = np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
-parameter_range = [{0: 1, 1: k} for k in range(1, 101+1, 10)]
+parameter_range = [{0: 1, 1: k} for k in range(1, 101 + 1, 10)]
 nb_split_cv = 5  # number of split cvs
 
 cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
@@ -102,7 +102,7 @@ num_leaves = ('num_leaves', np.array([3, 15, 31]))
 reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
 
 parameters_grid = OrderedDict([learning_rate, max_depth, num_leaves, reg_lambda])
-nb_split_cv = 20    # number of split cvs
+nb_split_cv = 20  # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
@@ -155,11 +155,14 @@ if __name__ == '__main__':
     elif train_models:
         if test_size is None:
             raise ValueError('Parameter test_size cannot be None.')
-        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, undersampling_rate, oversampling_rate, use_weights, reweight_posterior)
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size,
+                                       undersampling_rate, oversampling_rate, use_weights, reweight_posterior)
     elif cross_validation:
-        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, undersampling_rate, oversampling_rate, use_weights)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, undersampling_rate,
+                             oversampling_rate, use_weights)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, undersampling_rate, oversampling_rate, use_weights, reweight_posterior)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, undersampling_rate,
+                          oversampling_rate, use_weights, reweight_posterior)
     elif plot_curves:
         plot_roc_precrcll_curves(clf, dir_data, data_parameters, test_size, undersampling_rate, oversampling_rate)
     elif evaluate_model:

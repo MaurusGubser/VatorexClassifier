@@ -61,8 +61,9 @@ def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict
     return None
 
 
-def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_params: dict, undersampling_rate: float,
-                         oversampling_rate: float, use_weights: Union[None, str, (float, float)]) -> None:
+def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_params: dict,
+                         undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
+                         use_weights: Union[None, str, (float, float)]) -> None:
     test_size = None
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     X_train, _, y_train, _, _, _ = split_and_sample_data(data=data,
@@ -119,7 +120,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def grid_search_model(model: object, folder_path: str, data_params: dict, grid_search_params: dict, test_size: float,
-                      undersampling_rate: float, oversampling_rate: float,
+                      undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
                       use_weights: Union[None, str, (float, float)], reweight_posterior: bool) -> None:
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     X_train, X_test, y_train, y_test, paths_train, paths_test = split_and_sample_data(data=data,

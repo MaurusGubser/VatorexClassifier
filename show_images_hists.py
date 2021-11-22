@@ -10,7 +10,8 @@ def get_last_path_str(path: str) -> str:
 
 
 def plot_images_and_hist(path_folder: str) -> None:
-    images, hist, labels, images_paths = read_images_hist_from_folder(path_folder, True, 'candidate')
+    images, hist, labels, images_paths = read_images_hist_from_folder(path_folder, read_image=True,
+                                                                      read_hist='candidate', with_false1=True)
     labels = np.array(labels)
     nb_true = np.sum(labels)
     nb_false = labels.size - nb_true

@@ -1,9 +1,8 @@
 import lightgbm as lgb
 import numpy as np
-
 from lightgbm import LGBMClassifier
-
 from sklearn.metrics import confusion_matrix
+from typing import Union
 
 from data_handling import split_and_sample_data
 from data_reading_writing import load_data_and_labels
@@ -33,8 +32,8 @@ def train_sklearn(param_lgbm: dict, X_train: np.ndarray, y_train: np.ndarray) ->
     return model_sklearn
 
 
-def export_GUI_model(path_data: str, undersampling_rate: float, oversampling_rate: float, test_size: float, cv: int,
-                     param_lgbm: dict, export_name: str) -> None:
+def export_GUI_model(path_data: str, undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
+                     test_size: float, cv: int, param_lgbm: dict, export_name: str) -> None:
     _, data, labels, path_images = load_data_and_labels(path_data)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,

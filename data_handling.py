@@ -9,6 +9,7 @@ from skimage.segmentation import slic
 from imblearn.over_sampling import RandomOverSampler, SMOTE
 import random
 import time
+from typing import Union
 
 
 def compute_local_binary_pattern(image: np.ndarray, nb_pts=None, radius=3) -> np.ndarray:
@@ -35,7 +36,7 @@ def compute_histograms(image: np.ndarray, nb_divisions: int, nb_bins: int) -> np
         for i in range(0, nb_divisions):
             for j in range(0, nb_divisions):
                 sub_img = image[i * width_subregion:(i + 1) * width_subregion,
-                          j * length_subregion:(j + 1) * length_subregion, ch]
+                                j * length_subregion:(j + 1) * length_subregion, ch]
                 histograms[ch, i * nb_divisions + j, :] = np.histogram(sub_img, bins=nb_bins, density=True)[0]
         histograms[ch, :, :] = histograms[ch, :, :] / np.sum(histograms[ch, :, :])
     return histograms
@@ -125,7 +126,7 @@ def rearrange_hists(histograms_list: list, data_params: dict, read_hist: bool) -
     hist_l = data_params['hist_l']
 
     data = []
-    while histograms_list != []:
+    while histograms_list:
         data_hist = np.empty(0)
         hists = histograms_list.pop(0)
         if hist_hsl:
@@ -195,9 +196,9 @@ def oversample_true_candidates(data: np.ndarray, labels: np.ndarray, oversamplin
                                                                                                    oversampling_rate))
 
 
-def split_and_sample_data(data: np.ndarray, labels: np.ndarray, paths_imgs: list, test_size: float,
+def split_and_sample_data(data: np.ndarray, labels: np.ndarray, paths_imgs: list, test_size: Union[None, float],
                           undersampling_rate: float, oversampling_rate: float) -> (
-np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list):
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list):
     if test_size is not None:
         X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
                                                                                      labels,

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import re
+from typing import Union
 import numpy as np
 from skimage.io import imread
 from skimage.util import img_as_ubyte
@@ -39,8 +40,8 @@ def hist_read(path: str) -> list:
     return histograms
 
 
-def read_images_hist_from_folder(path_folder: str, read_image: bool, read_hist: bool, with_false1: bool) -> (
-        list, list, list, list):
+def read_images_hist_from_folder(path_folder: str, read_image: bool, read_hist: Union[None, str],
+                                 with_false1: bool) -> (list, list, list, list):
     if not read_image and read_hist not in ['candidate', 'context']:
         raise AssertionError('Got invalid values for read_image and read_hist; {} and {}'.format(read_image, read_hist))
 
@@ -85,7 +86,7 @@ def read_images_hist_from_folder(path_folder: str, read_image: bool, read_hist: 
     return images, histograms, labels, images_paths
 
 
-def read_images_and_histograms(folder_list: list, read_image: bool, read_hist: bool, with_false1: bool) -> (
+def read_images_and_histograms(folder_list: list, read_image: bool, read_hist: Union[None, str], with_false1: bool) -> (
         list, list, list, list):
     start_time = time.time()
     images = []

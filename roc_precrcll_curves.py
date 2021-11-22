@@ -7,6 +7,7 @@ from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
 from lightgbm import LGBMClassifier
 from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve
+from typing import Union
 
 from data_reading_writing import read_data_and_labels
 from data_handling import split_and_sample_data
@@ -101,7 +102,8 @@ def compute_roc_curve(clf: object, X_train: np.ndarray, X_test: np.ndarray, y_tr
     return None
 
 
-def plot_roc_precrcll_curves(clf: object, dir_data: str, data_params: dict, test_size: float, undersampling_rate: float, oversampling_rate: float) -> None:
+def plot_roc_precrcll_curves(clf: object, dir_data: str, data_params: dict, test_size: float,
+                             undersampling_rate: Union[None, float], oversampling_rate: Union[None, float]) -> None:
     data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,

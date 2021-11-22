@@ -103,7 +103,7 @@ def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray,
     return model
 
 
-def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: str, prior_mite: float,
+def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, prior_mite: float,
                    prior_no_mite: float) -> (dict, list, list):
     start_time = time.time()
     if prior_mite is None and prior_no_mite is None:
@@ -210,8 +210,9 @@ def get_name_index(model_name: str, folder_name: str, file_format: str) -> int:
 
 
 def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: np.ndarray, X_test: np.ndarray,
-                              y_train: np.ndarray, y_test: np.ndarray, paths_train: list, paths_test: list,
-                              data_params: dict, use_weights: Union[None, str, (float, float)], prior_mite: float,
+                              y_train: np.ndarray, y_test: np.ndarray, paths_train: Union[None, list],
+                              paths_test: Union[None, list], data_params: dict,
+                              use_weights: Union[None, str, (float, float)], prior_mite: float,
                               prior_no_mite: float) -> None:
     index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
@@ -234,7 +235,7 @@ def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: n
 
 
 def train_and_test_model_selection(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
-                                   undersampling_rate: float, oversampling_rate: float,
+                                   undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
                                    use_weights: Union[None, str, (float, float)], reweight_posterior: bool) -> None:
     if use_weights == 'balanced':
         class_weight = 'balanced'
