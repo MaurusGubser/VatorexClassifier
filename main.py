@@ -41,7 +41,7 @@ undersampling_rate = None  # must be None or float in [0,1]; false candidates ge
 oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = False
 sgd = False
@@ -119,7 +119,7 @@ path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Ima
 model_name = 'LinearSVC_1_200812R09AS'
 
 # ----- train and export model for GUI ------
-train_export_GUI = True
+train_export_GUI = False
 path_data = 'GUI_Model_Export/Model_tol03_local_balanced_withoutfalse1/Mite4_relabelledtol03_local_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
 cv = 3
 parameters_lgbm = {'objective': 'binary',
@@ -149,7 +149,7 @@ export_name = 'LightGBM_Model_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/Mite4_relabelledtol03_local/"
+    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist015_original/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:

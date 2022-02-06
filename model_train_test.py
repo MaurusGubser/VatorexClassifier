@@ -14,7 +14,7 @@ from lightgbm import LGBMClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
-from typing import Union
+from typing import Union, List
 
 from data_reading_writing import read_data_and_labels
 from data_handling import split_and_sample_data, compute_prior_weight
@@ -85,7 +85,7 @@ def read_model_stats_json(stats_path: str) -> dict:
 
 
 def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray,
-                use_weights: Union[None, str, (float, float)]) -> object:
+                use_weights: Union[None, str, List[float]]) -> object:
     if use_weights is None or use_weights == 'balanced':
         weights = None
     else:
@@ -212,7 +212,7 @@ def get_name_index(model_name: str, folder_name: str, file_format: str) -> int:
 def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: np.ndarray, X_test: np.ndarray,
                               y_train: np.ndarray, y_test: np.ndarray, paths_train: Union[None, list],
                               paths_test: Union[None, list], data_params: dict,
-                              use_weights: Union[None, str, (float, float)], prior_mite: float,
+                              use_weights: Union[None, str, List[float]], prior_mite: float,
                               prior_no_mite: float) -> None:
     index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
@@ -236,7 +236,7 @@ def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: n
 
 def train_and_test_model_selection(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
                                    undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
-                                   use_weights: Union[None, str, (float, float)], reweight_posterior: bool) -> None:
+                                   use_weights: Union[None, str, List[float]], reweight_posterior: bool) -> None:
     if use_weights == 'balanced':
         class_weight = 'balanced'
     else:
