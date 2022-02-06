@@ -342,14 +342,15 @@ def define_models(model_selection: dict, class_weight: Union[None, str]) -> dict
                               LGBMClassifier(n_estimators=10, class_weight=class_weight, reg_lambda=0.1),
                               LGBMClassifier(n_estimators=10, class_weight=class_weight, reg_lambda=1.0),
                               LGBMClassifier(n_estimators=10, class_weight=class_weight, reg_lambda=10.0),
-                              LGBMClassifier(n_estimators=20, class_weight=class_weight),
-                              LGBMClassifier(n_estimators=20, class_weight=class_weight, reg_lambda=0.1),
-                              LGBMClassifier(n_estimators=20, class_weight=class_weight, reg_lambda=1.0),
-                              LGBMClassifier(n_estimators=20, class_weight=class_weight, reg_lambda=10.0),
                               LGBMClassifier(n_estimators=100, class_weight=class_weight),
                               LGBMClassifier(n_estimators=100, class_weight=class_weight, reg_lambda=0.1),
                               LGBMClassifier(n_estimators=100, class_weight=class_weight, reg_lambda=1.0),
-                              LGBMClassifier(n_estimators=100, class_weight=class_weight, reg_lambda=10.0)]
+                              LGBMClassifier(n_estimators=100, class_weight=class_weight, reg_lambda=10.0),
+                              LGBMClassifier(n_estimators=200, class_weight=class_weight),
+                              LGBMClassifier(n_estimators=200, class_weight=class_weight, reg_lambda=0.1),
+                              LGBMClassifier(n_estimators=200, class_weight=class_weight, reg_lambda=1.0),
+                              LGBMClassifier(n_estimators=200, class_weight=class_weight, reg_lambda=10.0)
+                              ]
 
     gradient_boost_models = [GradientBoostingClassifier(n_estimators=10),
                              GradientBoostingClassifier(n_estimators=10, max_features='sqrt'),
