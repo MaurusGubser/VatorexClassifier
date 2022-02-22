@@ -88,7 +88,7 @@ def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
 
-    for score_param in ['recall', 'precision', 'f1', 'balanced_accuracy']:
+    for score_param in ['recall', 'precision', 'f1']:
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model_type=model,
                                                                                 data=X_train,
                                                                                 labels=y_train,
