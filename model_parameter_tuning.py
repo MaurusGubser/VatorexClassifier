@@ -21,7 +21,7 @@ def compute_cv_scores(model_type: object, data: np.ndarray, labels: np.ndarray, 
     k = cv_params['nb_split_cv']
     train_scores, test_scores = validation_curve(estimator=model_type, X=data, y=labels, param_name=model_parameter,
                                                  param_range=parameter_range, cv=k, scoring=score_param,
-                                                 n_jobs=4, verbose=1, fit_params=weights_dict)
+                                                 n_jobs=-1, verbose=1, fit_params=weights_dict)
     return train_scores, test_scores
 
 
