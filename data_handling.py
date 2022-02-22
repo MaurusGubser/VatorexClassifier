@@ -219,8 +219,8 @@ def split_and_sample_data(data: np.ndarray, labels: np.ndarray, paths_imgs: list
         X_train, y_train = oversample_true_candidates(X_train, y_train, oversampling_rate)
         paths_train = None
     print('Data before sampling: {} positive, {} total.'.format(np.sum(labels), labels.size))
-    print('Training data: {} positive, {} total'.format(np.sum(y_train), y_train.size))
-    print('Test data: {} positive, {} total'.format(np.sum(y_test), y_test.size))
+    print('Training data: {} positive, {} total'.format(np.sum(y_train, dtype=np.uint), y_train.size))
+    print('Test data: {} positive, {} total'.format(np.sum(y_test, dtype=np.uint), y_test.size))
     return X_train, X_test, y_train, y_test, paths_train, paths_test
 
 
