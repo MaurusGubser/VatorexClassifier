@@ -95,7 +95,6 @@ def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_
                                                                                 cv_params=cv_params,
                                                                                 score_param=score_param,
                                                                                 weights_dict=weights_dict)
-        print('Train scores {}: {}'.format(score_param, train_scores[score_param]))
         print('Test scores {}: {}'.format(score_param, test_scores[score_param]))
     plot_validation_curve(train_scores, test_scores, cv_params)
     return None
