@@ -29,7 +29,8 @@ def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict
     if not os.path.exists('CV_Plots'):
         os.mkdir('CV_Plots')
     parameter_range = cv_params['parameter_range']
-    export_name = cv_params['model_name'] + '_' + cv_params['model_parameter']
+    model_nb = get_name_index(cv_params['model_name'], 'CV_Plots/', 'pdf')
+    export_name = cv_params['model_name'] + '_' + cv_params['model_parameter'] + '_' + model_nb
     nb_rows = len(train_scores.keys())
     fig, axs = plt.subplots(ncols=1, nrows=nb_rows, figsize=(18, 10))
     i = 0
