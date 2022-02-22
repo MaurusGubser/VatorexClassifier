@@ -41,7 +41,7 @@ undersampling_rate = None  # must be None or float in [0,1]; false candidates ge
 oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
 log_reg = False
 sgd = False
@@ -66,23 +66,23 @@ use_weights = 'balanced'  # weights for model fitting; must be None, 'balanced' 
 reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
 
 # ----- cross-validation for one parameter -----
-cross_validation = False
+cross_validation = True
 
-model_cv = LogisticRegression()  # LGBMClassifier(n_estimators=10, class_weight='balanced')
-model_name = 'LogReg'
-model_parameter = 'class_weight'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
+model_cv = LGBMClassifier(class_weight='balanced')  # LGBMClassifier(n_estimators=10, class_weight='balanced')
+model_name = 'LGBM_balanced'
+model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = False  # if x axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
-# parameter_range = np.array([5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200])#, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
+parameter_range = np.array([10, 30, 50, 70, 100, 150, 200, 250, 300])   #, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
 # parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)  # l2_regularization/reg_lambda
 # parameter_range = np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255])   # max_bins
 # parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
 # parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
-# parameter_range = np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
-parameter_range = [{0: 1, 1: k} for k in range(1, 101 + 1, 10)]
-nb_split_cv = 5  # number of split cvs
+# parameter_range = np.insert(np.logspace(-2, 4, 5), 0, 0.0)  # np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
+# parameter_range = [{0: 1, 1: k} for k in range(1, 101 + 1, 10)]
+nb_split_cv = 10  # number of split cvs
 
 cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
                              ('parameter_range', parameter_range), ('semilog', semilog),
@@ -91,21 +91,19 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 # ----- grid search for several parameters -----
 grid_search = False
 
-model_gs = LGBMClassifier(n_estimators=500, class_weight='balanced')
-model_name = 'LGBM'
+model_gs = LGBMClassifier(class_weight='balanced')
+model_name = 'LGBM_balanced'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
-max_depth = ('max_depth', np.array([4, 50, -1]))
-num_leaves = ('num_leaves', np.array([3, 15, 31]))
-reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+n_estimators = ('n_estimators', np.array([10, 30, 50, 70, 100, 150, 200, 250, 300]))
+parameters_grid = OrderedDict([n_estimators])
 
-parameters_grid = OrderedDict([learning_rate, max_depth, num_leaves, reg_lambda])
-nb_split_cv = 20  # number of split cvs
+nb_split_cv = 10     # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
+
 
 # ----------- plot curves ----------------------
 plot_curves = False
@@ -120,14 +118,16 @@ model_name = 'LinearSVC_1_200812R09AS'
 
 # ----- train and export model for GUI ------
 train_export_GUI = False
-path_data = 'GUI_Model_Export/Model_tol03_local_balanced_withoutfalse1/Mite4_relabelledtol03_local_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
-cv = 3
+path_data = 'GUI_Model_Export/Model_TestFitting_matching05_mindist1/TestFitting_matching05_mindist1_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
+cv = 10
 parameters_lgbm = {'objective': 'binary',
-                   'num_iterations': 500,
-                   'learning_rate': 0.2,
+                   'num_iterations': 300,
+                   'learning_rate': 0.1,
                    'deterministic': True,
-                   'num_threads': 4,
-                   'lambda_l2': 1.0,
+                   'num_threads': 6,
+                   'lambda_l2': 7.0,
+                   'num_leaves': 15,    # std 31
+                   'max_depth': 50,     # std -1
                    'is_unbalance': True}
 """
 parameters_lgbm = {'task': 'train',
@@ -149,7 +149,7 @@ export_name = 'LightGBM_Model_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist015_original/"
+    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist001/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
