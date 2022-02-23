@@ -157,7 +157,8 @@ def grid_search_model(model: object, folder_path: str, data_params: dict, grid_s
                        n_jobs=-1,
                        refit=grid_search_params['refit_param'],
                        cv=grid_search_params['nb_split_cv'],
-                       verbose=1)
+                       verbose=1,
+                       return_train_score=True)
     clf.fit(X_train, y_train)
     gs_df = pd.DataFrame.from_dict(clf.cv_results_)
     gs_df = clean_df(gs_df)
