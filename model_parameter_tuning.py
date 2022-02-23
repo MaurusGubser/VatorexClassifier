@@ -114,7 +114,7 @@ def export_stats_gs(export_name: str, gs_dataframe: pd.DataFrame) -> None:
 
 
 def clean_df(df: pd.DataFrame) -> pd.DataFrame:
-    pattern_datasplits = r'split[0-9]{1,2}[_]test'
+    pattern_datasplits = r'split[0-9]{1,2}[_]'
     pattern_time = r'[_]time'
     pattern_rank = r'rank[_]'
     column_names = df.columns
