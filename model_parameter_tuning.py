@@ -25,6 +25,12 @@ def compute_cv_scores(model_type: object, data: np.ndarray, labels: np.ndarray, 
     return train_scores, test_scores
 
 
+def compute_f1(train_scores, test_scores):
+    train_f1 = 2 * train_scores['recall'] * train_scores['precision'] / (train_scores['recall'] + train_scores['precision'])
+    test_f1 = 2 * test_scores['recall'] * test_scores['precision'] / (test_scores['recall'] + test_scores['precision'])
+    return train_f1, test_f1
+
+
 def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict) -> None:
     if not os.path.exists('CV_Plots'):
         os.mkdir('CV_Plots')
@@ -33,8 +39,7 @@ def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict
     export_name = cv_params['model_name'] + '_' + cv_params['model_parameter'] + '_' + str(model_nb)
     nb_rows = len(train_scores.keys())
     fig, axs = plt.subplots(ncols=1, nrows=nb_rows, figsize=(18, 10))
-    i = 0
-    for key in train_scores.keys():
+    for i, key in enumerate(train_scores.keys()):
         train_scores_mean = np.mean(train_scores[key], axis=1)
         train_scores_std = np.std(train_scores[key], axis=1)
         test_scores_mean = np.mean(test_scores[key], axis=1)
@@ -55,7 +60,6 @@ def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict
         axs[i].set_ylabel(key)
         axs[i].set_title('{}-fold cross validation'.format(cv_params['nb_split_cv']))
         axs[i].legend()
-        i += 1
     plt.tight_layout()
     plt.savefig('CV_Plots/' + export_name)
     plt.show()
@@ -89,13 +93,14 @@ def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
 
-    for score_param in ['recall', 'precision', 'f1']:
+    for score_param in ['recall', 'precision']:
         train_scores[score_param], test_scores[score_param] = compute_cv_scores(model_type=model,
                                                                                 data=X_train,
                                                                                 labels=y_train,
                                                                                 cv_params=cv_params,
                                                                                 score_param=score_param,
                                                                                 weights_dict=weights_dict)
+    train_scores['f1'], test_scores['f1'] = compute_f1(train_scores, test_scores)
     plot_validation_curve(train_scores, test_scores, cv_params)
     return None
 
