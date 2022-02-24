@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import scale
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.decomposition import IncrementalPCA
+from sklearn.utils import shuffle
 from skimage.feature import local_binary_pattern
 from skimage.transform import rescale
 from skimage.segmentation import slic
@@ -199,19 +200,18 @@ def oversample_true_candidates(data: np.ndarray, labels: np.ndarray, oversamplin
 def split_and_sample_data(data: np.ndarray, labels: np.ndarray, paths_imgs: list, test_size: Union[None, float],
                           undersampling_rate: float, oversampling_rate: float) -> (
         np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list):
+    seed=42
     if test_size is not None:
         X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
                                                                                      labels,
                                                                                      paths_imgs,
                                                                                      test_size=test_size,
-                                                                                     random_state=42,
+                                                                                     random_state=seed,
                                                                                      stratify=labels)
     else:
-        X_train = data
+        X_train, y_train, paths_train = shuffle(data, labels, paths_imgs, random_state=seed)
         X_test = np.array([])
-        y_train = labels
         y_test = np.array([])
-        paths_train = paths_imgs
         paths_test = None
     if undersampling_rate is not None:
         X_train, y_train, paths_train = undersample_false_candidates(X_train, y_train, paths_train, undersampling_rate)
