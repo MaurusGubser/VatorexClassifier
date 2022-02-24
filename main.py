@@ -126,8 +126,8 @@ parameters_lgbm = {'objective': 'binary',
                    'deterministic': True,
                    'num_threads': 6,
                    'lambda_l2': 7.0,
-                   'num_leaves': 15,    # std 31
-                   'max_depth': 50,     # std -1
+                   'num_leaves': 15,  # std 31
+                   'max_depth': 50,  # std -1
                    'is_unbalance': True}
 """
 parameters_lgbm = {'task': 'train',
@@ -149,7 +149,7 @@ export_name = 'LightGBM_Model_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist001/"
+    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist1/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
