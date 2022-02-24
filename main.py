@@ -82,11 +82,11 @@ parameter_range = np.array([10, 30, 50, 70, 100, 150, 200, 250, 300])   #, 300, 
 # parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
 # parameter_range = np.insert(np.logspace(-2, 4, 5), 0, 0.0)  # np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
 # parameter_range = [{0: 1, 1: k} for k in range(1, 101 + 1, 10)]
-nb_split_cv = 10  # number of split cvs
+nb_split_gs = 10  # number of split cvs
 
 cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
                              ('parameter_range', parameter_range), ('semilog', semilog),
-                             ('nb_split_cv', nb_split_cv)])
+                             ('nb_split_cv', nb_split_gs)])
 
 # ----- grid search for several parameters -----
 grid_search = False
@@ -99,10 +99,10 @@ refit_param = 'f1'
 n_estimators = ('n_estimators', np.array([10, 30, 50, 70, 100, 150, 200, 250, 300]))
 parameters_grid = OrderedDict([n_estimators])
 
-nb_split_cv = 10     # number of split cvs
+nb_split_gs = 10     # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
-                             ('nb_split_cv', nb_split_cv)])
+                             ('nb_split_cv', nb_split_gs)])
 
 
 # ----------- plot curves ----------------------
