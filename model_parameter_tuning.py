@@ -37,12 +37,8 @@ def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict
     for key in train_scores.keys():
         train_scores_mean = np.mean(train_scores[key], axis=1)
         train_scores_std = np.std(train_scores[key], axis=1)
-        # train_stds = np.sqrt(np.average((train_scores[key] - train_scores_mean[:, np.newaxis]) ** 2, axis=1))
-        print('Train stds\n{}'.format(train_scores_std))
         test_scores_mean = np.mean(test_scores[key], axis=1)
         test_scores_std = np.std(test_scores[key], axis=1)
-        # test_stds = np.sqrt(np.average((test_scores[key] - test_scores_mean[:, np.newaxis]) ** 2, axis=1))
-        print('Test stds\n{}'.format(test_scores_std))
         axs[i].grid()
         if cv_params['semilog']:
             axs[i].semilogx(parameter_range, train_scores_mean, color='blue', label='Training')
