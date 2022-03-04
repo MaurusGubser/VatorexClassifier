@@ -89,21 +89,24 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_gs)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
 
-model_gs = LGBMClassifier(class_weight='balanced')
+model_gs = LGBMClassifier('balanced')
 model_name = 'LGBM_balanced'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-n_estimators = ('n_estimators', np.array([10, 30, 50, 70, 100, 150, 200, 250, 300]))
-parameters_grid = OrderedDict([n_estimators])
+learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
+n_estimators = ('n_estimators', np.array([10, 50, 100, 300]))
+max_depth = ('max_depth', np.array([4, 50, -1]))
+num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
+reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
 
-nb_split_gs = 10     # number of split cvs
+parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda])
+nb_split_cv = 20    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
-                             ('nb_split_cv', nb_split_gs)])
-
+                             ('nb_split_cv', nb_split_cv)])
 
 # ----------- plot curves ----------------------
 plot_curves = False
