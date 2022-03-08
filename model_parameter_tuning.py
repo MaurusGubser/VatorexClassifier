@@ -171,8 +171,11 @@ def grid_search_model(model: object, folder_path: str, data_params: dict, grid_s
                                                             prior_no_mite)
     stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_mite,
                                                                    prior_no_mite)
+    """
+    # exclude for now
     if misclassified_train is not None:
         export_evaluation_images_model(misclassified_train, true_pos_train, export_name, 'Train')
+    """
     export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')
     export_model_evaluation_stats_json(stats_test, export_name)
     print('Best estimator:', clf.best_estimator_)
