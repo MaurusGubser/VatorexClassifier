@@ -48,11 +48,11 @@ sgd = False
 ridge_class = False
 decision_tree = False
 random_forest = False
-l_svm = False
+l_svm = True
 nl_svm = False
 naive_bayes = False
 ada_boost = False
-histogram_boost = True
+histogram_boost = False
 gradient_boost = False
 handicraft = False
 
@@ -66,7 +66,7 @@ use_weights = 'balanced'  # weights for model fitting; must be None, 'balanced' 
 reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
 
 # ----- cross-validation for one parameter -----
-cross_validation = True
+cross_validation = False
 
 model_cv = LGBMClassifier(class_weight='balanced')  # LGBMClassifier(n_estimators=10, class_weight='balanced')
 model_name = 'LGBM_balanced'
@@ -89,7 +89,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_gs)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = LGBMClassifier('balanced')
 model_name = 'LGBM_balanced'
@@ -103,7 +103,7 @@ num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
 reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
 
 parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda])
-nb_split_cv = 20    # number of split cvs
+nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
@@ -120,17 +120,19 @@ path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Ima
 model_name = 'LinearSVC_1_200812R09AS'
 
 # ----- train and export model for GUI ------
-train_export_GUI = False
-path_data = 'GUI_Model_Export/Model_TestFitting_matching05_mindist1/TestFitting_matching05_mindist1_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
+train_export_GUI = True
+# path_data = 'GUI_Model_Export/Model_TestFitting_matching05_mindist015/TestFitting_matching05_mindist015_original_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
+name_data = 'Model_TestFitting_matching05_mindist03'
+
 cv = 10
 parameters_lgbm = {'objective': 'binary',
                    'num_iterations': 300,
                    'learning_rate': 0.1,
                    'deterministic': True,
                    'num_threads': 6,
-                   'lambda_l2': 7.0,
-                   'num_leaves': 15,  # std 31
-                   'max_depth': 50,  # std -1
+                   'lambda_l2': 20.0,
+                   'num_leaves': 31,  # std 31
+                   'max_depth': -1,  # std -1
                    'is_unbalance': True}
 """
 parameters_lgbm = {'task': 'train',
@@ -148,11 +150,10 @@ parameters_lgbm = {'task': 'train',
                    'is_unbalance': True,
                    'metric': 'binary_logloss'}
 """
-export_name = 'LightGBM_Model_balanced.txt'
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist1/"
+    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist015_original/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
@@ -171,6 +172,6 @@ if __name__ == '__main__':
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:
-        export_GUI_model(path_data, undersampling_rate, oversampling_rate, test_size, cv, parameters_lgbm, export_name)
+        export_GUI_model(name_data, undersampling_rate, oversampling_rate, test_size, cv, parameters_lgbm)
     else:
         print('No option chosen.')

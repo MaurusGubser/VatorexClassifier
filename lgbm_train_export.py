@@ -3,6 +3,7 @@ import numpy as np
 from lightgbm import LGBMClassifier
 from sklearn.metrics import confusion_matrix
 from typing import Union
+from glob import glob
 
 from data_handling import split_and_sample_data
 from data_reading_writing import load_data_and_labels
@@ -32,8 +33,12 @@ def train_sklearn(param_lgbm: dict, X_train: np.ndarray, y_train: np.ndarray) ->
     return model_sklearn
 
 
-def export_GUI_model(path_data: str, undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
-                     test_size: float, cv: int, param_lgbm: dict, export_name: str) -> None:
+def export_GUI_model(name_data: str, undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
+                     test_size: float, cv: int, param_lgbm: dict) -> None:
+    export_name = 'LightGBM_Model_Vatorex_balanced_' + name_data + '.txt'
+    path_data = 'GUI_Model_Export/' + name_data + '/'
+    assert len(glob(path_data + '*.npz')) == 1, '{} should contain only one file.'.format(path_data)
+    path_data = glob(path_data + '*.npz')[0]
     _, data, labels, path_images = load_data_and_labels(path_data)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
