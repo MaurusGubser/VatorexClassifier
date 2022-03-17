@@ -27,7 +27,7 @@ hist_l = True
 quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
-with_false1 = False  # use false1 labelled data
+with_false1 = True  # use false1 labelled data
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -39,6 +39,8 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
 test_size = 0.10  # must be float in (0,1); fraction of test set
 undersampling_rate = None  # must be None or float in [0,1]; false candidates get undersampled to according ratio
 oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
+
+path_image_folders = "Candidate_Images/TestFitting_matching05_mindist1/"
 
 # ----- train and evaluate models -----
 train_models = False
@@ -71,10 +73,9 @@ cross_validation = False
 model_cv = LGBMClassifier(class_weight='balanced')  # LGBMClassifier(n_estimators=10, class_weight='balanced')
 model_name = 'LGBM_balanced'
 model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
-semilog = False  # if x axis should be logarithmic
+semilog = False  # if x-axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
-parameter_range = np.array(
-    [10, 30, 50, 70, 100, 150, 200, 250, 300])  # , 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
+parameter_range = np.array([10, 30, 50, 70, 100, 150, 200, 250, 300])   # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
 # parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)  # l2_regularization/reg_lambda
@@ -92,16 +93,17 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 # ----- grid search for several parameters -----
 grid_search = False
 
-model_gs = LGBMClassifier('balanced')
-model_name = 'LGBM_balanced'
+model_gs = LGBMClassifier(class_weight='balanced')
+model_name = 'LGBM'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-learning_rate = ('learning_rate', np.array([0.1]))
-n_estimators = ('n_estimators', np.array([100, 300]))
-max_depth = ('max_depth', np.array([-1]))
+learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
+n_estimators = ('n_estimators', np.array([10, 50, 100, 300]))
+max_depth = ('max_depth', np.array([4, 50, -1]))
 # num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
-reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
+reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+# class_weight = ('class_weight', [None, 'balanced'])
 
 parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, reg_lambda])
 nb_split_cv = 10  # number of split cvs
@@ -112,7 +114,6 @@ gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', par
 # ----------- plot curves ----------------------
 plot_curves = False
 clf = LGBMClassifier(class_weight='balanced')
-dir_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist1/'
 
 # ----- evaluate trained model ------
 evaluate_model = False
@@ -123,7 +124,7 @@ model_name = 'LGBM_matching05_mindist015'
 # ----- train and export model for GUI ------
 train_export_GUI = True
 
-cv = 3
+cv = 10
 parameters_lgbm = {'objective': 'binary',
                    'num_iterations': 300,
                    'learning_rate': 0.1,
@@ -136,7 +137,6 @@ parameters_lgbm = {'objective': 'binary',
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist1/'   # "Candidate_Images/TestFitting_matching05_mindist1/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
@@ -151,7 +151,8 @@ if __name__ == '__main__':
         grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, undersampling_rate,
                           oversampling_rate, use_weights, reweight_posterior)
     elif plot_curves:
-        plot_roc_precrcll_curves(clf, dir_data, data_parameters, test_size, undersampling_rate, oversampling_rate)
+        plot_roc_precrcll_curves(clf, path_image_folders, data_parameters, test_size, undersampling_rate,
+                                 oversampling_rate)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:
