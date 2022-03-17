@@ -45,7 +45,7 @@ def read_images_hist_from_folder(path_folder: str, read_image: bool, read_hist: 
     if not read_image and read_hist not in ['candidate', 'context']:
         raise AssertionError('Got invalid values for read_image and read_hist; {} and {}'.format(read_image, read_hist))
     assert os.path.isdir(path_folder + '/extracted'), "Found no 'extracted' subdirectory in {}".format(path_folder)
-    images_paths = [str(path) for path in Path(path_folder).rglob('*.jpg')]
+    images_paths = [str(path) for path in Path(path_folder + '/extracted').rglob('*.jpg')]
     histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
     histograms_context_paths = [path.replace('.jpg', '_context.hist') for path in images_paths]
     images = []
