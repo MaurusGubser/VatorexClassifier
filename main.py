@@ -73,7 +73,8 @@ model_name = 'LGBM_balanced'
 model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = False  # if x axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
-parameter_range = np.array([10, 30, 50, 70, 100, 150, 200, 250, 300])   #, 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
+parameter_range = np.array(
+    [10, 30, 50, 70, 100, 150, 200, 250, 300])  # , 300, 400, 500, 600, 700, 800, 900, 1000])    # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
 # parameter_range = np.insert(np.logspace(-2, 3, 15), 0, 0.0)  # l2_regularization/reg_lambda
@@ -103,13 +104,13 @@ max_depth = ('max_depth', np.array([-1]))
 reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
 
 parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, reg_lambda])
-nb_split_cv = 10    # number of split cvs
+nb_split_cv = 10  # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
 
 # ----------- plot curves ----------------------
-plot_curves = True
+plot_curves = False
 clf = LGBMClassifier(class_weight='balanced')
 dir_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist1/'
 
@@ -120,10 +121,9 @@ path_test_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model
 model_name = 'LGBM_matching05_mindist015'
 
 # ----- train and export model for GUI ------
-train_export_GUI = False
-name_data = 'Model_TestFitting_matching05_mindist03'
+train_export_GUI = True
 
-cv = 10
+cv = 3
 parameters_lgbm = {'objective': 'binary',
                    'num_iterations': 300,
                    'learning_rate': 0.1,
@@ -136,7 +136,7 @@ parameters_lgbm = {'objective': 'binary',
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist1/"
+    path_image_folders = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist1/'   # "Candidate_Images/TestFitting_matching05_mindist1/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
@@ -155,6 +155,7 @@ if __name__ == '__main__':
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:
-        export_GUI_model(name_data, undersampling_rate, oversampling_rate, test_size, cv, parameters_lgbm)
+        export_GUI_model(path_image_folders, data_parameters, undersampling_rate, oversampling_rate, test_size, cv,
+                         parameters_lgbm)
     else:
         print('No option chosen.')

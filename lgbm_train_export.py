@@ -1,3 +1,6 @@
+import json
+import os
+
 import lightgbm as lgb
 import numpy as np
 from lightgbm import LGBMClassifier
@@ -6,7 +9,7 @@ from typing import Union
 from glob import glob
 
 from data_handling import split_and_sample_data
-from data_reading_writing import load_data_and_labels
+from data_reading_writing import get_folder_name, read_data_and_labels
 
 
 def get_data_path(path: str) -> str:
@@ -33,21 +36,27 @@ def train_sklearn(param_lgbm: dict, X_train: np.ndarray, y_train: np.ndarray) ->
     return model_sklearn
 
 
-def export_GUI_model(name_data: str, undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
+def export_GUI_model(folder_path: str, data_params: dict, undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
                      test_size: float, cv: int, param_lgbm: dict) -> None:
+    name_data = get_folder_name(folder_path)
     export_name = 'LightGBM_Model_Vatorex_balanced_' + name_data + '.txt'
-    path_data = 'GUI_Model_Export/' + name_data + '/'
-    assert len(glob(path_data + '*.npz')) == 1, '{} should contain only one file.'.format(path_data)
-    path_data = glob(path_data + '*.npz')[0]
-    _, data, labels, path_images = load_data_and_labels(path_data)
+    data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
-                                                                   paths_imgs=path_images,
+                                                                   paths_imgs=paths_imgs,
                                                                    test_size=test_size,
                                                                    undersampling_rate=undersampling_rate,
                                                                    oversampling_rate=oversampling_rate)
-    export_path = get_data_path(path_data) + export_name
+    if not os.path.exists('GUI_Model_Export'):
+        os.mkdir('GUI_Model_Export')
+    subfolder_name = 'GUI_Model_Export/' + name_data
+    if not os.path.exists(subfolder_name):
+        os.mkdir(subfolder_name)
+    export_path = subfolder_name + '/' + export_name
+    with open(subfolder_name + '/Data_Parameters.json', 'w') as outfile:
+        json.dump(data_params, outfile, indent=4)
     model_lgbm = train_lgbm(param_lgbm, X_train, y_train, cv, export_path)
+
     if test_size is not None:
         model_sklearn = train_sklearn(param_lgbm, X_train, y_train)
         y_pred_lgbm = np.around(model_lgbm.predict(X_test))
