@@ -48,11 +48,11 @@ sgd = False
 ridge_class = False
 decision_tree = False
 random_forest = False
-l_svm = True
+l_svm = False
 nl_svm = False
 naive_bayes = False
 ada_boost = False
-histogram_boost = False
+histogram_boost = True
 gradient_boost = False
 handicraft = False
 
@@ -96,13 +96,13 @@ model_name = 'LGBM_balanced'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
-n_estimators = ('n_estimators', np.array([10, 50, 100, 300]))
-max_depth = ('max_depth', np.array([4, 50, -1]))
-num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
-reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+learning_rate = ('learning_rate', np.array([0.1]))
+n_estimators = ('n_estimators', np.array([100, 300]))
+max_depth = ('max_depth', np.array([-1]))
+# num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
+reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
 
-parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda])
+parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, reg_lambda])
 nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
@@ -114,14 +114,13 @@ clf = RandomForestClassifier(class_weight='balanced')
 dir_data = 'Candidate_Images/Mite4_relabelledtol05_local/'
 
 # ----- evaluate trained model ------
-evaluate_model = False
-path_trained_model = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Models_Trained/LinearSVC_8.sav'
-path_test_data = '/home/maurus/PyCharm_Projects/Vatorex_Classifier/Candidate_Images/Mite4_relabelledtol02/200328-S09(labeled)/'
-model_name = 'LinearSVC_1_200812R09AS'
+evaluate_model = True
+path_trained_model = '/home/maurus/Pycharm_Projects/Vatorex_Classifier/Models_Trained/LGBM_balanced_matching05_mindist015_0.sav'
+path_test_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist015/'
+model_name = 'LGBM_matching05_mindist015'
 
 # ----- train and export model for GUI ------
-train_export_GUI = True
-# path_data = 'GUI_Model_Export/Model_TestFitting_matching05_mindist015/TestFitting_matching05_mindist015_original_False_context_None_False_None_None_None_None_None_True_True_True_True_False_False_False_False.npz'
+train_export_GUI = False
 name_data = 'Model_TestFitting_matching05_mindist03'
 
 cv = 10
