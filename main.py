@@ -109,14 +109,14 @@ gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', par
                              ('nb_split_cv', nb_split_cv)])
 
 # ----------- plot curves ----------------------
-plot_curves = False
-clf = RandomForestClassifier(class_weight='balanced')
-dir_data = 'Candidate_Images/Mite4_relabelledtol05_local/'
+plot_curves = True
+clf = LGBMClassifier(class_weight='balanced')
+dir_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist1/'
 
 # ----- evaluate trained model ------
-evaluate_model = True
+evaluate_model = False
 path_trained_model = '/home/maurus/Pycharm_Projects/Vatorex_Classifier/Models_Trained/LGBM_balanced_matching05_mindist015_0.sav'
-path_test_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist015/'
+path_test_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist1/'
 model_name = 'LGBM_matching05_mindist015'
 
 # ----- train and export model for GUI ------
@@ -133,26 +133,10 @@ parameters_lgbm = {'objective': 'binary',
                    'num_leaves': 31,  # std 31
                    'max_depth': -1,  # std -1
                    'is_unbalance': True}
-"""
-parameters_lgbm = {'task': 'train',
-                   'objective': 'binary',
-                   'boosting': 'gbdt',
-                   'num_iterations': 300,
-                   'learning_rate': 0.2,
-                   'num_leaves': 31,
-                   'num_threads': 4,
-                   'deterministic': True,
-                   'max_depth': -1,
-                   'lambda_l2': 1.0,
-                   'n_iter_no_change': 10,
-                   'max_bin': 255,
-                   'is_unbalance': True,
-                   'metric': 'binary_logloss'}
-"""
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist015_original/"
+    path_image_folders = "Candidate_Images/TestFitting_matching05_mindist1/"
     if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
     elif train_models:
