@@ -15,6 +15,7 @@ from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from typing import Union, List
+import lightgbm as lgb
 
 from data_reading_writing import read_data_and_labels
 from data_handling import split_and_sample_data, compute_prior_weight
@@ -107,7 +108,7 @@ def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, pri
                    prior_no_mite: float) -> (dict, list, list):
     start_time = time.time()
     if prior_mite is None and prior_no_mite is None:
-        y_pred = model.predict(X)
+        y_pred = np.around(model.predict(X))
     else:
         try:
             y_probs = model.predict_proba(X)
@@ -117,7 +118,7 @@ def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, pri
             y_probs = y_probs / sum_normalize[:, np.newaxis]
             y_pred = np.where(y_probs[:, 1] <= 0.5, 0, 1)
         except AttributeError:
-            y_pred = model.predict(X)
+            y_pred = np.around(model.predict(X))
             print('No probabilistic model for {} available; working with predictions instead.'.format(model))
     end_time = time.time()
     print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
@@ -156,15 +157,24 @@ def export_model_evaluation_stats_json(stats_dict: dict, model_name: str) -> Non
 
 
 def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_model: str, model_name: str) -> None:
-    model = pickle.load(open(path_trained_model, 'rb'))
+    try:
+        model = pickle.load(open(path_trained_model, 'rb'))
+    except pickle.UnpicklingError:
+        model = lgb.Booster(model_file=path_trained_model)
+    except RuntimeError:
+        'Could no load any model for {}'.format(path_trained_model)
     X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
     # To do: prior weight cannot be computed since training data is not given
     stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0,
                                                                    prior_no_mite=1.0)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
-    plot_confusion_matrix(model, X_test, y_test)
-    plt.show()
+    try:
+        plot_confusion_matrix(model, X_test, y_test)
+        plt.show()
+    except ValueError:
+        y_pred = np.around(model.predict(X_test))
+        print('Confusion matrix:\n', confusion_matrix(y_test, y_pred))
     return None
 
 
