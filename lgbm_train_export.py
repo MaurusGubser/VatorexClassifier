@@ -36,10 +36,18 @@ def train_sklearn(param_lgbm: dict, X_train: np.ndarray, y_train: np.ndarray) ->
     return model_sklearn
 
 
+def model_params_to_str(params_model: dict):
+    name = ''
+    for key, value in params_model.items():
+        name = name + '_' + str(key) + str(value)
+    return name
+
+
 def export_GUI_model(folder_path: str, data_params: dict, undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
                      test_size: float, cv: int, param_lgbm: dict) -> None:
-    name_data = get_folder_name(folder_path)
-    export_name = 'LightGBM_Model_Vatorex_balanced_' + name_data + '.txt'
+    data_params_str = get_folder_name(folder_path)
+    model_params_str = model_params_to_str(param_lgbm)
+    model_name = 'LightGBM_Model_Vatorex.txt'
     data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
@@ -49,12 +57,14 @@ def export_GUI_model(folder_path: str, data_params: dict, undersampling_rate: Un
                                                                    oversampling_rate=oversampling_rate)
     if not os.path.exists('GUI_Model_Export'):
         os.mkdir('GUI_Model_Export')
-    subfolder_name = 'GUI_Model_Export/' + name_data
+    subfolder_name = 'GUI_Model_Export/' + data_params_str + model_params_str
     if not os.path.exists(subfolder_name):
         os.mkdir(subfolder_name)
-    export_path = subfolder_name + '/' + export_name
+    export_path = subfolder_name + '/' + model_name
     with open(subfolder_name + '/Data_Parameters.json', 'w') as outfile:
         json.dump(data_params, outfile, indent=4)
+    with open(subfolder_name + '/Model_Parameters.json', 'w') as outfile:
+        json.dump(param_lgbm, outfile, indent=4)
     model_lgbm = train_lgbm(param_lgbm, X_train, y_train, cv, export_path)
 
     if test_size is not None:
