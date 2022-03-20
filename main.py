@@ -40,7 +40,7 @@ test_size = 0.10  # must be float in (0,1); fraction of test set
 undersampling_rate = None  # must be None or float in [0,1]; false candidates get undersampled to according ratio
 oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
-path_image_folders = "Candidate_Images/TestFitting_matching05_mindist1/"
+path_image_folders = 'Candidate_Images/TestFitting_matching05_mindist015_or'
 
 # ----- train and evaluate models -----
 train_models = False
@@ -93,7 +93,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 # ----- grid search for several parameters -----
 grid_search = False
 
-model_gs = LGBMClassifier(class_weight='balanced')
+model_gs = LGBMClassifier()
 model_name = 'LGBM'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
@@ -103,7 +103,6 @@ n_estimators = ('n_estimators', np.array([10, 50, 100, 300]))
 max_depth = ('max_depth', np.array([4, 50, -1]))
 # num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
 reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
-# class_weight = ('class_weight', [None, 'balanced'])
 
 parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, reg_lambda])
 nb_split_cv = 10  # number of split cvs
@@ -116,24 +115,24 @@ plot_curves = False
 clf = LGBMClassifier(class_weight='balanced')
 
 # ----- evaluate trained model ------
-evaluate_model = False
-path_trained_model = '/home/maurus/Pycharm_Projects/Vatorex_Classifier/Models_Trained/LGBM_balanced_matching05_mindist015_0.sav'
-path_test_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist1/'
-model_name = 'LGBM_matching05_mindist015'
+evaluate_model = True
+path_trained_model = 'path/to/model'
+path_test_data = '/home/maurus/Pictures/Vatorex_Project/TestFitting_Models/Model_matching05_mindist015/'
+model_name = 'LGBM_model_properties_matching05_mindist015'
 
 # ----- train and export model for GUI ------
-train_export_GUI = True
+train_export_GUI = False
 
 cv = 10
 parameters_lgbm = {'objective': 'binary',
                    'num_iterations': 300,
                    'learning_rate': 0.1,
                    'deterministic': True,
-                   'num_threads': 6,
+                   'num_threads': -1,
                    'lambda_l2': 20.0,
                    'num_leaves': 31,  # std 31
                    'max_depth': -1,  # std -1
-                   'is_unbalance': True}
+                   'is_unbalance': False}
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
