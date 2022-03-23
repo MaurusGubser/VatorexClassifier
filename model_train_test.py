@@ -7,7 +7,7 @@ import json
 import time
 from collections import OrderedDict
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
-    recall_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
+    recall_score, roc_auc_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
 from lightgbm import LGBMClassifier
@@ -19,6 +19,7 @@ import lightgbm as lgb
 
 from data_reading_writing import read_data_and_labels
 from data_handling import split_and_sample_data, compute_prior_weight
+from roc_precrcll_curves import compute_roc_curve, compute_precisionrecall_curve
 
 
 def export_model(model: object, model_name: str) -> None:
@@ -53,7 +54,7 @@ def export_model_training_stats_csv(model_dict: dict, model_name: str, data_dict
         os.mkdir('Training_Statistics')
     filename = 'Training_Statistics/Model_Statistics.csv'
     if not os.path.exists(filename):
-        title_string = 'Model name,Model_params,TRAIN Accuracy,Acc. Balanced,Precision,Recall,F1 Score,TEST Accuracy,Acc. Balanced,Precision,Recall,F1 Score,'
+        title_string = 'Model name,Model_params,TRAIN Accuracy,Acc. Balanced, ROCAUC,Precision,Recall,F1 Score,TEST Accuracy,Acc. Balanced, ROCAUC,Precision,Recall,F1 Score,'
         for i in data_dict.keys():
             title_string = title_string + str(i) + ','
         title_string = title_string + '\n'
@@ -125,7 +126,7 @@ def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, pri
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
                               ('acc_balanced', balanced_accuracy_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
-                              ('f1_scr', f1_score(y, y_pred))])
+                              ('f1_scr', f1_score(y, y_pred)), ('roc', roc_auc_score(y, y_pred))])
     if paths is not None:
         misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
     else:
@@ -169,6 +170,9 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
                                                                    prior_no_mite=1.0)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
+    compute_roc_curve(model, X_train=None, X_test=X_test, y_train=None, y_test=y_test)
+    compute_precisionrecall_curve(model, X_train=None, X_test=X_test, y_train=None, y_test=y_test)
+
     try:
         plot_confusion_matrix(model, X_test, y_test)
         plt.show()
