@@ -41,7 +41,7 @@ test_size = 0.10  # must be float in (0,1); fraction of test set
 undersampling_rate = None  # must be None or float in [0,1]; false candidates get undersampled to according ratio
 oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
-path_image_folders = 'Candidate_Images/TestFitting_matching05_mindist015/'
+path_image_folders = 'Candidate_Images/Small_matching05_mindist015/'
 
 # ----- train and evaluate models -----
 train_models = False
@@ -92,11 +92,11 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_gs)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
 model_gs = LGBMClassifier()
 model_name = 'LGBM'
-scoring_parameters = ['recall', 'precision', 'f1']
+scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
 learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
@@ -119,9 +119,9 @@ clf = LGBMClassifier()
 
 # ----- evaluate trained model ------
 evaluate_model = True
-path_trained_model = 'GUI_Model_Export/TestFitting_matching05_mindist015_original_objectivebinary_num_iterations300_learning_rate0.1_deterministicTrue_num_threads-1_lambda_l220.0_num_leaves31_max_depth-1_is_unbalanceFalse/LightGBM_Model_Vatorex.txt'
-path_test_data = 'Candidate_Images/TestFitting_matching05_mindist015/'
-model_name = 'LGBM_unbalanced_matching05_mindist015'
+path_trained_model = 'GUI_Model_Export/TestFitting_matching05_mindist015_original_objectivebinary_num_iterations300_learning_rate0.1_deterministicTrue_num_threads-1_lambda_l220.0_num_leaves31_max_depth-1_is_unbalanceTrue/LightGBM_Model_Vatorex.txt'
+path_test_data = 'Candidate_Images/MiteThresholdTest/'
+model_name = 'LGBM_balanced_matching05_mindist015'
 
 # ----- train and export model for GUI ------
 train_export_GUI = False
