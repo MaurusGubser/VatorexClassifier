@@ -82,42 +82,15 @@ def plot_learning_curve_model(folder_path: str, data_params: dict, model: object
     return None
 
 
-def compute_precisionrecall_curve(clf: object, X_train: Union[None, np.ndarray], X_test: np.ndarray,
-                                  y_train: Union[None, np.ndarray], y_test: np.ndarray) -> None:
-    if X_train is not None:
-        try:
-            plot_train = PrecisionRecallDisplay.from_estimator(clf, X_train, y_train)
-            plot_train.ax_.set_title('Precision-recall training set')
-        except ValueError:
-            plot_train = PrecisionRecallDisplay.from_predictions(y_true=y_train, y_pred=clf.predict(X_train))
-            plot_train.ax_.set_title('Precision-recall training set')
+def compute_metric_curve(metric_type: [RocCurveDisplay, PrecisionRecallDisplay], name: str, clf: object,
+                         X_test: np.ndarray, y_test: np.ndarray):
     try:
-        plot_test = PrecisionRecallDisplay.from_estimator(clf, X_test, y_test)
-        plot_test.ax_.set_title('Precision-recall test set')
+        plot_test = metric_type.from_estimator(clf, X_test, y_test)
+        plot_test.ax_.set_title('{} test set'.format(name))
     except ValueError:
-        plot_test = PrecisionRecallDisplay.from_predictions(y_true=y_test, y_pred=clf.predict(X_test))
-        plot_test.ax_.set_title('Precision-recall test set')
-    plt.show()
-    return None
-
-
-def compute_roc_curve(clf: object, X_train: Union[None, np.ndarray], X_test: np.ndarray,
-                      y_train: Union[None, np.ndarray], y_test: np.ndarray) -> None:
-    if X_train is not None:
-        try:
-            plot_train = RocCurveDisplay.from_estimator(clf, X_train, y_train)
-            plot_train.ax_.set_title('ROC training set')
-        except ValueError:
-            plot_train = RocCurveDisplay.from_predictions(y_true=y_train, y_pred=clf.predict(X_train))
-            plot_train.ax_.set_title('ROC training set')
-    try:
-        plot_test = RocCurveDisplay.from_estimator(clf, X_test, y_test)
-        plot_test.ax_.set_title('ROC test set')
-    except ValueError:
-        plot_test = RocCurveDisplay.from_predictions(y_true=y_test, y_pred=clf.predict(X_test))
-        plot_test.ax_.set_title('ROC test set')
-    plt.show()
-    return None
+        plot_test = metric_type.from_predictions(y_true=y_test, y_pred=clf.predict(X_test))
+        plot_test.ax_.set_title('{} test set'.format(name))
+    return plot_test
 
 
 def plot_roc_precrcll_curves(clf: object, dir_data: str, data_params: dict, test_size: float,
@@ -130,6 +103,9 @@ def plot_roc_precrcll_curves(clf: object, dir_data: str, data_params: dict, test
                                                                    undersampling_rate=undersampling_rate,
                                                                    oversampling_rate=oversampling_rate)
     clf.fit(X_train, y_train)
-    compute_precisionrecall_curve(clf, X_train, X_test, y_train, y_test)
-    compute_roc_curve(clf, X_train, X_test, y_train, y_test)
-    return None
+    figs = []
+    metrics = {'ROC': RocCurveDisplay, 'Precision-Recall': PrecisionRecallDisplay}
+    for name, metric in metrics.items():
+        figs.append(compute_metric_curve(metric, name, clf, X_test, y_test))
+        plt.show()
+    return figs
