@@ -7,7 +7,8 @@ import json
 import time
 from collections import OrderedDict
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
-    recall_score, roc_auc_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve
+    recall_score, roc_auc_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve, \
+    RocCurveDisplay, PrecisionRecallDisplay
 from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
 from lightgbm import LGBMClassifier
@@ -19,7 +20,7 @@ import lightgbm as lgb
 
 from data_reading_writing import read_data_and_labels
 from data_handling import split_and_sample_data, compute_prior_weight
-from roc_precrcll_curves import compute_roc_curve, compute_precisionrecall_curve
+from roc_precrcll_curves import compute_metric_curve
 
 
 def export_model(model: object, model_name: str) -> None:
@@ -170,8 +171,12 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
                                                                    prior_no_mite=1.0)
     export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
     export_model_evaluation_stats_json(stats_dict, model_name)
-    compute_roc_curve(model, X_train=None, X_test=X_test, y_train=None, y_test=y_test)
-    compute_precisionrecall_curve(model, X_train=None, X_test=X_test, y_train=None, y_test=y_test)
+
+    metrics = {'ROC': RocCurveDisplay, 'Precision-Recall': PrecisionRecallDisplay}
+    for name, metric in metrics.items():
+        fig = compute_metric_curve(metric, name, model, X_test, y_test)
+        plt.savefig('Evaluation_Images/' + model_name + '/' + name + '.pdf')
+        plt.show()
 
     try:
         plot_confusion_matrix(model, X_test, y_test)
