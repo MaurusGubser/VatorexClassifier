@@ -6,7 +6,7 @@ from sklearn.model_selection import learning_curve
 from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
 from lightgbm import LGBMClassifier
-from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve
+from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve, RocCurveDisplay, PrecisionRecallDisplay
 from typing import Union
 
 from data_reading_writing import read_data_and_labels
@@ -82,22 +82,40 @@ def plot_learning_curve_model(folder_path: str, data_params: dict, model: object
     return None
 
 
-def compute_precisionrecall_curve(clf: object, X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
-                                  y_test: np.ndarray) -> None:
-    plot_train = plot_precision_recall_curve(clf, X_train, y_train)
-    plot_train.ax_.set_title('Precision-recall training set')
-    plot_test = plot_precision_recall_curve(clf, X_test, y_test)
-    plot_test.ax_.set_title('Precision-recall test set')
+def compute_precisionrecall_curve(clf: object, X_train: Union[None, np.ndarray], X_test: np.ndarray,
+                                  y_train: Union[None, np.ndarray], y_test: np.ndarray) -> None:
+    if X_train is not None:
+        try:
+            plot_train = PrecisionRecallDisplay.from_estimator(clf, X_train, y_train)
+            plot_train.ax_.set_title('Precision-recall training set')
+        except ValueError:
+            plot_train = PrecisionRecallDisplay.from_predictions(y_true=y_train, y_pred=clf.predict(X_train))
+            plot_train.ax_.set_title('Precision-recall training set')
+    try:
+        plot_test = PrecisionRecallDisplay.from_estimator(clf, X_test, y_test)
+        plot_test.ax_.set_title('Precision-recall test set')
+    except ValueError:
+        plot_test = PrecisionRecallDisplay.from_predictions(y_true=y_test, y_pred=clf.predict(X_test))
+        plot_test.ax_.set_title('Precision-recall test set')
     plt.show()
     return None
 
 
-def compute_roc_curve(clf: object, X_train: np.ndarray, X_test: np.ndarray, y_train: np.ndarray,
-                      y_test: np.ndarray) -> None:
-    plot_train = plot_roc_curve(clf, X_train, y_train)
-    plot_train.ax_.set_title('ROC training set')
-    plot_test = plot_roc_curve(clf, X_test, y_test)
-    plot_test.ax_.set_title('ROC test set')
+def compute_roc_curve(clf: object, X_train: Union[None, np.ndarray], X_test: np.ndarray,
+                      y_train: Union[None, np.ndarray], y_test: np.ndarray) -> None:
+    if X_train is not None:
+        try:
+            plot_train = RocCurveDisplay.from_estimator(clf, X_train, y_train)
+            plot_train.ax_.set_title('ROC training set')
+        except ValueError:
+            plot_train = RocCurveDisplay.from_predictions(y_true=y_train, y_pred=clf.predict(X_train))
+            plot_train.ax_.set_title('ROC training set')
+    try:
+        plot_test = RocCurveDisplay.from_estimator(clf, X_test, y_test)
+        plot_test.ax_.set_title('ROC test set')
+    except ValueError:
+        plot_test = RocCurveDisplay.from_predictions(y_true=y_test, y_pred=clf.predict(X_test))
+        plot_test.ax_.set_title('ROC test set')
     plt.show()
     return None
 
