@@ -1,13 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import OrderedDict
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import learning_curve
 from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
 from lightgbm import LGBMClassifier
 from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve, RocCurveDisplay, PrecisionRecallDisplay
-from typing import Union
 
 from data_reading_writing import read_data_and_labels
 from data_handling import split_and_sample_data
@@ -68,15 +66,12 @@ def plot_learning_curve(estimator: object, title: str, X: np.ndarray, y: np.ndar
     return None
 
 
-def plot_learning_curve_model(folder_path: str, data_params: dict, model: object, model_name: str,
-                              undersampling_rate: float, oversampling_rate: float) -> None:
+def plot_learning_curve_model(folder_path: str, data_params: dict, model: object, model_name: str) -> None:
     data, labels, paths = read_data_and_labels(folder_path, data_params)
     data, labels, _ = split_and_sample_data(data=data,
                                             labels=labels,
                                             paths_imgs=paths,
-                                            test_size=None,
-                                            undersampling_rate=undersampling_rate,
-                                            oversampling_rate=oversampling_rate)
+                                            test_size=None)
     cv = 10
     plot_learning_curve(model, model_name, data, labels, ylim=None, cv=cv)
     return None
