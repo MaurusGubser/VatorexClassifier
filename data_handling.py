@@ -155,52 +155,8 @@ def rearrange_hists(histograms_list: list, data_params: dict, read_hist: bool) -
     return data
 
 
-def undersample_false_candidates(data: np.ndarray, labels: np.ndarray, paths_images: list,
-                                 undersampling_rate: float) -> (np.ndarray, np.ndarray, list):
-    nb_candidates = labels.size
-    nb_true_cand = np.sum(labels)
-
-    if nb_true_cand / nb_candidates <= undersampling_rate:
-        nb_false_remove = nb_candidates - int(nb_true_cand / undersampling_rate)
-        idxs_false = list(np.arange(0, nb_candidates)[labels == 0])
-        random.seed(42)  # to assure, same sample is drawn; remove if selection should be random
-        idxs_false_remove = random.sample(idxs_false, k=nb_false_remove)
-        data = np.delete(data, idxs_false_remove, axis=0)
-        labels = np.delete(labels, idxs_false_remove)
-        paths_images = np.delete(paths_images, idxs_false_remove)
-        return data, labels, paths_images
-    else:
-        raise ValueError(
-            'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand,
-                                                                                                   nb_candidates,
-                                                                                                   undersampling_rate))
-
-
-def oversample_true_candidates(data: np.ndarray, labels: np.ndarray, oversampling_rate: float) -> (
-        np.ndarray, np.ndarray):
-    nb_candidates = labels.size
-    nb_true_cand = np.sum(labels)
-
-    alpha = oversampling_rate / (1 - oversampling_rate)
-    if nb_true_cand / nb_candidates <= oversampling_rate:
-        oversampling_type = 'random'
-        if oversampling_type == 'random':
-            oversampler = RandomOverSampler(sampling_strategy=alpha, shrinkage=0.1, random_state=42)
-        elif oversampling_type == 'smote':
-            oversampler = SMOTE(sampling_strategy=alpha, n_jobs=-1, random_state=42)
-        data_res, labels_res = oversampler.fit_resample(data, labels)
-        return data_res, labels_res
-    else:
-        raise ValueError(
-            'Ratio of true candidates {} to total candidates {} is already greater than {}'.format(nb_true_cand,
-                                                                                                   nb_candidates,
-                                                                                                   oversampling_rate))
-
-
-def split_and_sample_data(data: np.ndarray, labels: np.ndarray, paths_imgs: list, test_size: Union[None, float],
-                          undersampling_rate: float, oversampling_rate: float) -> (
+def split_and_sample_data(data: np.ndarray, labels: np.ndarray, paths_imgs: list, test_size: Union[None, float]) -> (
         np.ndarray, np.ndarray, np.ndarray, np.ndarray, list, list):
-
     seed = 42
     if test_size is not None:
         X_train, X_test, y_train, y_test, paths_train, paths_test = train_test_split(data,
@@ -214,11 +170,6 @@ def split_and_sample_data(data: np.ndarray, labels: np.ndarray, paths_imgs: list
         X_test = np.array([])
         y_test = np.array([])
         paths_test = None
-    if undersampling_rate is not None:
-        X_train, y_train, paths_train = undersample_false_candidates(X_train, y_train, paths_train, undersampling_rate)
-    if oversampling_rate is not None:
-        X_train, y_train = oversample_true_candidates(X_train, y_train, oversampling_rate)
-        paths_train = None
     print('Data before sampling: {} positive, {} total.'.format(np.sum(labels), labels.size))
     print('Training data: {} positive, {} total'.format(np.sum(y_train, dtype=np.uint), y_train.size))
     print('Test data: {} positive, {} total'.format(np.sum(y_test, dtype=np.uint), y_test.size))

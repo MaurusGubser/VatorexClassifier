@@ -93,15 +93,12 @@ def compute_metric_curve(metric_type: [RocCurveDisplay, PrecisionRecallDisplay],
     return plot_test
 
 
-def plot_roc_precrcll_curves(clf: object, dir_data: str, data_params: dict, test_size: float,
-                             undersampling_rate: Union[None, float], oversampling_rate: Union[None, float]) -> None:
+def plot_roc_precrcll_curves(clf: object, dir_data: str, data_params: dict, test_size: float) -> None:
     data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
                                                                    paths_imgs=paths_imgs,
-                                                                   test_size=test_size,
-                                                                   undersampling_rate=undersampling_rate,
-                                                                   oversampling_rate=oversampling_rate)
+                                                                   test_size=test_size)
     clf.fit(X_train, y_train)
     figs = []
     metrics = {'ROC': RocCurveDisplay, 'Precision-Recall': PrecisionRecallDisplay}

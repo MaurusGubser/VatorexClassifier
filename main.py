@@ -17,9 +17,9 @@ read_hist = 'context'  # must be 'candidate', 'context' or None
 with_image = None  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = None  # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-nb_segments = None  # must be None or a integer; segment image using k-means in color space
+nb_segments = None  # must be None or an integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
-nb_components_pca = None  # must be None or a integer, which defines number of components
+nb_components_pca = None  # must be None or an integer, which defines number of components
 batch_size_pca = None  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
 hist_hsl = True
 hist_h = True
@@ -38,8 +38,6 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('quadratic_features', quadratic_features), ('with_mean', with_mean),
                                ('with_std', with_std), ('with_false1', with_false1)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
-undersampling_rate = None  # must be None or float in [0,1]; false candidates get undersampled to according ratio
-oversampling_rate = None  # must be None or float in [0,1]; true candidates get oversample to according ratio
 
 path_image_folders = 'Candidate_Images/Small_matching05_mindist015/'
 
@@ -76,7 +74,7 @@ model_name = 'LGBM_balanced'
 model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = False  # if x-axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
-parameter_range = np.array([10, 30, 50, 70, 100, 150, 200, 250, 300])   # max_iter/n_estimators
+parameter_range = np.array([10, 30, 50, 70, 100, 150, 200, 250, 300])  # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
 # parameter_range = np.insert(np.logspace(-2, 3, 10), 0, 0.0)  # l2_regularization/reg_lambda
@@ -108,7 +106,7 @@ reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
 
 parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, reg_alpha, class_weight])
-nb_split_cv = 10    # number of split cvs
+nb_split_cv = 10  # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
@@ -144,21 +142,18 @@ if __name__ == '__main__':
     elif train_models:
         if test_size is None:
             raise ValueError('Parameter test_size cannot be None.')
-        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size,
-                                       undersampling_rate, oversampling_rate, use_weights, reweight_posterior)
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, use_weights,
+                                       reweight_posterior)
     elif cross_validation:
-        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, undersampling_rate,
-                             oversampling_rate, use_weights)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, use_weights)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, undersampling_rate,
-                          oversampling_rate, use_weights, reweight_posterior)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, use_weights,
+                          reweight_posterior)
     elif plot_curves:
-        plot_roc_precrcll_curves(clf, path_image_folders, data_parameters, test_size, undersampling_rate,
-                                 oversampling_rate)
+        plot_roc_precrcll_curves(clf, path_image_folders, data_parameters, test_size)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
     elif train_export_GUI:
-        export_GUI_model(path_image_folders, data_parameters, undersampling_rate, oversampling_rate, test_size, cv,
-                         parameters_lgbm)
+        export_GUI_model(path_image_folders, data_parameters, test_size, cv, parameters_lgbm)
     else:
         print('No option chosen.')

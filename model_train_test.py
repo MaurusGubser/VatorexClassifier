@@ -254,7 +254,6 @@ def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: n
 
 
 def train_and_test_model_selection(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
-                                   undersampling_rate: Union[None, float], oversampling_rate: Union[None, float],
                                    use_weights: Union[None, str, List[float]], reweight_posterior: bool) -> None:
     if use_weights == 'balanced':
         class_weight = 'balanced'
@@ -266,9 +265,7 @@ def train_and_test_model_selection(model_selection: dict, folder_path: str, data
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
                                                                    paths_imgs=paths_images,
-                                                                   test_size=test_size,
-                                                                   undersampling_rate=undersampling_rate,
-                                                                   oversampling_rate=oversampling_rate)
+                                                                   test_size=test_size)
     del data
     if reweight_posterior:
         prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
