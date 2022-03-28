@@ -1,7 +1,7 @@
-numpy~=1.19.5
+numpy~=1.22.3
 sklearn~=0.0
 scikit-learn~=1.0.2
-lightgbm~=3.2.0
-scikit-image~=0.18.1
-matplotlib~=3.3.3
-pandas~=1.2.0
+lightgbm~=3.3.2
+scikit-image~=0.19.2
+matplotlib~=3.5.1
+pandas~=1.4.1
