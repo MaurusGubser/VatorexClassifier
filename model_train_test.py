@@ -252,7 +252,7 @@ def train_and_test_model_selection(model_selection: dict, folder_path: str, data
     if reweight_posterior:
         prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
     else:
-        prior_mite, prior_no_mite = None, None
+        prior_mite, prior_no_mite = 1.0, 1.0
     for key, value in models.items():
         train_and_test_modelgroup(modelgroup=value,
                                   modelgroup_name=key,

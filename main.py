@@ -42,7 +42,7 @@ test_size = 0.10  # must be float in (0,1); fraction of test set
 path_image_folders = 'Candidate_Images/Small_matching05_mindist015/'
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
 log_reg = True
 sgd = False
@@ -63,7 +63,7 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
                                ('gradient_boost', gradient_boost), ('handicraft', handicraft)])
 
-use_class_weight = 'balanced'  # give classes weight according to their size; either 'balanced' or None
+use_class_weight = None  # give classes weight according to their size; either 'balanced' or None
 reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
 
 # ----- cross-validation for one parameter -----
@@ -94,7 +94,7 @@ grid_search = False
 
 model_gs = LGBMClassifier()
 model_name = 'LGBM'
-scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
+scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
 learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
@@ -106,7 +106,7 @@ reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
 
 parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, reg_alpha, class_weight])
-nb_split_cv = 10  # number of split cvs
+nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
@@ -116,8 +116,8 @@ plot_curves = False
 clf = LGBMClassifier()
 
 # ----- evaluate trained model ------
-evaluate_model = True
-path_trained_model = 'GUI_Model_Export/TestFitting_matching05_mindist015_original_objectivebinary_num_iterations300_learning_rate0.1_deterministicTrue_num_threads-1_lambda_l220.0_num_leaves31_max_depth-1_is_unbalanceTrue/LightGBM_Model_Vatorex.txt'
+evaluate_model = False
+path_trained_model = 'GUI_Model_Export/path_to_dir/LightGBM_Model_Vatorex.txt'
 path_test_data = 'Candidate_Images/MiteThresholdTest/'
 model_name = 'LGBM_balanced_matching05_mindist015'
 
@@ -126,11 +126,11 @@ train_export_GUI = False
 
 cv = 10
 parameters_lgbm = {'objective': 'binary',
-                   'num_iterations': 300,
+                   'num_iterations': 200,
                    'learning_rate': 0.1,
                    'deterministic': True,
                    'num_threads': -1,
-                   'lambda_l2': 20.0,
+                   'lambda_l2': 10.0,
                    'num_leaves': 31,  # std 31
                    'max_depth': -1,  # std -1
                    'is_unbalance': False}
