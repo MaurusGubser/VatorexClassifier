@@ -63,6 +63,7 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
                                ('gradient_boost', gradient_boost), ('handicraft', handicraft)])
 
+use_class_weight = 'balanced'  # give classes weight according to their size; either 'balanced' or None
 reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
 
 # ----- cross-validation for one parameter -----
@@ -142,7 +143,7 @@ if __name__ == '__main__':
         if test_size is None:
             raise ValueError('Parameter test_size cannot be None.')
         train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size,
-                                       reweight_posterior)
+                                       use_class_weight, reweight_posterior)
     elif cross_validation:
         cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
