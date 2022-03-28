@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import json
 import time
 from collections import OrderedDict
+
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
     recall_score, roc_auc_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve, \
     RocCurveDisplay, PrecisionRecallDisplay
@@ -15,7 +16,7 @@ from lightgbm import LGBMClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
-from typing import Union, List
+from typing import Union
 import lightgbm as lgb
 
 from data_reading_writing import read_data_and_labels
@@ -55,7 +56,7 @@ def export_model_training_stats_csv(model_dict: dict, model_name: str, data_dict
         os.mkdir('Training_Statistics')
     filename = 'Training_Statistics/Model_Statistics.csv'
     if not os.path.exists(filename):
-        title_string = 'Model name,Model_params,TRAIN Accuracy,Acc. Balanced, ROCAUC,Precision,Recall,F1 Score,TEST Accuracy,Acc. Balanced, ROCAUC,Precision,Recall,F1 Score,'
+        title_string = 'Model name,Model_params,TRAIN Accuracy,Acc. Balanced,ROCAUC,Precision,Recall,F1 Score,TEST Accuracy,Acc. Balanced,ROCAUC,Precision,Recall,F1 Score,'
         for i in data_dict.keys():
             title_string = title_string + str(i) + ','
         title_string = title_string + '\n'
@@ -98,19 +99,16 @@ def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray) -> obje
 def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, prior_mite: float,
                    prior_no_mite: float) -> (dict, list, list):
     start_time = time.time()
-    if prior_mite is None and prior_no_mite is None:
+    try:
+        y_probs = model.predict_proba(X)
+        y_probs[:, 1] = y_probs[:, 1] * prior_mite
+        y_probs[:, 0] = y_probs[:, 0] * prior_no_mite
+        sum_normalize = np.sum(y_probs, axis=1)
+        y_probs = y_probs / sum_normalize[:, np.newaxis]
+        y_pred = np.where(y_probs[:, 1] <= 0.5, 0, 1)
+    except AttributeError:
         y_pred = np.around(model.predict(X))
-    else:
-        try:
-            y_probs = model.predict_proba(X)
-            y_probs[:, 1] = y_probs[:, 1] * prior_mite
-            y_probs[:, 0] = y_probs[:, 0] * prior_no_mite
-            sum_normalize = np.sum(y_probs, axis=1)
-            y_probs = y_probs / sum_normalize[:, np.newaxis]
-            y_pred = np.where(y_probs[:, 1] <= 0.5, 0, 1)
-        except AttributeError:
-            y_pred = np.around(model.predict(X))
-            print('No probabilistic model for {} available; working with predictions instead.'.format(model))
+        print('No probabilistic model for {} available; working with predictions instead.'.format(model))
     end_time = time.time()
     print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
@@ -201,7 +199,7 @@ def export_images(images_list: list, export_directory: str) -> None:
     if not os.path.exists(export_directory):
         os.mkdir(export_directory)
     filename_list = export_directory + 'image_list.txt'
-    np.savetxt(filename_list, np.sort(images_list), delimiter=' ', fmt='%s')
+    np.savetxt(filename_list, X=np.sort(images_list), delimiter=' ', fmt='%s')
     for path in images_list:
         path = path.replace('(', '\(')
         path = path.replace(')', '\)')
