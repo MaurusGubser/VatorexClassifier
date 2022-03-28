@@ -5,7 +5,6 @@ import lightgbm as lgb
 import numpy as np
 from lightgbm import LGBMClassifier
 from sklearn.metrics import confusion_matrix
-from glob import glob
 
 from data_handling import split_and_sample_data
 from data_reading_writing import get_folder_name, read_data_and_labels
