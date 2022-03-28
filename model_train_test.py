@@ -87,20 +87,9 @@ def read_model_stats_json(stats_path: str) -> dict:
     return stats_dict
 
 
-def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray,
-                use_weights: Union[None, str, List[float]]) -> object:
-    if use_weights is None or use_weights == 'balanced':
-        weights = None
-    else:
-        nb_samples = y_train.size
-        nb_pos = np.sum(y_train)
-        nb_neg = nb_samples - nb_pos
-        weights = np.zeros(nb_samples)
-        weight_0, weight_1 = use_weights
-        weights[y_train == 0] = weight_0 * nb_samples / (2 * nb_neg)
-        weights[y_train == 1] = weight_1 * nb_samples / (2 * nb_pos)
+def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray) -> object:
     start_time = time.time()
-    model.fit(X_train, y_train, sample_weight=weights)
+    model.fit(X_train, y_train)
     end_time = time.time()
     print('Training time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     return model
@@ -230,8 +219,7 @@ def get_name_index(model_name: str, folder_name: str, file_format: str) -> int:
 
 def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: np.ndarray, X_test: np.ndarray,
                               y_train: np.ndarray, y_test: np.ndarray, paths_train: Union[None, list],
-                              paths_test: Union[None, list], data_params: dict,
-                              use_weights: Union[None, str, List[float]], prior_mite: float,
+                              paths_test: Union[None, list], data_params: dict, prior_mite: float,
                               prior_no_mite: float) -> None:
     index = get_name_index(modelgroup_name, 'Training_Statistics/', 'json')
     dict_data = OrderedDict([('training_size', y_train.size), ('training_nb_mites', int(np.sum(y_train))),
@@ -241,7 +229,7 @@ def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: n
     for i in range(0, len(modelgroup)):
         model_name = modelgroup_name + '_' + str(index + i)
         dict_model = OrderedDict([('model', modelgroup[i]), ('model_params', modelgroup[i].get_params())])
-        dict_model['model'] = train_model(dict_model['model'], X_train, y_train, use_weights)
+        dict_model['model'] = train_model(dict_model['model'], X_train, y_train)
         dict_model['model_stats_train'], _, _ = evaluate_model(dict_model['model'], X_train, y_train, paths_train,
                                                                prior_mite, prior_no_mite)
         dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test,
@@ -254,11 +242,7 @@ def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: n
 
 
 def train_and_test_model_selection(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
-                                   use_weights: Union[None, str, List[float]], reweight_posterior: bool) -> None:
-    if use_weights == 'balanced':
-        class_weight = 'balanced'
-    else:
-        class_weight = None
+                                   class_weight: Union[str, None], reweight_posterior: bool) -> None:
     models = define_models(model_selection, class_weight)
 
     data, labels, paths_images = read_data_and_labels(folder_path, data_params)
@@ -281,7 +265,6 @@ def train_and_test_model_selection(model_selection: dict, folder_path: str, data
                                   paths_train=None,
                                   paths_test=None,
                                   data_params=data_params,
-                                  use_weights=use_weights,
                                   prior_mite=prior_mite,
                                   prior_no_mite=prior_no_mite)
     return None

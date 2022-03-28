@@ -63,7 +63,6 @@ model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
                                ('gradient_boost', gradient_boost), ('handicraft', handicraft)])
 
-use_weights = 'balanced'  # weights for model fitting; must be None, 'balanced' or [weight_0, weight_1] in percent
 reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
 
 # ----- cross-validation for one parameter -----
@@ -142,13 +141,12 @@ if __name__ == '__main__':
     elif train_models:
         if test_size is None:
             raise ValueError('Parameter test_size cannot be None.')
-        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size, use_weights,
+        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size,
                                        reweight_posterior)
     elif cross_validation:
-        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters, use_weights)
+        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, use_weights,
-                          reweight_posterior)
+        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, reweight_posterior)
     elif plot_curves:
         plot_roc_precrcll_curves(clf, path_image_folders, data_parameters, test_size)
     elif evaluate_model:
