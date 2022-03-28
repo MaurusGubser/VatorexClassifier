@@ -94,7 +94,7 @@ grid_search = False
 
 model_gs = LGBMClassifier()
 model_name = 'LGBM'
-scoring_parameters = ['recall', 'precision', 'f1']
+scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
 learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
