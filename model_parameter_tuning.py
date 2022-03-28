@@ -6,7 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import validation_curve, GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
-from typing import Union, List
 
 from data_handling import split_and_sample_data, compute_prior_weight
 from data_reading_writing import read_data_and_labels
@@ -15,7 +14,7 @@ from model_train_test import get_name_index, evaluate_model, export_evaluation_i
 
 
 def compute_cv_scores(model_type: object, data: np.ndarray, labels: np.ndarray, cv_params: dict, score_param: str) -> (
-np.ndarray, np.ndarray):
+        np.ndarray, np.ndarray):
     model_parameter = cv_params['model_parameter']
     parameter_range = cv_params['parameter_range']
     k = cv_params['nb_split_cv']
@@ -118,7 +117,7 @@ def grid_search_model(model: object, folder_path: str, data_params: dict, grid_s
     if reweight_posterior:
         prior_mite, prior_no_mite = compute_prior_weight(np.array(labels), y_train)
     else:
-        prior_mite, prior_no_mite = None, None
+        prior_mite, prior_no_mite = 1.0, 1.0
 
     clf = GridSearchCV(estimator=model,
                        param_grid=grid_search_params['parameters_grid'],
