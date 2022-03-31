@@ -19,21 +19,21 @@ def hist_read(path: str) -> list:
                 size_h = int(line_tokens[1])
                 size_l = int(line_tokens[2])
                 size_s = int(line_tokens[3])
-                pdf_hls = np.zeros((size_h, size_l, size_s), dtype='float32')
-                pdf_h = np.zeros(size_h, dtype='float32')
-                pdf_l = np.zeros(size_l, dtype='float32')
-                pdf_s = np.zeros(size_s, dtype='float32')
+                pdf_hls = np.zeros((size_h, size_l, size_s), dtype='float64')
+                pdf_h = np.zeros(size_h, dtype='float64')
+                pdf_l = np.zeros(size_l, dtype='float64')
+                pdf_s = np.zeros(size_s, dtype='float64')
                 mode = 'hls'
             elif line_tokens[0] in ['h', 'l', 's']:
                 mode = line_tokens[0]
             elif mode == 'hls':
-                pdf_hls[int(line_tokens[0]), int(line_tokens[1]), int(line_tokens[2])] = np.float32(line_tokens[3])
+                pdf_hls[int(line_tokens[0]), int(line_tokens[1]), int(line_tokens[2])] = np.float64(line_tokens[3])
             elif mode == 'h':
-                pdf_h[int(line_tokens[0])] = np.float32(line_tokens[1])
+                pdf_h[int(line_tokens[0])] = np.float64(line_tokens[1])
             elif mode == 'l':
-                pdf_l[int(line_tokens[0])] = np.float32(line_tokens[1])
+                pdf_l[int(line_tokens[0])] = np.float64(line_tokens[1])
             elif mode == 's':
-                pdf_s[int(line_tokens[0])] = np.float32(line_tokens[1])
+                pdf_s[int(line_tokens[0])] = np.float64(line_tokens[1])
             else:
                 raise ValueError('Line {} does not correspond to expected pattern.'.format(line))
     histograms = [pdf_hls, pdf_h, pdf_l, pdf_s]
