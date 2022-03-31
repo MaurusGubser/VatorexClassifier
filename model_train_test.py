@@ -124,11 +124,11 @@ def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, pri
 
 
 def export_model_evaluation_stats_json(stats_dict: dict, model_name: str) -> None:
-    if not os.path.exists('Evaluation_Images'):
-        os.mkdir('Evaluation_Images')
-    if not os.path.exists('Evaluation_Images/' + model_name):
-        os.mkdir('Evaluation_Images/' + model_name)
-    rel_file_path = 'Evaluation_Images/' + model_name + '/Statistics.json'
+    if not os.path.exists('Evaluation_Model'):
+        os.mkdir('Evaluation_Model')
+    if not os.path.exists('Evaluation_Model/' + model_name):
+        os.mkdir('Evaluation_Model/' + model_name)
+    rel_file_path = 'Evaluation_Model/' + model_name + '/Statistics.json'
     stats_dict.pop('acc')
     stats_dict.pop('acc_balanced')
     stats_dict.pop('f1_scr')
@@ -162,7 +162,7 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
     metrics = {'ROC': RocCurveDisplay, 'Precision-Recall': PrecisionRecallDisplay}
     for name, metric in metrics.items():
         fig = compute_metric_curve(metric, name, model, X_test, y_test)
-        plt.savefig('Evaluation_Images/' + model_name + '/' + name + '.pdf')
+        plt.savefig('Evaluation_Model/' + model_name + '/' + name + '.pdf')
         plt.show()
 
     try:
@@ -182,9 +182,9 @@ def list_fp_fn_tp_images(y_true: np.ndarray, y_pred: np.ndarray, paths_images: l
 
 def export_evaluation_images_model(misclassified_images: list, true_pos_images: list, model_name: str,
                                    train_test: str) -> None:
-    model_dir = 'Evaluation_Images/' + model_name
-    if not os.path.exists('Evaluation_Images'):
-        os.mkdir('Evaluation_Images')
+    model_dir = 'Evaluation_Model/' + model_name
+    if not os.path.exists('Evaluation_Model'):
+        os.mkdir('Evaluation_Model')
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
     dir_misclassified = model_dir + '/' + train_test + '_Misclassified/'
