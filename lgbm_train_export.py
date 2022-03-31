@@ -6,7 +6,7 @@ from lightgbm import LGBMClassifier
 from sklearn.metrics import confusion_matrix
 
 from data_handling import split_and_sample_data
-from data_reading_writing import get_folder_name, read_data_and_labels
+from data_reading_writing import get_folder_name, read_data_and_labels_from_path
 
 
 def get_data_path(path: str) -> str:
@@ -44,7 +44,7 @@ def export_GUI_model(folder_path: str, data_params: dict, test_size: float, cv: 
     data_params_str = get_folder_name(folder_path)
     model_params_str = model_params_to_str(param_lgbm)
     model_name = 'LightGBM_Model_Vatorex.txt'
-    data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
+    data, labels, paths_imgs = read_data_and_labels_from_path(folder_path, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
                                                                    paths_imgs=paths_imgs,

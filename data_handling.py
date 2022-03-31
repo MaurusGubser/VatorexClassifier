@@ -23,7 +23,7 @@ def compute_local_binary_pattern(image: np.ndarray, nb_pts=None, radius=3) -> np
     return image_lbp
 
 
-def compute_histograms(image: np.ndarray, nb_divisions: int, nb_bins: int) -> np.ndarray:
+def compute_histograms_from_image(image: np.ndarray, nb_divisions: int, nb_bins: int) -> np.ndarray:
     width = image.shape[0]
     length = image.shape[1]
     if image.ndim == 2:
@@ -49,8 +49,8 @@ def scale_data(data: np.ndarray, with_mean: bool, with_std: bool) -> np.ndarray:
     return scale(data, axis=-1, with_mean=with_mean, with_std=with_std)
 
 
-def feature_computation(images_list: list, with_image: bool, with_binary_patterns: bool, histogram_params: dict,
-                        nb_segments: int) -> np.ndarray:
+def compute_features(images_list: list, with_image: bool, with_binary_patterns: bool, histogram_params: dict,
+                     nb_segments: int) -> np.ndarray:
     if not (with_image or with_binary_patterns or histogram_params or nb_segments):
         raise ValueError(
             "At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
@@ -67,7 +67,7 @@ def feature_computation(images_list: list, with_image: bool, with_binary_pattern
         if histogram_params:
             nb_divisions, nb_bins = histogram_params
             data_img = np.append(data_img,
-                                 compute_histograms(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
+                                 compute_histograms_from_image(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
         if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
@@ -77,7 +77,7 @@ def feature_computation(images_list: list, with_image: bool, with_binary_pattern
     return data
 
 
-def dimension_reduction(data: np.ndarray, nb_components_pca: int, batch_size_pca: int) -> np.ndarray:
+def reduce_dimension(data: np.ndarray, nb_components_pca: int, batch_size_pca: int) -> np.ndarray:
     start = time.time()
     old_shape = data.shape
     if nb_components_pca:
@@ -110,9 +110,9 @@ def preprocess_images(images_list: list, data_params: dict) -> np.ndarray:
     nb_components_pca = data_params['nb_components_pca']
     batch_size_pca = data_params['batch_size_pca']
 
-    data = feature_computation(images_list, with_image, with_binary_patterns, histogram_params, nb_segments)
+    data = compute_features(images_list, with_image, with_binary_patterns, histogram_params, nb_segments)
     data = remove_low_var_features(data, threshold_low_var)
-    data = dimension_reduction(data, nb_components_pca, batch_size_pca)
+    data = reduce_dimension(data, nb_components_pca, batch_size_pca)
 
     return data
 
@@ -179,3 +179,9 @@ def compute_prior_weight(y_unbalanced: np.ndarray, y_balanced: np.ndarray) -> (f
     factor_mite = p_unbalanced_mite / p_balanced_mite
     factor_no_mite = (1 - p_unbalanced_mite) / (1 - p_balanced_mite)
     return factor_mite, factor_no_mite
+
+
+def compute_quadratic_features(data: np.ndarray) -> np.ndarray:
+    data_squared = np.square(data)
+    data = np.append(data, data_squared, axis=1)
+    return data

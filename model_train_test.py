@@ -19,7 +19,7 @@ from sklearn.tree import DecisionTreeClassifier
 from typing import Union
 import lightgbm as lgb
 
-from data_reading_writing import read_data_and_labels
+from data_reading_writing import read_data_and_labels_from_path
 from data_handling import split_and_sample_data, compute_prior_weight
 from roc_precrcll_curves import compute_metric_curve
 
@@ -152,7 +152,7 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
         model = lgb.Booster(model_file=path_trained_model)
     except RuntimeError:
         'Could no load any model for {}'.format(path_trained_model)
-    X_test, y_test, paths_images = read_data_and_labels(path_test_data, data_params)
+    X_test, y_test, paths_images = read_data_and_labels_from_path(path_test_data, data_params)
     # To do: prior weight cannot be computed since training data is not given
     stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0,
                                                                    prior_no_mite=1.0)
@@ -243,7 +243,7 @@ def train_and_test_model_selection(model_selection: dict, folder_path: str, data
                                    class_weight: Union[str, None], reweight_posterior: bool) -> None:
     models = define_models(model_selection, class_weight)
 
-    data, labels, paths_images = read_data_and_labels(folder_path, data_params)
+    data, labels, paths_images = read_data_and_labels_from_path(folder_path, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
                                                                    paths_imgs=paths_images,
@@ -359,16 +359,11 @@ def define_models(model_selection: dict, class_weight: Union[None, str]) -> dict
                              GradientBoostingClassifier(n_estimators=200, max_features='sqrt'),
                              GradientBoostingClassifier(n_estimators=200, max_features='log2')]
 
-    handicraft_models = [LGBMClassifier(n_estimators=100, class_weight='balanced', num_leaves=5),
-                         LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=0.1, num_leaves=5),
-                         LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=1.0, num_leaves=5),
-                         LGBMClassifier(n_estimators=100, class_weight='balanced', reg_lambda=10.0, num_leaves=5)]
-
     models = OrderedDict([('log_reg', log_reg_models), ('sgd', sgd_models), ('ridge_class', ridge_class_models),
                           ('decision_tree', decision_tree_models), ('random_forest', random_forest_models),
                           ('l_svm', l_svm_models), ('nl_svm', nl_svm_models), ('naive_bayes', naive_bayes_models),
                           ('ada_boost', ada_boost_models), ('histogram_boost', histogram_boost_models),
-                          ('gradient_boost', gradient_boost_models), ('handicraft', handicraft_models)])
+                          ('gradient_boost', gradient_boost_models)])
 
     for key, value in model_selection.items():
         if not value:

@@ -28,7 +28,7 @@ hist_l = True
 quadratic_features = False  # use basis 1, x_i, x_i**2, no mixed terms
 with_mean = False  # data gets shifted such that mean is 0.0
 with_std = False  # data gets scaled such that std is 1.0
-with_false1 = True  # use false1 labelled data
+with_false1 = False  # use false1 labelled data
 
 data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hist), ('with_image', with_image),
                                ('with_binary_patterns', with_binary_patterns), ('histogram_params', histogram_params),
@@ -39,10 +39,10 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('with_std', with_std), ('with_false1', with_false1)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
 
-path_image_folders = 'Candidate_Images/Small_matching05_mindist015/'
+path_image_folders = 'Candidate_Images/Test_Read_Write/'    # 'Candidate_Images/Small_matching05_mindist015/'
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
 log_reg = True
 sgd = False
@@ -55,13 +55,12 @@ naive_bayes = True
 ada_boost = False
 histogram_boost = True
 gradient_boost = False
-handicraft = False
 
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
                                ('decision_tree', decision_tree), ('random_forest', random_forest),
                                ('l_svm', l_svm), ('nl_svm', nl_svm), ('naive_bayes', naive_bayes),
                                ('ada_boost', ada_boost), ('histogram_boost', histogram_boost),
-                               ('gradient_boost', gradient_boost), ('handicraft', handicraft)])
+                               ('gradient_boost', gradient_boost)])
 
 use_class_weight = None  # give classes weight according to their size; either 'balanced' or None
 reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
@@ -117,18 +116,18 @@ clf = LGBMClassifier()
 
 # ----- evaluate trained model ------
 evaluate_model = False
-path_trained_model = 'GUI_Model_Export/path_to_dir/LightGBM_Model_Vatorex.txt'
-path_test_data = 'Candidate_Images/MiteThresholdTest/'
-model_name = 'LGBM_balanced_matching05_mindist015'
+path_trained_model = '/home/maurus/ownCloud/Institution/Vatorex_Projekt/BesprechungenTom/2022_04_05/MiteThresholdEvaluation/model_tom_balanced.txt'
+path_test_data = '/home/maurus/ownCloud/Institution/Vatorex_Projekt/BesprechungenTom/2022_04_05/MiteThresholdEvaluation/LabelledSeriesAppTestExtracted/220303_164416/'
+model_name = 'LGBM_model_tom_balanced_220303_164416'
 
 # ----- train and export model for GUI ------
-train_export_GUI = False
+train_export_GUI = True
 
 cv = 10
 parameters_lgbm = {'objective': 'binary',
-                   'num_iterations': 200,
+                   'num_iterations': 300,
                    'learning_rate': 0.1,
-                   'deterministic': True,
+                   'deterministic': False,
                    'num_threads': -1,
                    'lambda_l2': 10.0,
                    'num_leaves': 31,  # std 31

@@ -7,7 +7,7 @@ from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, Ran
 from lightgbm import LGBMClassifier
 from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve, RocCurveDisplay, PrecisionRecallDisplay
 
-from data_reading_writing import read_data_and_labels
+from data_reading_writing import read_data_and_labels_from_path
 from data_handling import split_and_sample_data
 
 
@@ -67,7 +67,7 @@ def plot_learning_curve(estimator: object, title: str, X: np.ndarray, y: np.ndar
 
 
 def plot_learning_curve_model(folder_path: str, data_params: dict, model: object, model_name: str) -> None:
-    data, labels, paths = read_data_and_labels(folder_path, data_params)
+    data, labels, paths = read_data_and_labels_from_path(folder_path, data_params)
     data, labels, _ = split_and_sample_data(data=data,
                                             labels=labels,
                                             paths_imgs=paths,
@@ -89,7 +89,7 @@ def compute_metric_curve(metric_type: [RocCurveDisplay, PrecisionRecallDisplay],
 
 
 def plot_roc_precrcll_curves(clf: object, dir_data: str, data_params: dict, test_size: float) -> None:
-    data, labels, paths_imgs = read_data_and_labels(dir_data, data_params)
+    data, labels, paths_imgs = read_data_and_labels_from_path(dir_data, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
                                                                    labels=labels,
                                                                    paths_imgs=paths_imgs,

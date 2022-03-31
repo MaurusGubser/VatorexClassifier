@@ -2,7 +2,7 @@ import os.path
 import numpy as np
 import lightgbm as lgb
 
-from data_reading_writing import load_data_and_labels
+from data_reading_writing import reload_data_and_labels
 
 
 # ---------------------- working dir ----------------------
@@ -11,7 +11,7 @@ assert os.path.exists(working_dir), 'Directory {} does not exist.'.format(workin
 
 # ---------------------- load data and labels ----------------------
 path_data = working_dir + 'data.npz'    # must be already stored as .npz, for convenience
-_, data_hist, labels, _ = load_data_and_labels(path_data)
+_, data_hist, labels, _ = reload_data_and_labels(path_data)
 print('Data of shape {}'.format(data_hist.shape))
 
 # ---------------------- load model ----------------------

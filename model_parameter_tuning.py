@@ -8,7 +8,7 @@ from sklearn.model_selection import validation_curve, GridSearchCV
 from sklearn.metrics import plot_confusion_matrix
 
 from data_handling import split_and_sample_data, compute_prior_weight
-from data_reading_writing import read_data_and_labels
+from data_reading_writing import read_data_and_labels_from_path
 from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model, export_model, \
     export_model_evaluation_stats_json
 
@@ -68,7 +68,7 @@ def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict
 
 def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_params: dict) -> None:
     test_size = None
-    data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
+    data, labels, paths_imgs = read_data_and_labels_from_path(folder_path, data_params)
     X_train, _, y_train, _, _, _ = split_and_sample_data(data=data,
                                                          labels=labels,
                                                          paths_imgs=paths_imgs,
@@ -109,7 +109,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
 def grid_search_model(model: object, folder_path: str, data_params: dict, grid_search_params: dict, test_size: float,
                       reweight_posterior: bool) -> None:
-    data, labels, paths_imgs = read_data_and_labels(folder_path, data_params)
+    data, labels, paths_imgs = read_data_and_labels_from_path(folder_path, data_params)
     X_train, X_test, y_train, y_test, paths_train, paths_test = split_and_sample_data(data=data,
                                                                                       labels=labels,
                                                                                       paths_imgs=paths_imgs,

@@ -8,10 +8,10 @@ from skimage.util import img_as_ubyte
 from skimage.exposure import equalize_adapthist
 import time
 
-from data_handling import preprocess_images, rearrange_hists, scale_data
+from data_handling import preprocess_images, rearrange_hists, scale_data, compute_quadratic_features
 
 
-def hist_read(path: str) -> list:
+def read_histograms(path: str) -> list:
     with open(path, 'r') as read_file:
         for line in read_file.readlines():
             line_tokens = line.replace('\n', '').split(':')
@@ -40,8 +40,8 @@ def hist_read(path: str) -> list:
     return histograms
 
 
-def read_images_hist_from_folder(path_folder: str, read_image: bool, read_hist: Union[None, str],
-                                 with_false1: bool) -> (list, list, list, list):
+def read_data_from_single_dir(path_folder: str, read_image: bool, read_hist: Union[None, str],
+                              with_false1: bool) -> (list, list, list, list):
     if not read_image and read_hist not in ['candidate', 'context']:
         raise AssertionError('Got invalid values for read_image and read_hist; {} and {}'.format(read_image, read_hist))
     assert os.path.isdir(path_folder + '/extracted'), "Found no 'extracted' subdirectory in {}".format(path_folder)
@@ -60,9 +60,9 @@ def read_images_hist_from_folder(path_folder: str, read_image: bool, read_hist: 
             image = img_as_ubyte(equalize_adapthist(imread(path_img, as_gray=False)))
             images.append(image)
         if read_hist == 'candidate':
-            histograms.append(hist_read(path_hist))
+            histograms.append(read_histograms(path_hist))
         if read_hist == 'context':
-            histograms.append(hist_read(path_hist) + hist_read(path_hist_context))
+            histograms.append(read_histograms(path_hist) + read_histograms(path_hist_context))
         if re.search(pattern_true, path_img):
             labels.append(1)
         elif re.search(pattern_false1, path_img):
@@ -86,7 +86,7 @@ def read_images_hist_from_folder(path_folder: str, read_image: bool, read_hist: 
     return images, histograms, labels, images_paths
 
 
-def read_images_and_histograms(folder_list: list, read_image: bool, read_hist: Union[None, str], with_false1: bool) -> (
+def read_imgs_hists_labels_paths(folder_list: list, read_image: bool, read_hist: Union[None, str], with_false1: bool) -> (
         list, list, list, list):
     start_time = time.time()
     images = []
@@ -94,7 +94,7 @@ def read_images_and_histograms(folder_list: list, read_image: bool, read_hist: U
     labels = []
     images_paths = []
     for folder_path in folder_list:
-        imgs, hists, lbls, imgs_paths = read_images_hist_from_folder(folder_path, read_image, read_hist, with_false1)
+        imgs, hists, lbls, imgs_paths = read_data_from_single_dir(folder_path, read_image, read_hist, with_false1)
         images = images + imgs
         histograms = histograms + hists
         labels = labels + lbls
@@ -146,7 +146,7 @@ def export_data(data_img: np.ndarray, data_hist: np.ndarray, labels: np.ndarray,
     return None
 
 
-def load_data_and_labels(path_data: str) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+def reload_data_and_labels(path_data: str) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
     data = np.load(path_data)
     images = data['img']
     histograms = data['hist']
@@ -155,19 +155,19 @@ def load_data_and_labels(path_data: str) -> (np.ndarray, np.ndarray, np.ndarray,
     return images, histograms, labels, paths_images
 
 
-def read_data_and_labels(path: str, data_params: dict) -> (np.ndarray, np.ndarray, np.ndarray):
+def read_data_and_labels_from_path(path: str, data_params: dict) -> (np.ndarray, np.ndarray, np.ndarray):
     folder_name = get_folder_name(path)
     path_preprocessed = 'Preprocessed_Data/' + set_export_data_name(folder_name, data_params) + '.npz'
     read_image = data_params['read_image']
     read_hist = data_params['read_hist']
     with_false1 = data_params['with_false1']
     if os.path.exists(path_preprocessed):
-        data_images, data_histograms, labels, paths_images = load_data_and_labels(path_preprocessed)
+        data_images, data_histograms, labels, paths_images = reload_data_and_labels(path_preprocessed)
         print('Re-loaded preprocessed data and labels from {}'.format(path_preprocessed))
     else:
         folder_list = get_paths_of_image_folders(path)
-        data_images, data_histograms, labels, paths_images = read_images_and_histograms(folder_list, read_image,
-                                                                                        read_hist, with_false1)
+        data_images, data_histograms, labels, paths_images = read_imgs_hists_labels_paths(folder_list, read_image,
+                                                                                          read_hist, with_false1)
         if read_image:
             data_images = preprocess_images(data_images, data_params)
         if read_hist in ['candidate', 'context']:
@@ -197,7 +197,4 @@ def concatenate_data(data_img: np.ndarray, data_hist: np.ndarray, read_image: bo
     return data
 
 
-def compute_quadratic_features(data: np.ndarray) -> np.ndarray:
-    data_squared = np.square(data)
-    data = np.append(data, data_squared, axis=1)
-    return data
+
