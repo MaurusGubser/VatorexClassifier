@@ -1,6 +1,5 @@
 import json
 import os
-
 import lightgbm as lgb
 import numpy as np
 from lightgbm import LGBMClassifier
