@@ -146,7 +146,6 @@ def rearrange_hists(histograms_list: list, data_params: dict, read_hist: bool) -
             if hist_l:
                 data_hist = np.append(data_hist, hists[7])
         data.append(data_hist)
-        del hists
     data = np.array(data)
     end_time = time.time()
     print('Rearranged histograms in {:.1f}s; histograms of shape {}'.format((end_time - start_time), data.shape))
