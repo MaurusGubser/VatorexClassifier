@@ -33,7 +33,7 @@ def export_model(model: object, model_name: str) -> None:
     return None
 
 
-def export_model_stats_json(model_dict: dict, model_name: str, data_dict: dict) -> None:
+def export_stats_json(model_dict: dict, model_name: str, data_dict: dict) -> None:
     if not os.path.exists('Training_Statistics'):
         os.mkdir('Training_Statistics')
     rel_file_path = 'Training_Statistics/' + model_name + '.json'
@@ -51,7 +51,7 @@ def export_model_stats_json(model_dict: dict, model_name: str, data_dict: dict) 
     return None
 
 
-def export_model_training_stats_csv(model_dict: dict, model_name: str, data_dict: dict) -> None:
+def export_stats_csv(model_dict: dict, model_name: str, data_dict: dict) -> None:
     if not os.path.exists('Training_Statistics'):
         os.mkdir('Training_Statistics')
     filename = 'Training_Statistics/Model_Statistics.csv'
@@ -78,14 +78,6 @@ def export_model_training_stats_csv(model_dict: dict, model_name: str, data_dict
     with open(filename, 'a') as outfile:
         outfile.write(model_string)
     return None
-
-
-def read_model_stats_json(stats_path: str) -> dict:
-    with open(stats_path) as infile:
-        stats_dict = json.load(infile)
-    stats_dict['model_stats_train']['conf_matrix'] = np.reshape(stats_dict['model_stats_train']['conf_matrix'], (2, 2))
-    stats_dict['model_stats_test']['conf_matrix'] = np.reshape(stats_dict['model_stats_test']['conf_matrix'], (2, 2))
-    return stats_dict
 
 
 def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray) -> object:
@@ -165,6 +157,8 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
         plt.savefig('Evaluation_Model/' + model_name + '/' + name + '.pdf')
         plt.show()
 
+
+
     try:
         plot_confusion_matrix(model, X_test, y_test)
         plt.show()
@@ -233,8 +227,8 @@ def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: n
         dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test,
                                                               prior_mite, prior_no_mite)
         # export_model(dict_model['model'], model_name)
-        export_model_stats_json(dict_model, model_name, dict_data)
-        export_model_training_stats_csv(dict_model, model_name, dict_data)
+        export_stats_json(dict_model, model_name, dict_data)
+        export_stats_csv(dict_model, model_name, dict_data)
 
     return None
 
