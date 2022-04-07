@@ -1,11 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import learning_curve
-from sklearn.svm import LinearSVC, SVC
-from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
-from lightgbm import LGBMClassifier
-from sklearn.metrics import plot_precision_recall_curve, plot_roc_curve, RocCurveDisplay, PrecisionRecallDisplay
+from sklearn.metrics import RocCurveDisplay, PrecisionRecallDisplay
 
 from data_reading_writing import read_data_and_labels_from_path
 from data_handling import split_and_sample_data
