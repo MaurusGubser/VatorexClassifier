@@ -7,7 +7,7 @@ from sklearn.svm import SVC, LinearSVC
 from lightgbm import LGBMClassifier
 
 from lgbm_train_export import export_GUI_model
-from model_parameter_tuning import cross_validate_model, grid_search_model
+from model_parameter_tuning import cross_validation_evaluation, grid_search_evaluation
 from model_train_test import train_test_models, evaluate_trained_model
 from roc_precrcll_curves import plot_roc_precrcll_curves
 
@@ -144,9 +144,9 @@ if __name__ == '__main__':
         train_test_models(model_selection, path_image_folders, data_parameters, test_size,
                           use_class_weight, reweight_posterior)
     elif cross_validation:
-        cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
+        cross_validation_evaluation(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
-        grid_search_model(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, reweight_posterior)
+        grid_search_evaluation(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, reweight_posterior)
     elif plot_curves:
         plot_roc_precrcll_curves(clf, path_image_folders, data_parameters, test_size)
     elif evaluate_model:

@@ -5,20 +5,20 @@ from collections import OrderedDict
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import validation_curve, GridSearchCV
-from sklearn.metrics import plot_confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
 
 from data_handling import split_and_sample_data, compute_prior_weight
 from data_reading_writing import read_data_and_labels_from_path
-from model_train_test import get_name_index, evaluate_model, export_evaluation_images_model, export_model, \
-    export_model_evaluation_stats_json
+from model_train_test import get_name_index, evaluate_model, export_evaluation_stats_imgs, export_model, \
+    export_evaluation_stats_json
 
 
-def compute_cv_scores(model_type: object, data: np.ndarray, labels: np.ndarray, cv_params: dict, score_param: str) -> (
+def compute_cv_scores(model: object, data: np.ndarray, labels: np.ndarray, cv_params: dict, score_param: str) -> (
         np.ndarray, np.ndarray):
     model_parameter = cv_params['model_parameter']
     parameter_range = cv_params['parameter_range']
     k = cv_params['nb_split_cv']
-    train_scores, test_scores = validation_curve(estimator=model_type, X=data, y=labels, param_name=model_parameter,
+    train_scores, test_scores = validation_curve(estimator=model, X=data, y=labels, param_name=model_parameter,
                                                  param_range=parameter_range, cv=k, scoring=score_param,
                                                  n_jobs=-1, verbose=1)
     return train_scores, test_scores
@@ -66,7 +66,7 @@ def plot_validation_curve(train_scores: dict, test_scores: dict, cv_params: dict
     return None
 
 
-def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_params: dict) -> None:
+def cross_validation_evaluation(model: object, folder_path: str, data_params: dict, cv_params: dict) -> None:
     test_size = None
     data, labels, paths_imgs = read_data_and_labels_from_path(folder_path, data_params)
     X_train, _, y_train, _, _, _ = split_and_sample_data(data=data,
@@ -77,7 +77,7 @@ def cross_validate_model(model: object, folder_path: str, data_params: dict, cv_
     train_scores = OrderedDict({})
     test_scores = OrderedDict({})
     for score_param in ['recall', 'precision']:
-        train_scores[score_param], test_scores[score_param] = compute_cv_scores(model_type=model,
+        train_scores[score_param], test_scores[score_param] = compute_cv_scores(model=model,
                                                                                 data=X_train,
                                                                                 labels=y_train,
                                                                                 cv_params=cv_params,
@@ -107,8 +107,8 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def grid_search_model(model: object, folder_path: str, data_params: dict, grid_search_params: dict, test_size: float,
-                      reweight_posterior: bool) -> None:
+def grid_search_evaluation(model: object, folder_path: str, data_params: dict, grid_search_params: dict,
+                           test_size: float, reweight_posterior: bool) -> None:
     data, labels, paths_imgs = read_data_and_labels_from_path(folder_path, data_params)
     X_train, X_test, y_train, y_test, paths_train, paths_test = split_and_sample_data(data=data,
                                                                                       labels=labels,
@@ -139,11 +139,11 @@ def grid_search_model(model: object, folder_path: str, data_params: dict, grid_s
     stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_mite,
                                                                    prior_no_mite)
 
-    export_evaluation_images_model(misclassified_test, true_pos_test, export_name, 'Test')
-    export_model_evaluation_stats_json(stats_test, export_name)
+    export_evaluation_stats_imgs(misclassified_test, true_pos_test, export_name, 'Test')
+    export_evaluation_stats_json(stats_test, export_name)
     print('Best estimator:', clf.best_estimator_)
     export_model(clf.best_estimator_, export_name)
     print('Testing score:', clf.score(X_test, y_test))
-    plot_confusion_matrix(clf, X_test, y_test)
+    ConfusionMatrixDisplay().from_estimator(clf, X_test, y_test)
     plt.show()
     return None
