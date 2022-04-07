@@ -33,7 +33,7 @@ def export_model(model: object, model_name: str) -> None:
     return None
 
 
-def export_stats_json(model_dict: dict, model_name: str, data_dict: dict) -> None:
+def export_training_stats_json(model_dict: dict, model_name: str, data_dict: dict) -> None:
     if not os.path.exists('Training_Statistics'):
         os.mkdir('Training_Statistics')
     rel_file_path = 'Training_Statistics/' + model_name + '.json'
@@ -51,7 +51,7 @@ def export_stats_json(model_dict: dict, model_name: str, data_dict: dict) -> Non
     return None
 
 
-def export_stats_csv(model_dict: dict, model_name: str, data_dict: dict) -> None:
+def export_training_stats_csv(model_dict: dict, model_name: str, data_dict: dict) -> None:
     if not os.path.exists('Training_Statistics'):
         os.mkdir('Training_Statistics')
     filename = 'Training_Statistics/Model_Statistics.csv'
@@ -115,7 +115,7 @@ def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, pri
     return stats_dict, misclassified_imgs, true_pos_imgs
 
 
-def export_model_evaluation_stats_json(stats_dict: dict, model_name: str) -> None:
+def export_evaluation_stats_json(stats_dict: dict, model_name: str) -> None:
     if not os.path.exists('Evaluation_Model'):
         os.mkdir('Evaluation_Model')
     if not os.path.exists('Evaluation_Model/' + model_name):
@@ -148,8 +148,8 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
     # To do: prior weight cannot be computed since training data is not given
     stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0,
                                                                    prior_no_mite=1.0)
-    export_evaluation_images_model(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
-    export_model_evaluation_stats_json(stats_dict, model_name)
+    export_evaluation_stats_imgs(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
+    export_evaluation_stats_json(stats_dict, model_name)
 
     metrics = {'ROC': RocCurveDisplay, 'Precision-Recall': PrecisionRecallDisplay}
     for name, metric in metrics.items():
@@ -169,13 +169,13 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
 
 
 def list_fp_fn_tp_images(y_true: np.ndarray, y_pred: np.ndarray, paths_images: list) -> (list, list):
-    misclassified_imgs = paths_images[y_true + y_pred == 1]
-    correct_imgs = paths_images[y_true + y_pred == 2]
-    return misclassified_imgs, correct_imgs
+    fp_fn_imgs = paths_images[y_true + y_pred == 1]
+    tp_imgs = paths_images[y_true + y_pred == 2]
+    return fp_fn_imgs, tp_imgs
 
 
-def export_evaluation_images_model(misclassified_images: list, true_pos_images: list, model_name: str,
-                                   train_test: str) -> None:
+def export_evaluation_stats_imgs(misclassified_images: list, true_pos_images: list, model_name: str,
+                                 train_test: str) -> None:
     model_dir = 'Evaluation_Model/' + model_name
     if not os.path.exists('Evaluation_Model'):
         os.mkdir('Evaluation_Model')
@@ -209,7 +209,7 @@ def get_name_index(model_name: str, folder_name: str, file_format: str) -> int:
     return idx
 
 
-def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: np.ndarray, X_test: np.ndarray,
+def train_test_one_model_type(modelgroup: list, modelgroup_name: str, X_train: np.ndarray, X_test: np.ndarray,
                               y_train: np.ndarray, y_test: np.ndarray, paths_train: Union[None, list],
                               paths_test: Union[None, list], data_params: dict, prior_mite: float,
                               prior_no_mite: float) -> None:
@@ -227,15 +227,15 @@ def train_and_test_modelgroup(modelgroup: list, modelgroup_name: str, X_train: n
         dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test,
                                                               prior_mite, prior_no_mite)
         # export_model(dict_model['model'], model_name)
-        export_stats_json(dict_model, model_name, dict_data)
-        export_stats_csv(dict_model, model_name, dict_data)
+        export_training_stats_json(dict_model, model_name, dict_data)
+        export_training_stats_csv(dict_model, model_name, dict_data)
 
     return None
 
 
-def train_and_test_model_selection(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
-                                   class_weight: Union[str, None], reweight_posterior: bool) -> None:
-    models = define_models(model_selection, class_weight)
+def train_test_models(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
+                      class_weight: Union[str, None], reweight_posterior: bool) -> None:
+    models = set_models_by_type(model_selection, class_weight)
 
     data, labels, paths_images = read_data_and_labels_from_path(folder_path, data_params)
     X_train, X_test, y_train, y_test, _, _ = split_and_sample_data(data=data,
@@ -248,7 +248,7 @@ def train_and_test_model_selection(model_selection: dict, folder_path: str, data
     else:
         prior_mite, prior_no_mite = 1.0, 1.0
     for key, value in models.items():
-        train_and_test_modelgroup(modelgroup=value,
+        train_test_one_model_type(modelgroup=value,
                                   modelgroup_name=key,
                                   X_train=X_train,
                                   X_test=X_test,
@@ -262,7 +262,7 @@ def train_and_test_model_selection(model_selection: dict, folder_path: str, data
     return None
 
 
-def define_models(model_selection: dict, class_weight: Union[None, str]) -> dict:
+def set_models_by_type(model_types: dict, class_weight: Union[None, str]) -> dict:
     log_reg_models = [LogisticRegression(penalty='none', max_iter=200, class_weight=class_weight),
                       LogisticRegression(penalty='l2', C=10.0, max_iter=200, class_weight=class_weight),
                       LogisticRegression(penalty='l1', C=10.0, max_iter=200, solver='saga', class_weight=class_weight),
@@ -359,14 +359,14 @@ def define_models(model_selection: dict, class_weight: Union[None, str]) -> dict
                           ('ada_boost', ada_boost_models), ('histogram_boost', histogram_boost_models),
                           ('gradient_boost', gradient_boost_models)])
 
-    for key, value in model_selection.items():
+    for key, value in model_types.items():
         if not value:
             models.pop(key)
 
     return models
 
 
-def read_models(model_list: list) -> dict:
+def load_models(model_list: list) -> dict:
     model_dict = OrderedDict({})
     for name in model_list:
         model = pickle.load(open('Models_Trained/' + name + '.sav', 'rb'))
@@ -381,22 +381,3 @@ def test_model(model: object, X_test: np.ndarray, y_test: np.ndarray) -> None:
     plot_precision_recall_curve(model, X_test, y_test)
     plt.show()
     return None
-
-
-def get_feature_dims(model_dict: dict) -> dict:
-    feature_dims = OrderedDict({})
-    for key, value in model_dict.items():
-        model_type = key[0:key.rfind('_')]
-        if model_type in ['log_reg', 'sgd', 'ridge_class', 'log_reg_cv']:
-            feature_dims[key] = value.coef_.shape[1]
-        elif model_type in ['svm']:
-            feature_dims[key] = value.support_vectors_.shape[1]
-        elif model_type in ['naive_bayes']:
-            feature_dims[key] = value.theta_.shape[1]
-        elif model_type in ['ada_boost', 'gradient_boost']:
-            feature_dims[key] = value.feature_importance_.shape[0]
-        elif model_type in ['histogram_boost']:
-            feature_dims[key] = value.is_categorical_.shape[0]
-        else:
-            feature_dims[key] = value.n_features_
-    return feature_dims

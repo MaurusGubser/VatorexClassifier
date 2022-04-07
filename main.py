@@ -8,7 +8,7 @@ from lightgbm import LGBMClassifier
 
 from lgbm_train_export import export_GUI_model
 from model_parameter_tuning import cross_validate_model, grid_search_model
-from model_train_test import train_and_test_model_selection, evaluate_trained_model
+from model_train_test import train_test_models, evaluate_trained_model
 from roc_precrcll_curves import plot_roc_precrcll_curves
 
 # ----- data parameters -----
@@ -39,21 +39,21 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('with_std', with_std), ('with_false1', with_false1)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
 
-path_image_folders = 'Candidate_Images/Test_Read_Write/'    # 'Candidate_Images/Small_matching05_mindist015/'
+path_image_folders = 'Candidate_Images/Series_matching05_mindist015_test/'    # 'Candidate_Images/Small_matching05_mindist015/'
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
-log_reg = True
+log_reg = False
 sgd = False
 ridge_class = False
 decision_tree = False
 random_forest = False
 l_svm = True
 nl_svm = False
-naive_bayes = True
+naive_bayes = False
 ada_boost = False
-histogram_boost = True
+histogram_boost = False
 gradient_boost = False
 
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
@@ -73,7 +73,7 @@ model_name = 'LGBM_balanced'
 model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = False  # if x-axis should be logarithmic
 # parameter_range = np.array([0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]) # learning_rate
-parameter_range = np.array([10, 30, 50, 70, 100, 150, 200, 250, 300])  # max_iter/n_estimators
+parameter_range = np.array([100, 200, 300, 400, 500, 600])  # max_iter/n_estimators
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20, 25, 30, 50, 100, 200])   # max_depth
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
 # parameter_range = np.insert(np.logspace(-2, 3, 10), 0, 0.0)  # l2_regularization/reg_lambda
@@ -116,12 +116,12 @@ clf = LGBMClassifier()
 
 # ----- evaluate trained model ------
 evaluate_model = False
-path_trained_model = '/home/maurus/ownCloud/Institution/Vatorex_Projekt/BesprechungenTom/2022_04_05/MiteThresholdEvaluation/model_tom_balanced.txt'
-path_test_data = '/home/maurus/ownCloud/Institution/Vatorex_Projekt/BesprechungenTom/2022_04_05/MiteThresholdEvaluation/LabelledSeriesAppTestExtracted/220303_164416/'
-model_name = 'LGBM_model_tom_balanced_220303_164416'
+path_trained_model = 'GUI_Model_Export/Series_matching05_mindist015_original_objectivebinary_num_iterations100_learning_rate0.3_deterministicFalse_num_threads-1_lambda_l210.0_num_leaves31_max_depth-1_is_unbalanceFalse/LightGBM_Model_Vatorex.txt'
+path_test_data = 'Candidate_Images/Series_matching05_mindist015_original/'
+model_name = 'LGBM_model_unbalanced_train'
 
 # ----- train and export model for GUI ------
-train_export_GUI = True
+train_export_GUI = False
 
 cv = 10
 parameters_lgbm = {'objective': 'binary',
@@ -141,8 +141,8 @@ if __name__ == '__main__':
     elif train_models:
         if test_size is None:
             raise ValueError('Parameter test_size cannot be None.')
-        train_and_test_model_selection(model_selection, path_image_folders, data_parameters, test_size,
-                                       use_class_weight, reweight_posterior)
+        train_test_models(model_selection, path_image_folders, data_parameters, test_size,
+                          use_class_weight, reweight_posterior)
     elif cross_validation:
         cross_validate_model(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
