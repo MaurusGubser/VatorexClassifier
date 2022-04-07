@@ -6,7 +6,7 @@ from data_reading_writing import reload_data_and_labels
 
 
 # ---------------------- working dir ----------------------
-working_dir = 'LGBM_Comparison/Test_0_matching05_mindist015/'
+working_dir = 'LGBM_Comparison/220405_Test1/'
 assert os.path.exists(working_dir), 'Directory {} does not exist.'.format(working_dir)
 
 # ---------------------- load data and labels ----------------------
@@ -26,7 +26,7 @@ pred_labels = np.around(pred_proba)
 
 export_path_data = working_dir + 'data.txt'
 with open(export_path_data, 'w') as out_data:
-    np.savetxt(out_data, data_hist)
+    np.savetxt(out_data, data_hist, delimiter=',')
 
 export_path_labels = working_dir + 'labels.txt'
 with open(export_path_labels, 'w') as out_labels:
