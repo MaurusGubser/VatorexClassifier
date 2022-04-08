@@ -7,7 +7,7 @@ from sklearn.svm import SVC, LinearSVC
 from lightgbm import LGBMClassifier
 
 from lgbm_train_export import export_GUI_model
-from model_parameter_tuning import cross_validation_evaluation, grid_search_evaluation
+from model_parameter_tuning import cross_validation_one_param, grid_search_multi_param
 from model_train_test import train_test_models, evaluate_trained_model
 from roc_precrcll_curves import plot_roc_precrcll_curves
 
@@ -39,22 +39,22 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('with_std', with_std), ('with_false1', with_false1)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
 
-path_image_folders = 'Candidate_Images/Series_matching05_mindist015_test/'    # 'Candidate_Images/Small_matching05_mindist015/'
+path_image_folders = 'Candidate_Images/Series_matching05_mindist015_train/'    # 'Candidate_Images/Small_matching05_mindist015/'
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
-log_reg = False
+log_reg = True
 sgd = False
 ridge_class = False
 decision_tree = False
-random_forest = False
+random_forest = True
 l_svm = True
 nl_svm = False
-naive_bayes = False
-ada_boost = False
-histogram_boost = False
-gradient_boost = False
+naive_bayes = True
+ada_boost = True
+histogram_boost = True
+gradient_boost = True
 
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
                                ('decision_tree', decision_tree), ('random_forest', random_forest),
@@ -89,19 +89,20 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_gs)])
 
 # ----- grid search for several parameters -----
-grid_search = False
+grid_search = True
 
 model_gs = LGBMClassifier()
 model_name = 'LGBM'
-scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
+scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
-n_estimators = ('n_estimators', np.array([10, 50, 100, 300]))
-max_depth = ('max_depth', np.array([4, 10, 20, 50, -1]))
+# max_bins = ('max_bins', np.array([15, 63, 255]))
+learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
+n_estimators = ('n_estimators', np.array([50, 100, 300]))
+max_depth = ('max_depth', np.array([4, 20, 50, -1]))
 num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
-reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
-reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
+reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
+reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
 
 parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, reg_alpha, class_weight])
@@ -144,9 +145,9 @@ if __name__ == '__main__':
         train_test_models(model_selection, path_image_folders, data_parameters, test_size,
                           use_class_weight, reweight_posterior)
     elif cross_validation:
-        cross_validation_evaluation(model_cv, path_image_folders, data_parameters, cv_parameters)
+        cross_validation_one_param(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
-        grid_search_evaluation(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, reweight_posterior)
+        grid_search_multi_param(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, reweight_posterior)
     elif plot_curves:
         plot_roc_precrcll_curves(clf, path_image_folders, data_parameters, test_size)
     elif evaluate_model:
