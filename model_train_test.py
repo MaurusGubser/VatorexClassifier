@@ -104,9 +104,9 @@ def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, pri
     end_time = time.time()
     print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
-                              ('acc_balanced', balanced_accuracy_score(y, y_pred)),
+                              ('acc_balanced', balanced_accuracy_score(y, y_pred)), ('roc', roc_auc_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
-                              ('f1_scr', f1_score(y, y_pred)), ('roc', roc_auc_score(y, y_pred))])
+                              ('f1_scr', f1_score(y, y_pred))])
     if paths is not None:
         misclassified_imgs, true_pos_imgs = list_fp_fn_tp_images(y, y_pred, paths)
     else:
