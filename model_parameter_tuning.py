@@ -134,8 +134,6 @@ def grid_search_evaluation(model: object, folder_path: str, data_params: dict, g
     model_nb = get_name_index(grid_search_params['model_name'], 'GridSearch_Statistics/', 'csv')
     export_name = grid_search_params['model_name'] + '_' + str(model_nb)
     export_stats_gs(export_name, gs_df)
-    _, misclassified_train, true_pos_train = evaluate_model(clf, X_train, y_train, paths_train, prior_mite,
-                                                            prior_no_mite)
     stats_test, misclassified_test, true_pos_test = evaluate_model(clf, X_test, y_test, paths_test, prior_mite,
                                                                    prior_no_mite)
 
@@ -144,6 +142,6 @@ def grid_search_evaluation(model: object, folder_path: str, data_params: dict, g
     print('Best estimator:', clf.best_estimator_)
     export_model(clf.best_estimator_, export_name)
     print('Testing score:', clf.score(X_test, y_test))
-    ConfusionMatrixDisplay().from_estimator(clf, X_test, y_test)
+    ConfusionMatrixDisplay.from_estimator(clf, X_test, y_test)
     plt.show()
     return None
