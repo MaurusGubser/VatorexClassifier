@@ -6,13 +6,14 @@ model_name = 'LGBM'
 scoring_parameters = ['recall', 'precision', 'f1']
 refit_param = 'f1'
 
-learning_rate = ('learning_rate', np.array([0.1, 0.15, 0.2, 0.25]))
-n_estimators = ('n_estimators', np.array([10, 50, 100, 300]))
-max_depth = ('max_depth', np.array([4, 10, 20, 50, -1]))
-num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
-reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
-reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 6), 0, 0.0))
-class_weight = ('class_weight', [None, 'balanced'])
+# max_bins = ('max_bins', np.array([15, 63, 255]))
+# learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
+n_estimators = ('n_estimators', np.array([50, 100, 300]))
+max_depth = ('max_depth', np.array([4, 20, 50, -1]))
+# num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
+reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
+# reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
+# class_weight = ('class_weight', [None, 'balanced'])
 
 parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, reg_alpha, class_weight])
 nb_split_cv = 10    # number of split cvs
