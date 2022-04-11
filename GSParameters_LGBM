@@ -3,7 +3,7 @@ grid_search = True
 
 model_gs = LGBMClassifier()
 model_name = 'LGBM'
-scoring_parameters = ['recall', 'precision', 'f1']
+scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
 # max_bins = ('max_bins', np.array([15, 63, 255]))

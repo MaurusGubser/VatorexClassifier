@@ -3,7 +3,7 @@ grid_search = True
 
 model_gs = SVC()
 model_name = 'SVC'
-scoring_parameters = ['recall', 'precision', 'f1']
+scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
 Cs = ('C', np.insert(np.logspace(-2, 3, 12), 0, 0.0))

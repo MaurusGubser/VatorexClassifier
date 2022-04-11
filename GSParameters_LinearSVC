@@ -3,7 +3,7 @@ grid_search = True
 
 model_gs = LinearSVC(penalty='l2', class_weight='balanced')
 model_name = 'LinearSVC'
-scoring_parameters = ['recall', 'precision', 'f1']
+scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
 Cs = ('C', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
