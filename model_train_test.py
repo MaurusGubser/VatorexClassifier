@@ -84,7 +84,7 @@ def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray) -> obje
     start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
-    print('Training time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
+    print('Training time: {}min {}s'.format((end_time - start_time) // 60, (end_time - start_time) % 60))
     return model
 
 
@@ -102,7 +102,7 @@ def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, pri
         y_pred = np.around(model.predict(X))
         print('No probabilistic model for {} available; working with predictions instead.'.format(model))
     end_time = time.time()
-    print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) / 60, (end_time - start_time) % 60))
+    print('Evaluating time: {}min {}s'.format((end_time - start_time) // 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
                               ('acc_balanced', balanced_accuracy_score(y, y_pred)), ('roc', roc_auc_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),

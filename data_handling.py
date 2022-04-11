@@ -35,7 +35,7 @@ def compute_histograms_from_image(image: np.ndarray, nb_divisions: int, nb_bins:
         for i in range(0, nb_divisions):
             for j in range(0, nb_divisions):
                 sub_img = image[i * width_subregion:(i + 1) * width_subregion,
-                                j * length_subregion:(j + 1) * length_subregion, ch]
+                          j * length_subregion:(j + 1) * length_subregion, ch]
                 histograms[ch, i * nb_divisions + j, :] = np.histogram(sub_img, bins=nb_bins, density=True)[0]
         histograms[ch, :, :] = histograms[ch, :, :] / np.sum(histograms[ch, :, :])
     return histograms
@@ -67,13 +67,14 @@ def compute_features(images_list: list, with_image: bool, with_binary_patterns: 
         if histogram_params:
             nb_divisions, nb_bins = histogram_params
             data_img = np.append(data_img,
-                                 compute_histograms_from_image(img, nb_divisions=nb_divisions, nb_bins=nb_bins).flatten())
+                                 compute_histograms_from_image(img, nb_divisions=nb_divisions,
+                                                               nb_bins=nb_bins).flatten())
         if nb_segments:
             data_img = np.append(data_img, segment_image(img, nb_segments).flatten())
         data.append(data_img)
     data = np.array(data)
     end = time.time()
-    print('Computed features in {:.1f} minutes.'.format((end - start) / 60))
+    print('Computed features in {} minutes.'.format((end - start) // 60))
     return data
 
 
@@ -85,9 +86,8 @@ def reduce_dimension(data: np.ndarray, nb_components_pca: int, batch_size_pca: i
         # data = normalize(data)
         data = pca.fit_transform(data)
         end = time.time()
-        print(
-            'Dimensionality reduction took {:.1f} minutes; reduction from {} to {}'.format((end - start) / 60,
-                                                                                           old_shape, data.shape))
+        print('Dimensionality reduction took {} minutes; reduction from {} to {}'.format((end - start) // 60, old_shape,
+                                                                                         data.shape))
     return data
 
 
@@ -97,7 +97,7 @@ def remove_low_var_features(data: np.ndarray, threshold_low_var: float) -> np.nd
         selector = VarianceThreshold(threshold=threshold_low_var)
         data = selector.fit_transform(data)
         end_time = time.time()
-        print('Removed low var features in {:.1f} minutes.'.format((end_time - start_time) / 60))
+        print('Removed low var features in {} minutes.'.format((end_time - start_time) // 60))
     return data
 
 
@@ -148,7 +148,7 @@ def rearrange_hists(histograms_list: list, data_params: dict, read_hist: bool) -
         data.append(data_hist)
     data = np.array(data)
     end_time = time.time()
-    print('Rearranged histograms in {:.1f}s; histograms of shape {}'.format((end_time - start_time), data.shape))
+    print('Rearranged histograms in {}s; histograms of shape {}'.format((end_time - start_time), data.shape))
     return data
 
 

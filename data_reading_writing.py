@@ -86,7 +86,8 @@ def read_data_from_single_dir(path_folder: str, read_image: bool, read_hist: Uni
     return images, histograms, labels, images_paths
 
 
-def read_imgs_hists_labels_paths(folder_list: list, read_image: bool, read_hist: Union[None, str], with_false1: bool) -> (
+def read_imgs_hists_labels_paths(folder_list: list, read_image: bool, read_hist: Union[None, str],
+                                 with_false1: bool) -> (
         list, list, list, list):
     start_time = time.time()
     images = []
@@ -100,8 +101,8 @@ def read_imgs_hists_labels_paths(folder_list: list, read_image: bool, read_hist:
         labels = labels + lbls
         images_paths = images_paths + imgs_paths
     end_time = time.time()
-    print('Read images and histograms in {:.1f} minutes and {:.0f} seconds'.format((end_time - start_time) / 60,
-                                                                                   (end_time - start_time) % 60))
+    print('Read images and histograms in {} minutes and {} seconds'.format((end_time - start_time) // 60,
+                                                                           (end_time - start_time) % 60))
     return images, histograms, labels, images_paths
 
 
@@ -195,6 +196,3 @@ def concatenate_data(data_img: np.ndarray, data_hist: np.ndarray, read_image: bo
     else:
         data = np.append(data_img, data_hist, axis=1)
     return data
-
-
-
