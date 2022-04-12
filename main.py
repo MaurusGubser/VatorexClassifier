@@ -1,4 +1,6 @@
 import numpy as np
+import cProfile
+import pstats
 from collections import OrderedDict
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -89,27 +91,28 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
                              ('nb_split_cv', nb_split_gs)])
 
 # ----- grid search for several parameters -----
-grid_search = True
+grid_search = False
 
-model_gs = LGBMClassifier()
-model_name = 'LGBM'
-scoring_parameters = ['recall', 'precision', 'f1']
+model_gs = LGBMClassifier(class_weight='balanced')
+model_name = 'LGBM_balanced'
+scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
 # max_bins = ('max_bins', np.array([15, 63, 255]))
-learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
+# learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
 n_estimators = ('n_estimators', np.array([50, 100, 300]))
 max_depth = ('max_depth', np.array([4, 20, 50, -1]))
-num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
+# num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
 reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
-reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
-class_weight = ('class_weight', [None, 'balanced'])
+# reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
+# class_weight = ('class_weight', [None, 'balanced'])
 
-parameters_grid = OrderedDict([learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, reg_alpha, class_weight])
+parameters_grid = OrderedDict([n_estimators, max_depth, reg_lambda])
 nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
+
 
 # ----------- plot curves ----------------------
 plot_curves = False
@@ -117,20 +120,20 @@ clf = LGBMClassifier()
 
 # ----- evaluate trained model ------
 evaluate_model = False
-path_trained_model = 'GUI_Model_Export/Series_matching05_mindist015_original_objectivebinary_num_iterations100_learning_rate0.3_deterministicFalse_num_threads-1_lambda_l210.0_num_leaves31_max_depth-1_is_unbalanceFalse/LightGBM_Model_Vatorex.txt'
-path_test_data = 'Candidate_Images/Series_matching05_mindist015_original/'
-model_name = 'LGBM_model_unbalanced_train'
+path_trained_model = 'GUI_Model_Export/data_mixed_train_objectivebinary_num_iterations100_learning_rate0.1_deterministicFalse_n_jobs-1_reg_lambda1.0_num_leaves31_max_depth-1_is_unbalanceTrue_kfold10/LightGBM_Model_Vatorex.txt'
+path_test_data = 'data_mixed_test'
+model_name = 'LGBM_model_balanced_matching05_mindist015_mixed'
 
 # ----- train and export model for GUI ------
-train_export_GUI = False
+train_export_GUI = True
 
 cv = 10
 parameters_lgbm = {'objective': 'binary',
-                   'num_iterations': 300,
+                   'num_iterations': 100,
                    'learning_rate': 0.1,
-                   'deterministic': False,
-                   'num_threads': -1,
-                   'lambda_l2': 10.0,
+                   'force_col_wise': True,
+                   'n_jobs': -1,
+                   'reg_lambda': 1.0,
                    'num_leaves': 31,  # std 31
                    'max_depth': -1,  # std -1
                    'is_unbalance': False}
@@ -156,3 +159,4 @@ if __name__ == '__main__':
         export_GUI_model(path_image_folders, data_parameters, test_size, cv, parameters_lgbm)
     else:
         print('No option chosen.')
+
