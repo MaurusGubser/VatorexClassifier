@@ -44,8 +44,7 @@ def read_data_from_single_dir(path_folder: str, read_image: bool, read_hist: Uni
                               with_false1: bool) -> (list, list, list, list):
     if not read_image and read_hist not in ['candidate', 'context']:
         raise AssertionError('Got invalid values for read_image and read_hist; {} and {}'.format(read_image, read_hist))
-    assert os.path.isdir(path_folder + '/extracted'), "Found no 'extracted' subdirectory in {}".format(path_folder)
-    images_paths = [str(path) for path in Path(path_folder + '/extracted').rglob('*.jpg')]
+    images_paths = [str(path) for path in Path(path_folder).glob('*.jpg')]
     histograms_paths = [path.replace('.jpg', '.hist') for path in images_paths]
     histograms_context_paths = [path.replace('.jpg', '_context.hist') for path in images_paths]
     images = []
@@ -84,36 +83,6 @@ def read_data_from_single_dir(path_folder: str, read_image: bool, read_hist: Uni
         images_paths = [images_paths[i] for i in range(0, len(labels)) if mask[i]]
         labels = [label for label in labels if label != 2]
     return images, histograms, labels, images_paths
-
-
-def read_imgs_hists_labels_paths(folder_list: list, read_image: bool, read_hist: Union[None, str],
-                                 with_false1: bool) -> (
-        list, list, list, list):
-    start_time = time.time()
-    images = []
-    histograms = []
-    labels = []
-    images_paths = []
-    for folder_path in folder_list:
-        imgs, hists, lbls, imgs_paths = read_data_from_single_dir(folder_path, read_image, read_hist, with_false1)
-        images = images + imgs
-        histograms = histograms + hists
-        labels = labels + lbls
-        images_paths = images_paths + imgs_paths
-    end_time = time.time()
-    print('Read images and histograms in {} minutes and {} seconds'.format((end_time - start_time) // 60,
-                                                                           (end_time - start_time) % 60))
-    return images, histograms, labels, images_paths
-
-
-def get_paths_of_image_folders(path_folder: str) -> list:
-    folder_list = []
-    for root, dirs, files in os.walk(path_folder):
-        if root != path_folder:
-            continue
-        for name in dirs:
-            folder_list.append(path_folder + name)
-    return folder_list
 
 
 def get_folder_name(path_folder: str) -> str:
@@ -166,18 +135,22 @@ def read_data_and_labels_from_path(path: str, data_params: dict) -> (np.ndarray,
         data_images, data_histograms, labels, paths_images = reload_data_and_labels(path_preprocessed)
         print('Re-loaded preprocessed data and labels from {}'.format(path_preprocessed))
     else:
-        folder_list = get_paths_of_image_folders(path)
-        data_images, data_histograms, labels, paths_images = read_imgs_hists_labels_paths(folder_list, read_image,
-                                                                                          read_hist, with_false1)
-        if read_image:
-            data_images = preprocess_images(data_images, data_params)
-        if read_hist in ['candidate', 'context']:
-            data_histograms = rearrange_hists(data_histograms, data_params, read_hist)
-        labels = np.array(labels)
-        paths_images = np.array(paths_images)
-        data_name = set_export_data_name(folder_name, data_params)
-        export_data(data_images, data_histograms, labels, paths_images, data_name)
-
+        folder_list = [str(p) for p in list(Path(path).rglob('extracted'))]
+        data_images, data_histograms, labels, paths_images = [], [], [], []
+        for path_series in folder_list:
+            imgs, hists, lbls, imgs_paths = read_data_from_single_dir(path_series, read_image, read_hist, with_false1)
+            data_images += imgs
+            data_histograms += hists
+            labels += lbls
+            imgs_paths += imgs_paths
+    if read_image:
+        data_images = preprocess_images(data_images, data_params)
+    if read_hist in ['candidate', 'context']:
+        data_histograms = rearrange_hists(data_histograms, data_params, read_hist)
+    labels = np.array(labels)
+    paths_images = np.array(paths_images)
+    data_name = set_export_data_name(folder_name, data_params)
+    export_data(data_images, data_histograms, labels, paths_images, data_name)
     data = concatenate_data(data_images, data_histograms, read_image, read_hist)
     print('Data before preprocessing of shape {}'.format(data.shape))
     if data_params['quadratic_features']:
