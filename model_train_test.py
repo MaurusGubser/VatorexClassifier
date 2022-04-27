@@ -16,7 +16,7 @@ from lightgbm import LGBMClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
-from typing import Union
+from typing import Union, List
 import lightgbm as lgb
 
 from data_reading_writing import read_data_and_labels_from_path
@@ -51,14 +51,27 @@ def export_training_stats_json(model_dict: dict, model_name: str, data_dict: dic
     return None
 
 
+def get_score_params(model_dict: dict) -> List[str]:
+    score_names = []
+    for name in model_dict.keys():
+        if name == 'conf_matrix':
+            continue
+        else:
+            score_names.append(name)
+    return score_names
+
+
 def export_training_stats_csv(model_dict: dict, model_name: str, data_dict: dict) -> None:
     if not os.path.exists('Training_Statistics'):
         os.mkdir('Training_Statistics')
     filename = 'Training_Statistics/Model_Statistics.csv'
     if not os.path.exists(filename):
-        title_string = 'Model name,Model_params,TRAIN Accuracy,Acc. Balanced,ROCAUC,Precision,Recall,F1 Score,TEST Accuracy,Acc. Balanced,ROCAUC,Precision,Recall,F1 Score,'
-        for i in data_dict.keys():
-            title_string = title_string + str(i) + ','
+        title_string = 'Model name,Model params,'
+        score_params = get_score_params(model_dict['model_stats_train'])
+        title_string = title_string + '_train,'.join(score_params) + '_train,'
+        title_string = title_string + '_test,'.join(score_params) + '_test,'
+        for data_params in data_dict.keys():
+            title_string = title_string + str(data_params) + ','
         title_string = title_string + '\n'
         with open(filename, 'w') as initfile:
             initfile.write(title_string)
@@ -84,7 +97,7 @@ def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray) -> obje
     start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
-    print('Training time: {}min {}s'.format((end_time - start_time) // 60, (end_time - start_time) % 60))
+    print('Training time: {:.0f}min {:.0f}s'.format((end_time - start_time) // 60, (end_time - start_time) % 60))
     return model
 
 
@@ -102,7 +115,7 @@ def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, pri
         y_pred = np.around(model.predict(X))
         print('No probabilistic model for {} available; working with predictions instead.'.format(model))
     end_time = time.time()
-    print('Evaluating time: {}min {}s'.format((end_time - start_time) // 60, (end_time - start_time) % 60))
+    print('Evaluating time: {:.0f}min {:.0f}s'.format((end_time - start_time) // 60, (end_time - start_time) % 60))
     stats_dict = OrderedDict([('conf_matrix', confusion_matrix(y, y_pred)), ('acc', accuracy_score(y, y_pred)),
                               ('acc_balanced', balanced_accuracy_score(y, y_pred)), ('roc', roc_auc_score(y, y_pred)),
                               ('prec', precision_score(y, y_pred)), ('rcll', recall_score(y, y_pred)),
@@ -123,7 +136,7 @@ def export_evaluation_stats_json(stats_dict: dict, model_name: str) -> None:
     rel_file_path = 'Evaluation_Model/' + model_name + '/Statistics.json'
     stats_dict.pop('acc')
     stats_dict.pop('acc_balanced')
-    stats_dict.pop('f1_scr')
+    # stats_dict.pop('f1_scr')
     conf_matrix = stats_dict['conf_matrix']
     stats_dict.pop('conf_matrix')
     stats_dict['Candidates'] = int(np.sum(conf_matrix))
@@ -156,9 +169,6 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
         fig = compute_metric_curve(metric, name, model, X_test, y_test)
         plt.savefig('Evaluation_Model/' + model_name + '/' + name + '.pdf')
         plt.show()
-
-
-
     try:
         plot_confusion_matrix(model, X_test, y_test)
         plt.show()
@@ -226,7 +236,6 @@ def train_test_one_model_type(modelgroup: list, modelgroup_name: str, X_train: n
                                                                prior_mite, prior_no_mite)
         dict_model['model_stats_test'], _, _ = evaluate_model(dict_model['model'], X_test, y_test, paths_test,
                                                               prior_mite, prior_no_mite)
-        # export_model(dict_model['model'], model_name)
         export_training_stats_json(dict_model, model_name, dict_data)
         export_training_stats_csv(dict_model, model_name, dict_data)
 
