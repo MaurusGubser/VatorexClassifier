@@ -125,9 +125,10 @@ def rearrange_hists(histograms_list: list, data_params: dict, read_hist: bool) -
     hist_l = data_params['hist_l']
 
     data = []
-    while histograms_list:
+    # while histograms_list not empty:
+    for hists in histograms_list:
         data_hist = np.empty(0)
-        hists = histograms_list.pop(0)
+        #hists = histograms_list.pop(0)
         if hist_hsl:
             data_hist = np.append(data_hist, hists[0].flatten())
         if hist_h:

@@ -142,15 +142,15 @@ def read_data_and_labels_from_path(path: str, data_params: dict) -> (np.ndarray,
             data_images += imgs
             data_histograms += hists
             labels += lbls
-            imgs_paths += imgs_paths
-    if read_image:
-        data_images = preprocess_images(data_images, data_params)
-    if read_hist in ['candidate', 'context']:
-        data_histograms = rearrange_hists(data_histograms, data_params, read_hist)
-    labels = np.array(labels)
-    paths_images = np.array(paths_images)
-    data_name = set_export_data_name(folder_name, data_params)
-    export_data(data_images, data_histograms, labels, paths_images, data_name)
+            paths_images += imgs_paths
+        if read_image:
+            data_images = preprocess_images(data_images, data_params)
+        if read_hist in ['candidate', 'context']:
+            data_histograms = rearrange_hists(data_histograms, data_params, read_hist)
+        labels = np.array(labels)
+        paths_images = np.array(paths_images)
+        data_name = set_export_data_name(folder_name, data_params)
+        export_data(data_images, data_histograms, labels, paths_images, data_name)
     data = concatenate_data(data_images, data_histograms, read_image, read_hist)
     print('Data before preprocessing of shape {}'.format(data.shape))
     if data_params['quadratic_features']:
