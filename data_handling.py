@@ -74,7 +74,7 @@ def compute_features(images_list: list, with_image: bool, with_binary_patterns: 
         data.append(data_img)
     data = np.array(data)
     end = time.time()
-    print('Computed features in {} minutes.'.format((end - start) // 60))
+    print('Computed features in {:.0f}min.'.format((end - start) // 60))
     return data
 
 
@@ -83,11 +83,10 @@ def reduce_dimension(data: np.ndarray, nb_components_pca: int, batch_size_pca: i
     old_shape = data.shape
     if nb_components_pca:
         pca = IncrementalPCA(n_components=nb_components_pca, batch_size=batch_size_pca)
-        # data = normalize(data)
         data = pca.fit_transform(data)
         end = time.time()
-        print('Dimensionality reduction took {} minutes; reduction from {} to {}'.format((end - start) // 60, old_shape,
-                                                                                         data.shape))
+        print('Dimensionality reduction took {:.0f}min; reduction from {} to {}'.format((end - start) // 60,
+                                                                                             old_shape, data.shape))
     return data
 
 
@@ -97,7 +96,7 @@ def remove_low_var_features(data: np.ndarray, threshold_low_var: float) -> np.nd
         selector = VarianceThreshold(threshold=threshold_low_var)
         data = selector.fit_transform(data)
         end_time = time.time()
-        print('Removed low var features in {} minutes.'.format((end_time - start_time) // 60))
+        print('Removed low var features in {:.0f}min.'.format((end_time - start_time) // 60))
     return data
 
 
@@ -125,10 +124,8 @@ def rearrange_hists(histograms_list: list, data_params: dict, read_hist: bool) -
     hist_l = data_params['hist_l']
 
     data = []
-    # while histograms_list not empty:
     for hists in histograms_list:
         data_hist = np.empty(0)
-        #hists = histograms_list.pop(0)
         if hist_hsl:
             data_hist = np.append(data_hist, hists[0].flatten())
         if hist_h:
