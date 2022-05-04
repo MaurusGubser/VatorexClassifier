@@ -17,8 +17,8 @@ def compute_local_binary_pattern(image: np.ndarray, nb_pts=None, radius=3) -> np
     if nb_pts is None:
         nb_pts = 8 * radius
     image_lbp = np.zeros(image.shape)
-    for ch in range(0, image.shape[-1]):
-        image_lbp[:, :, ch] = local_binary_pattern(image[:, :, ch], nb_pts, radius)
+    for chnl in range(0, image.shape[-1]):
+        image_lbp[:, :, chnl] = local_binary_pattern(image[:, :, chnl], nb_pts, radius)
     image_lbp = image_lbp / np.amax(image_lbp)
     return image_lbp
 

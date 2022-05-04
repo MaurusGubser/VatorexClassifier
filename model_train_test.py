@@ -158,7 +158,6 @@ def evaluate_trained_model(path_test_data: str, data_params: dict, path_trained_
     except RuntimeError:
         'Could no load any model for {}'.format(path_trained_model)
     X_test, y_test, paths_images = read_data_and_labels_from_path(path_test_data, data_params)
-    # To do: prior weight cannot be computed since training data is not given
     stats_dict, misclassified_imgs, true_pos_imgs = evaluate_model(model, X_test, y_test, paths_images, prior_mite=1.0,
                                                                    prior_no_mite=1.0)
     export_evaluation_stats_imgs(misclassified_imgs, true_pos_imgs, model_name, 'Evaluation')
