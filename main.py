@@ -1,9 +1,5 @@
 import numpy as np
-import cProfile
-import pstats
 from collections import OrderedDict
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from lightgbm import LGBMClassifier
@@ -13,15 +9,16 @@ from model_parameter_tuning import cross_validation_one_param, grid_search_multi
 from model_train_test import train_test_models, evaluate_trained_model
 from roc_precrcll_curves import plot_roc_precrcll_curves
 
+
 # ----- data parameters -----
-read_image = False  # True or False
-read_hist = 'context'  # must be 'candidate', 'context' or None
+read_image = True  # True or False
+read_hist = None  # must be 'candidate', 'context' or None
 with_image = None  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = None  # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
-nb_segments = None  # must be None or an integer; segment image using k-means in color space
+nb_segments = 20  # must be None or an integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
-nb_components_pca = None  # must be None or an integer, which defines number of components
+nb_components_pca = 100  # must be None or an integer, which defines number of components
 batch_size_pca = None  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
 hist_hsl = True
 hist_h = True
@@ -41,22 +38,22 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('with_std', with_std), ('with_false1', with_false1)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
 
-path_image_folders = 'Candidate_Images/Series_matching05_mindist015_train/'    # 'Candidate_Images/Small_matching05_mindist015/'
+path_image_folders = 'Candidate_Images/Series_matching05_mindist015_train/'    # 'Candidate_Images/Small_Series/'
 
 # ----- train and evaluate models -----
-train_models = False
+train_models = True
 
-log_reg = True
+log_reg = False
 sgd = False
 ridge_class = False
 decision_tree = False
-random_forest = True
+random_forest = False
 l_svm = True
 nl_svm = False
 naive_bayes = True
-ada_boost = True
-histogram_boost = True
-gradient_boost = True
+ada_boost = False
+histogram_boost = False
+gradient_boost = False
 
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
                                ('decision_tree', decision_tree), ('random_forest', random_forest),
@@ -80,10 +77,7 @@ parameter_range = np.array([100, 200, 300, 400, 500, 600])  # max_iter/n_estimat
 # parameter_range = np.array([2, 3, 5, 7, 9, 15, 20])   # max_leaf_nodes/num_leaves
 # parameter_range = np.insert(np.logspace(-2, 3, 10), 0, 0.0)  # l2_regularization/reg_lambda
 # parameter_range = np.array([2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 255])   # max_bins
-# parameter_range = np.array([1, 3, 5, 7, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200])  # n_estimators
-# parameter_range = np.array([0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0])    # learning_rate
-# parameter_range = np.insert(np.logspace(-2, 4, 5), 0, 0.0)  # np.array([0.001, 0.01, 0.1, 0.2, 0.3, 0.5, 1.0, 5.0, 10.0, 100.0, 1000.0])   # C, alpha
-# parameter_range = [{0: 1, 1: k} for k in range(1, 101 + 1, 10)]
+# parameter_range = np.insert(np.logspace(-2, 4, 5), 0, 0.0)    # C, alpha
 nb_split_gs = 10  # number of split cvs
 
 cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', model_parameter),
@@ -98,16 +92,15 @@ model_name = 'LGBM_balanced'
 scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
-# max_bins = ('max_bins', np.array([15, 63, 255]))
-# learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
+max_bins = ('max_bins', np.array([15, 63, 255]))
+learning_rate = ('learning_rate', np.array([0.1, 0.2, 0.3]))
 n_estimators = ('n_estimators', np.array([50, 100, 300]))
 max_depth = ('max_depth', np.array([4, 20, 50, -1]))
-# num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
+num_leaves = ('num_leaves', np.array([3, 7, 15, 31]))
 reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
-# reg_alpha = ('reg_alpha', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
-# class_weight = ('class_weight', [None, 'balanced'])
+class_weight = ('class_weight', [None, 'balanced'])
 
-parameters_grid = OrderedDict([n_estimators, max_depth, reg_lambda])
+parameters_grid = OrderedDict([max_bins, learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, class_weight])
 nb_split_cv = 10    # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
@@ -120,12 +113,12 @@ clf = LGBMClassifier()
 
 # ----- evaluate trained model ------
 evaluate_model = False
-path_trained_model = 'GUI_Model_Export/data_mixed_train_objectivebinary_num_iterations100_learning_rate0.1_deterministicFalse_n_jobs-1_reg_lambda1.0_num_leaves31_max_depth-1_is_unbalanceTrue_kfold10/LightGBM_Model_Vatorex.txt'
-path_test_data = 'data_mixed_test'
-model_name = 'LGBM_model_balanced_matching05_mindist015_mixed'
+path_trained_model = 'path/to/trained/model.txt'
+path_test_data = 'path/to/data/'
+model_name = 'data_model_name'
 
 # ----- train and export model for GUI ------
-train_export_GUI = True
+train_export_GUI = False
 
 cv = 10
 parameters_lgbm = {'objective': 'binary',
