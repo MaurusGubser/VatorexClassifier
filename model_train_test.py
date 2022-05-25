@@ -7,6 +7,7 @@ import json
 import time
 from collections import OrderedDict
 
+import sklearn.base
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, balanced_accuracy_score, precision_score, \
     recall_score, roc_auc_score, plot_confusion_matrix, classification_report, plot_precision_recall_curve, \
     RocCurveDisplay, PrecisionRecallDisplay
@@ -24,7 +25,7 @@ from data_handling import split_and_sample_data, compute_prior_weight
 from roc_precrcll_curves import compute_metric_curve
 
 
-def export_model(model: object, model_name: str) -> None:
+def export_model(model: sklearn.base.BaseEstimator, model_name: str) -> None:
     if not os.path.exists('Models_Trained'):
         os.mkdir('Models_Trained')
     rel_file_path = 'Models_Trained/' + model_name + '.sav'
@@ -93,7 +94,7 @@ def export_training_stats_csv(model_dict: dict, model_name: str, data_dict: dict
     return None
 
 
-def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray) -> object:
+def train_model(model: sklearn.base.BaseEstimator, X_train: np.ndarray, y_train: np.ndarray) -> object:
     start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
@@ -101,7 +102,7 @@ def train_model(model: object, X_train: np.ndarray, y_train: np.ndarray) -> obje
     return model
 
 
-def evaluate_model(model: object, X: np.ndarray, y: np.ndarray, paths: list, prior_mite: float,
+def evaluate_model(model: sklearn.base.BaseEstimator, X: np.ndarray, y: np.ndarray, paths: list, prior_mite: float,
                    prior_no_mite: float) -> (dict, list, list):
     start_time = time.time()
     try:
@@ -242,7 +243,7 @@ def train_test_one_model_type(modelgroup: list, modelgroup_name: str, X_train: n
 
 
 def compare_different_models(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
-                             class_weight: Union[str, None], reweight_posterior: bool) -> None:
+                             class_weight: Union[str, None] = None, reweight_posterior: bool = False) -> None:
     models = set_models_by_type(model_selection, class_weight)
 
     data, labels, paths_images = read_data_and_labels_from_path(folder_path, data_params)
@@ -382,7 +383,7 @@ def load_models(model_list: list) -> dict:
     return model_dict
 
 
-def test_model(model: object, X_test: np.ndarray, y_test: np.ndarray) -> None:
+def test_model(model: sklearn.base.BaseEstimator, X_test: np.ndarray, y_test: np.ndarray) -> None:
     y_pred = model.predict(X_test)
     print(classification_report(y_test, y_pred, target_names=['Non-mite', 'Mite']))
     plot_confusion_matrix(model, X_test, y_test, display_labels=['Non-mite', 'Mite'])

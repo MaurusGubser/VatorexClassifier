@@ -108,7 +108,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def grid_search_multi_param(model: object, folder_path: str, data_params: dict, grid_search_params: dict,
-                            test_size: float, reweight_posterior: bool) -> None:
+                            test_size: float, reweight_posterior: bool = False) -> None:
     data, labels, paths_imgs = read_data_and_labels_from_path(folder_path, data_params)
     X_train, X_test, y_train, y_test, paths_train, paths_test = split_and_sample_data(data=data,
                                                                                       labels=labels,

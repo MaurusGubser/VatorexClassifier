@@ -152,8 +152,6 @@ def read_data_and_labels_from_path(path: str, data_params: dict) -> (np.ndarray,
         export_data(data_images, data_histograms, labels, paths_images, data_name)
     data = concatenate_data(data_images, data_histograms, read_image, read_hist)
     print('Data before preprocessing of shape {}'.format(data.shape))
-    if data_params['quadratic_features']:
-        data = compute_quadratic_features(data)
     if data_params['with_mean'] or data_params['with_std']:
         data = scale_data(data, data_params['with_mean'], data_params['with_mean'])
     print('Data after preprocessing of shape {}'.format(data.shape))

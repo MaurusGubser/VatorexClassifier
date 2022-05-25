@@ -50,7 +50,7 @@ def scale_data(data: np.ndarray, with_mean: bool, with_std: bool) -> np.ndarray:
 
 
 def compute_features(images_list: list, with_image: bool, with_binary_patterns: bool, histogram_params: dict,
-                     nb_segments: int) -> np.ndarray:
+                     nb_segments: Union[int, None]) -> np.ndarray:
     if not (with_image or with_binary_patterns or histogram_params or nb_segments):
         raise ValueError(
             "At least one of 'with_image', 'with_binary_patterns', 'histogram_params', 'nb_segments' has to be True.")
@@ -78,21 +78,22 @@ def compute_features(images_list: list, with_image: bool, with_binary_patterns: 
     return data
 
 
-def reduce_dimension(data: np.ndarray, nb_components_pca: int, batch_size_pca: int) -> np.ndarray:
-    start = time.time()
-    old_shape = data.shape
+def reduce_dimension(data: np.ndarray, nb_components_pca: Union[int, None],
+                     batch_size_pca: Union[int, None]) -> np.ndarray:
     if nb_components_pca:
+        old_shape = data.shape
+        start = time.time()
         pca = IncrementalPCA(n_components=nb_components_pca, batch_size=batch_size_pca)
         data = pca.fit_transform(data)
         end = time.time()
         print('Dimensionality reduction took {:.0f}min; reduction from {} to {}'.format((end - start) // 60,
-                                                                                             old_shape, data.shape))
+                                                                                        old_shape, data.shape))
     return data
 
 
-def remove_low_var_features(data: np.ndarray, threshold_low_var: float) -> np.ndarray:
-    start_time = time.time()
+def remove_low_var_features(data: np.ndarray, threshold_low_var: Union[float, None]) -> np.ndarray:
     if threshold_low_var:
+        start_time = time.time()
         selector = VarianceThreshold(threshold=threshold_low_var)
         data = selector.fit_transform(data)
         end_time = time.time()
@@ -104,10 +105,10 @@ def preprocess_images(images_list: list, data_params: dict) -> np.ndarray:
     with_image = data_params['with_image']
     with_binary_patterns = data_params['with_binary_patterns']
     histogram_params = data_params['histogram_params']
-    nb_segments = data_params['nb_segments']
-    threshold_low_var = data_params['threshold_low_var']
-    nb_components_pca = data_params['nb_components_pca']
-    batch_size_pca = data_params['batch_size_pca']
+    nb_segments = None
+    threshold_low_var = None
+    nb_components_pca = None
+    batch_size_pca = None
 
     data = compute_features(images_list, with_image, with_binary_patterns, histogram_params, nb_segments)
     data = remove_low_var_features(data, threshold_low_var)
