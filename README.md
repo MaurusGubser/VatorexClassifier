@@ -4,9 +4,8 @@ The script contains different functions with different purposes:
 
 - `compare_different_models`: comparing different classifiers, outputs a csv file in "Training_Statistics" with the performance of the different models
 - `cross_validation_one_param`: make cross validation for a single hyperparameter, outputs a graph in "CV_Plots" of precision, recall and f1 score for different values of the chosen hyperparameter
-- `grid_search_multi_param`: make a grid search for finding the best hyperparameters for a model, outputs a csv file in "GridSearch_Statistics" with the precision, recall and f1 score for all combinations of hyperparameters 
-- `plot_roc_precrcll_curves`: plot the ROC curve and precision-recall-curve for on model
-- `evaluate_trained_model`: evaluate a trained model on test data
+- `grid_search_multi_param`: make a grid search for finding the best hyperparameters for a model, outputs a csv file in "GridSearch_Statistics" with the precision, recall and f1 score for all combinations of hyperparameters
+- `evaluate_trained_model`: evaluate a trained model on test data and plot the ROC and precision-recall curves
 - `export_Vatorex_model`: train and export a LightGBM model for classification, the model gets stored in a subfolder "Vatorex_Model_Export"
 
 Each function can be executed by setting the corresponding boolean value to True and then executing the main.py script.
@@ -24,9 +23,6 @@ For a chosen model, on has to set a (meaningful) name, a model parameter, a rang
 
 ### Grid search
 For a chosen model, on has to set a (meaningful) name, tuples consisting of a model parameter and the range for this parameter and the number of splits for cross validation.
-
-### Plot curves
-Set a model.
 
 ### Train and export 
 Set number of splits for cross validation and the parameters for the LightGBM model.
