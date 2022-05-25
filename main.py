@@ -40,7 +40,7 @@ test_size = 0.10  # must be float in (0,1); fraction of test set
 
 path_image_folders = 'Candidate_Images/Series_matching05_mindist015_train/'    # 'Candidate_Images/Small_Series/'
 
-# ----- train and evaluate models -----
+# ----- train and compare models -----
 compare_models = False
 
 log_reg = True
@@ -117,7 +117,7 @@ path_trained_model = 'path/to/trained/model.txt'
 path_test_data = 'path/to/data/'
 model_name = 'data_model_name'
 
-# ----- train and export model for GUI ------
+# ----- train and export Vatorex model ------
 train_export_Vatorex = False
 
 cv = 10
