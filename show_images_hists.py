@@ -1,16 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from data_reading_writing import read_images_hist_from_folder
+from data_reading_writing import read_data_from_single_dir
 
 
-def get_last_path_str(path):
+def get_last_path_str(path: str) -> str:
     start = path.rfind('/') + 1
     name = path[start:]
     return name
 
 
-def plot_images_and_hist(path_folder):
-    images, hist, labels, images_paths = read_images_hist_from_folder(path_folder, True, 'candidate')
+def plot_images_and_hist(path_folder: str) -> None:
+    images, hist, labels, images_paths = read_data_from_single_dir(path_folder, read_image=True,
+                                                                   read_hist='candidate', with_false1=True)
     labels = np.array(labels)
     nb_true = np.sum(labels)
     nb_false = labels.size - nb_true
@@ -38,5 +39,5 @@ def plot_images_and_hist(path_folder):
     return None
 
 
-path_folder = 'Candidate_Images/Mite4_relabelledtol05/200328-S09(labeled)'
+path_folder = 'Candidate_Images/Mite4_relabelledtol05/200328-R02(43Milben,labeled)/'
 plot_images_and_hist(path_folder)

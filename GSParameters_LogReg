@@ -3,7 +3,7 @@ grid_search = True
 
 model_gs = LogisticRegression(penalty='l2', dual=False, solver='lbfgs', l1_ratio=None)
 model_name = 'LogReg'
-scoring_parameters = ['recall', 'precision', 'f1']
+scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
 Cs = ('C', np.insert(np.logspace(-2, 3, 15), 0, 0.0))

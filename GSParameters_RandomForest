@@ -3,7 +3,7 @@ grid_search = True
 
 model_gs = RandomForestClassifier()
 model_name = 'RandomForest'
-scoring_parameters = ['recall', 'precision', 'f1']
+scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
 
 n_estimators = ('n_estimators', np.array([3, 10, 100]))
