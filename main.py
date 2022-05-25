@@ -6,19 +6,19 @@ from lightgbm import LGBMClassifier
 
 from lgbm_train_export import export_GUI_model
 from model_parameter_tuning import cross_validation_one_param, grid_search_multi_param
-from model_train_test import train_test_models, evaluate_trained_model
+from model_train_test import compare_different_models, evaluate_trained_model
 from roc_precrcll_curves import plot_roc_precrcll_curves
 
 
 # ----- data parameters -----
-read_image = True  # True or False
-read_hist = None  # must be 'candidate', 'context' or None
+read_image = False  # True or False
+read_hist = 'context'  # must be 'candidate', 'context' or None
 with_image = None  # must be None or a scalar, which defines downsize factor; use image
 with_binary_patterns = False  # use local binary patterns of image
 histogram_params = None  # (3, 16)  # must be None or a tuple of two integers, which describes (nb_divisions, nb_bins)
 nb_segments = 20  # must be None or an integer; segment image using k-means in color space
 threshold_low_var = None  # must be None or a float in [0.0, 1.0], which defines threshold for minimal variance
-nb_components_pca = 100  # must be None or an integer, which defines number of components
+nb_components_pca = None  # must be None or an integer, which defines number of components
 batch_size_pca = None  # must be an integer, should be >= nb_features (ideally larger) and <= nb_images
 hist_hsl = True
 hist_h = True
@@ -41,18 +41,18 @@ test_size = 0.10  # must be float in (0,1); fraction of test set
 path_image_folders = 'Candidate_Images/Series_matching05_mindist015_train/'    # 'Candidate_Images/Small_Series/'
 
 # ----- train and evaluate models -----
-train_models = True
+train_models = False
 
-log_reg = False
+log_reg = True
 sgd = False
 ridge_class = False
 decision_tree = False
-random_forest = False
+random_forest = True
 l_svm = True
 nl_svm = False
 naive_bayes = True
-ada_boost = False
-histogram_boost = False
+ada_boost = True
+histogram_boost = True
 gradient_boost = False
 
 model_selection = OrderedDict([('log_reg', log_reg), ('sgd', sgd), ('ridge_class', ridge_class),
@@ -65,9 +65,9 @@ use_class_weight = None  # give classes weight according to their size; either '
 reweight_posterior = False  # if posterior probabilities should be reweighted for prediction
 
 # ----- cross-validation for one parameter -----
-cross_validation = False
+cross_validation = True
 
-model_cv = LGBMClassifier(class_weight='balanced')
+model_cv = LGBMClassifier(is_unbalanced='balanced')
 model_name = 'LGBM_balanced'
 model_parameter = 'n_estimators'  # e.g. learning_rate, max_iter, max_depth, l2_regularization, max_bins depending on model
 semilog = False  # if x-axis should be logarithmic
@@ -87,7 +87,7 @@ cv_parameters = OrderedDict([('model_name', model_name), ('model_parameter', mod
 # ----- grid search for several parameters -----
 grid_search = False
 
-model_gs = LGBMClassifier(class_weight='balanced')
+model_gs = LGBMClassifier(is_unbalanced='balanced')
 model_name = 'LGBM_balanced'
 scoring_parameters = ['recall', 'precision', 'f1', 'roc_auc']
 refit_param = 'f1'
@@ -138,8 +138,8 @@ if __name__ == '__main__':
     elif train_models:
         if test_size is None:
             raise ValueError('Parameter test_size cannot be None.')
-        train_test_models(model_selection, path_image_folders, data_parameters, test_size,
-                          use_class_weight, reweight_posterior)
+        compare_different_models(model_selection, path_image_folders, data_parameters, test_size,
+                                 use_class_weight, reweight_posterior)
     elif cross_validation:
         cross_validation_one_param(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:

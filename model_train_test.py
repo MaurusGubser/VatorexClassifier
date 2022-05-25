@@ -241,8 +241,8 @@ def train_test_one_model_type(modelgroup: list, modelgroup_name: str, X_train: n
     return None
 
 
-def train_test_models(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
-                      class_weight: Union[str, None], reweight_posterior: bool) -> None:
+def compare_different_models(model_selection: dict, folder_path: str, data_params: dict, test_size: float,
+                             class_weight: Union[str, None], reweight_posterior: bool) -> None:
     models = set_models_by_type(model_selection, class_weight)
 
     data, labels, paths_images = read_data_and_labels_from_path(folder_path, data_params)
