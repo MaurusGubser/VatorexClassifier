@@ -9,7 +9,6 @@ from model_parameter_tuning import cross_validation_one_param, grid_search_multi
 from model_train_test import compare_different_models, evaluate_trained_model
 from roc_precrcll_curves import plot_roc_precrcll_curves
 
-
 # ----- data parameters -----
 read_image = False  # True or False
 read_hist = 'context'  # must be 'candidate', 'context' or None
@@ -38,7 +37,7 @@ data_parameters = OrderedDict([('read_image', read_image), ('read_hist', read_hi
                                ('with_std', with_std), ('with_false1', with_false1)])
 test_size = 0.10  # must be float in (0,1); fraction of test set
 
-path_image_folders = 'Candidate_Images/Series_matching05_mindist015_train/'    # 'Candidate_Images/Small_Series/'
+path_image_folders = 'Candidate_Images/Series_matching05_mindist015_train/'  # 'Candidate_Images/Small_Series/'
 
 # ----- train and compare models -----
 compare_models = False
@@ -101,11 +100,10 @@ reg_lambda = ('reg_lambda', np.insert(np.logspace(-2, 2, 5), 0, 0.0))
 class_weight = ('class_weight', [None, 'balanced'])
 
 parameters_grid = OrderedDict([max_bins, learning_rate, n_estimators, max_depth, num_leaves, reg_lambda, class_weight])
-nb_split_cv = 10    # number of split cvs
+nb_split_cv = 10  # number of split cvs
 gs_parameters = OrderedDict([('model_name', model_name), ('parameters_grid', parameters_grid),
                              ('scoring_parameters', scoring_parameters), ('refit_param', refit_param),
                              ('nb_split_cv', nb_split_cv)])
-
 
 # ----------- plot curves ----------------------
 plot_curves = False
@@ -143,7 +141,8 @@ if __name__ == '__main__':
     elif cross_validation:
         cross_validation_one_param(model_cv, path_image_folders, data_parameters, cv_parameters)
     elif grid_search:
-        grid_search_multi_param(model_gs, path_image_folders, data_parameters, gs_parameters, test_size, reweight_posterior)
+        grid_search_multi_param(model_gs, path_image_folders, data_parameters, gs_parameters, test_size,
+                                reweight_posterior)
     elif plot_curves:
         plot_roc_precrcll_curves(clf, path_image_folders, data_parameters, test_size)
     elif evaluate_model:
@@ -152,4 +151,3 @@ if __name__ == '__main__':
         export_Vatorex_model(path_image_folders, data_parameters, test_size, cv, parameters_lgbm)
     else:
         print('No option chosen.')
-
