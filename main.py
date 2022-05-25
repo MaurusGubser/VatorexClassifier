@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from lightgbm import LGBMClassifier
 
-from lgbm_train_export import export_GUI_model
+from lgbm_train_export import export_Vatorex_model
 from model_parameter_tuning import cross_validation_one_param, grid_search_multi_param
 from model_train_test import compare_different_models, evaluate_trained_model
 from roc_precrcll_curves import plot_roc_precrcll_curves
@@ -41,7 +41,7 @@ test_size = 0.10  # must be float in (0,1); fraction of test set
 path_image_folders = 'Candidate_Images/Series_matching05_mindist015_train/'    # 'Candidate_Images/Small_Series/'
 
 # ----- train and evaluate models -----
-train_models = False
+compare_models = False
 
 log_reg = True
 sgd = False
@@ -118,7 +118,7 @@ path_test_data = 'path/to/data/'
 model_name = 'data_model_name'
 
 # ----- train and export model for GUI ------
-train_export_GUI = False
+train_export_Vatorex = False
 
 cv = 10
 parameters_lgbm = {'objective': 'binary',
@@ -133,9 +133,9 @@ parameters_lgbm = {'objective': 'binary',
 
 # ----- apply parameters and code ------
 if __name__ == '__main__':
-    if train_models + cross_validation + grid_search + evaluate_model + train_export_GUI > 1:
+    if compare_models + cross_validation + grid_search + evaluate_model + train_export_Vatorex > 1:
         raise AssertionError('Only one of evaluate_models, cross_validation, grid_search should be True.')
-    elif train_models:
+    elif compare_models:
         if test_size is None:
             raise ValueError('Parameter test_size cannot be None.')
         compare_different_models(model_selection, path_image_folders, data_parameters, test_size,
@@ -148,8 +148,8 @@ if __name__ == '__main__':
         plot_roc_precrcll_curves(clf, path_image_folders, data_parameters, test_size)
     elif evaluate_model:
         evaluate_trained_model(path_test_data, data_parameters, path_trained_model, model_name)
-    elif train_export_GUI:
-        export_GUI_model(path_image_folders, data_parameters, test_size, cv, parameters_lgbm)
+    elif train_export_Vatorex:
+        export_Vatorex_model(path_image_folders, data_parameters, test_size, cv, parameters_lgbm)
     else:
         print('No option chosen.')
 

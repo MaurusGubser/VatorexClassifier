@@ -40,7 +40,7 @@ def model_params_to_str(params_model: dict) -> str:
     return name
 
 
-def export_GUI_model(folder_path: str, data_params: dict, test_size: float, cv: int, param_lgbm: dict) -> None:
+def export_Vatorex_model(folder_path: str, data_params: dict, test_size: float, cv: int, param_lgbm: dict) -> None:
     data_params_str = get_folder_name(folder_path)
     model_params_str = model_params_to_str(param_lgbm)
     cv_str = '_kfold' + str(cv)
