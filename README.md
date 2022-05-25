@@ -1,6 +1,5 @@
 # Vatorex_Classifier
-Classifier to detect varroa mites in a sample of candidate images.
-
+A repo for training and evaluating different classifiers for the classification of varroa mites.
 The script contains different functions with different purposes:
 
 - compare_different_models: comparing different classifiers
