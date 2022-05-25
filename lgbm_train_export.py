@@ -50,9 +50,9 @@ def export_Vatorex_model(folder_path: str, data_params: dict, test_size: float, 
                                                                    labels=labels,
                                                                    paths_imgs=paths_imgs,
                                                                    test_size=test_size)
-    if not os.path.exists('GUI_Model_Export'):
-        os.mkdir('GUI_Model_Export')
-    subfolder_name = 'GUI_Model_Export/' + data_params_str + model_params_str + cv_str
+    if not os.path.exists('Vatorex_Model_Export'):
+        os.mkdir('Vatorex_Model_Export')
+    subfolder_name = 'Vatorex_Model_Export/' + data_params_str + model_params_str + cv_str
     if not os.path.exists(subfolder_name):
         os.mkdir(subfolder_name)
     export_path = subfolder_name + '/' + model_name
