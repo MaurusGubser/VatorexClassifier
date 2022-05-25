@@ -2,12 +2,12 @@
 A repo for training and evaluating different classifiers for the classification of varroa mites.
 The script contains different functions with different purposes:
 
-- compare_different_models: comparing different classifiers
-- cross_validation_one_param: make cross validation for a single hyper parameter
-- grid_search_multi_param: make a grid search for finding the best hyper parameters for a model
-- plot_roc_precrcll_curves: plot the ROC curve and precision-recall-curve for on model
-- evaluate_trained_model: evaluate a trained model on test data
-- export_Vatorex_model: train and export a LightGBM model for classification
+- `compare_different_models`: comparing different classifiers
+- `cross_validation_one_param`: make cross validation for a single hyper parameter
+- `grid_search_multi_param`: make a grid search for finding the best hyper parameters for a model
+- `plot_roc_precrcll_curves`: plot the ROC curve and precision-recall-curve for on model
+- `evaluate_trained_model`: evaluate a trained model on test data
+- `export_Vatorex_model`: train and export a LightGBM model for classification
 
 Each function can be executed by setting the corresponding boolean value to True and then executing the main.py script.
 
